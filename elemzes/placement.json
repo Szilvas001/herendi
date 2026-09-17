@@ -1,0 +1,43 @@
+{
+  "bevezeto": "Csak a válogatás fix áras tételei. A „Hirdetési ár” a feltöltéskor megadandó ár, a „Legkisebb elfogadható” az az ajánlat, ami alatt már nem éri meg eladni: ez nagyjából fedezi a vételárat, a nemzetközi szállítást és a platformdíjat, és még marad haszon. eBay-en és Etsyn a hirdetési ár mellé kapcsold be az ajánlattétel lehetőségét (eBay: Best Offer, Etsy: Offers). Catawikin nincs fix ár: 7 napos aukció fut, ott a „Legkisebb elfogadható” a minimálár (reserve), a hirdetési ár pedig a kért becsérték. Árfolyam-feltételezés: 1 EUR ≈ 395 Ft ≈ 1,15 USD.",
+  "piacterek": [
+    ["eBay.com (USA)", "A legnagyobb Herendi-gyűjtői vevőkör, sok „sold” referenciaár. Díj: kb. 13–15% értékesítési díj a teljes összegre (szállítással együtt), plusz nemzetközi díj. Nagy értékű figurákhoz, levesestálakhoz, teáskészlethez. Az USA-ba küldött csomagokra 2025 óta vám van, a kis értékűekre is (EU-áru: kb. 15%). Az eBay International Shipping ezt a vevőnél beszedi, de a teljes ár emiatt magasabb lesz a vevőnek."],
+    ["eBay.de (Németország/EU)", "Az osztrák és német vevők ismerik a Zsolnayt és a Pompadourt. Az EU-n belül nincs vám, és a szállítás olcsóbb. Díj külföldi eladóként kb. 11–13% plusz nemzetközi díj. Zsolnay figurákhoz, készletekhez, a jelzés nélküli darabokhoz („Zsolnay zugeschrieben”)."],
+    ["Etsy (USA/EU)", "Vintage lakberendezési vevők, alacsonyabb díjak: 0,20 USD feltöltési díj, 6,5% tranzakciós díj és kb. 3–4% fizetési díj. Az Etsy offsite hirdetései miatt ehhez eseti 12–15% jöhet. Kisebb, 50–250 USD-s tárgyakhoz. Szabály: vintage kategóriában a tárgynak legalább 20 évesnek kell lennie, ezt feltöltés előtt ellenőrizd a jelzés alapján."],
+    ["Catawiki (EU, kurált aukció)", "Szakértő ellenőrzi és fogadja be a tételt, ami a jelzés nélküli vagy antik daraboknál hitelességet ad. Az európai vevők a Zsolnay eozint és az antik herendi darabokat jól fizetik. Eladói jutalék 12,5%, a szállítást a vevő fizeti. Minimálárral indítható, így nem kel el áron alul."]
+  ],
+  "megjegyzes": "A díjak és a vámszabályok a 2026 elején ismert szintek, feltöltés előtt ellenőrizd őket az adott piactéren. A szállítási költséget mindenhol a vevőre hárítsd, és a nagy darabokat (levesestálak, 30 cm feletti vázák, étkészlet) dupla dobozban, biztosítással küldd. Az árak a hibátlan, a hirdetésben leírt állapotra vonatkoznak: ha átvételkor sérülést vagy eltérő jelzést találsz, az árat ahhoz kell igazítani.",
+  "tetelek": {
+    "3501767960": ["eBay.com", "1 050 USD", "650 USD", "A nagy (33 cm) herendi madárfigurák legtöbb vevője és legmagasabb eladási ára az USA-ban van."],
+    "3499799522": ["eBay.com", "450 USD", "300 USD", "Herendi madárgyűjtők az eBay-en a formaszám (5108) alapján keresnek, azt írd a címbe."],
+    "3501768152": ["eBay.com", "550 USD", "350 USD", "A kutyafigurák fajtanévre keresve („Herend Fox Terrier”) az amerikai eBay-en fogynak a legjobban."],
+    "3526894709": ["eBay.com", "520 USD", "300 USD", "A Hadik huszár (5526) ismert herendi modell, az amerikai magyar és porcelángyűjtő vevők ott keresik."],
+    "3527136749": ["Etsy", "170 USD", "95 USD", "Kis, olcsóbb figura: az Etsy alacsonyabb díja itt többet hagy, az eBay díja arányaiban sokat vinne el."],
+    "3487249883": ["Catawiki", "550 EUR becsérték", "350 EUR minimálár", "Antik, Lux Elek tervezői nevű darab: a Catawiki szakértői jóváhagyása hitelesíti, és az európai gyűjtők jól fizetik."],
+    "3526021535": ["eBay.com", "2 300 USD", "1 400 USD", "A 12 személyes jubileumi Rothschild levesestál ritka, az amerikai Herend-gyűjtők a Rothschild mintát fizetik a legjobban."],
+    "3528645125": ["eBay.com", "1 150 USD", "700 USD", "A Queen Victoria (VBO) a legkeresettebb herendi minta az USA-ban."],
+    "3528644864": ["eBay.com", "1 250 USD", "800 USD", "Ritka, citromfogós Rothschild forma: a formaszámmal (1014/RO) keresők főleg amerikaiak."],
+    "3527661473": ["eBay.com", "1 100 USD", "700 USD", "Az Apponyi Orange étkészletet pótló vevők főleg az USA-ban keresik a nagy darabokat."],
+    "3491251307": ["Catawiki", "5 500 EUR becsérték", "3 500 EUR minimálár", "Nagy, nehéz (26 darabos) készlet: EU-n belül olcsóbb a szállítás és nincs vám, a Catawiki herendi készletaukcióin pedig komoly vevők licitálnak."],
+    "3493100438": ["eBay.com", "2 850 USD", "1 750 USD", "Teljes, 6 személyes Rothschild teáskészlet: az amerikai eBay-en ennek van a legtöbb referenciaeladása és vevője."],
+    "3487243616": ["eBay.com", "800 USD", "470 USD", "Nagy (34,5 cm) Apponyi Purple váza: lakberendezési és gyűjtői vevő is keresi az USA-ban."],
+    "3487346153": ["eBay.com", "570 USD", "350 USD", "33 cm-es Apponyi amfóra: az eBay-en a „Herend Apponyi Purple vase” keresésre ez a méret jól fogy."],
+    "3524724029": ["Etsy", "220 USD", "140 USD", "Kis Apponyi Green váza: az Etsy vintage lakberendezési vevői jellemzően ebben az ársávban vásárolnak."],
+    "3524920469": ["Etsy", "220 USD", "140 USD", "Kis Apponyi Purple váza, ugyanaz a logika, mint a zöldnél. Érdemes a két vázát egy boltban, egymásra hivatkozva hirdetni."],
+    "3528588389": ["Etsy", "250 USD", "150 USD", "Bouquet de Saxe váza. Ha a párját (Indiai kosár) is megveszed, párban 550 USD-ért hirdesd."],
+    "3527536409": ["Etsy", "200 USD", "115 USD", "Kosárfonott Apponyi Green váza, kisebb darab, Etsy-árszint."],
+    "3493102247": ["Etsy", "250 USD", "140 USD", "13 cm-es papagáj: a madaras herendi figurák az Etsyn ajándéktárgyként is jól fogynak."],
+    "3272242091": ["eBay.com", "690 USD", "400 USD", "35 cm-es herendi akt: a nagyméretű figurák amerikai vevői fizetik a legtöbbet, a méret miatt a szállítást külön számold ki."],
+    "3464572610": ["Etsy", "230 USD", "140 USD", "18 cm-es madárfigura, alsó-közép ársáv, az Etsy díjai itt kedvezőbbek."],
+    "3502089875": ["Catawiki", "700 EUR becsérték", "400 EUR minimálár", "19. századi antik tányérsor: a Catawiki szakértője igazolja a kort és a jelzést, az európai antikvevők ezt megfizetik."],
+    "3527645609": ["eBay.de", "450 EUR", "280 EUR", "Jelzés nélküli darab: a német eBay-en „Zsolnay zugeschrieben” (Zsolnaynak tulajdonított) megnevezéssel tisztességesen és jól eladható, a Catawiki jelzés nélkül valószínűleg nem fogadná be."],
+    "3526996043": ["Catawiki", "1 200 EUR becsérték", "700 EUR minimálár", "Jelzés nélküli Nikelszky-terv: ha a Catawiki szakértője befogadja, az hitelesíti. Ha nem, eBay.de-n 900 EUR-ért, „zugeschrieben” megnevezéssel hirdesd."],
+    "3273802046": ["Catawiki", "1 600 EUR becsérték", "900 EUR minimálár", "1930-as Zsolnay eozin nagyváza: a Catawiki szecessziós és art deco kerámiaaukcióin ezek a legerősebbek."],
+    "3274129457": ["Catawiki", "1 400 EUR becsérték", "800 EUR minimálár", "1930-as eozin díszváza, ugyanaz a vevőkör, mint a bordázott nagyvázánál. Érdemes külön héten indítani őket."],
+    "3273802028": ["eBay.de", "790 EUR", "480 EUR", "1937-es eozin bölény: az eozin állatfigurákat a német és osztrák eBay-vevők keresik, EU-n belül vám nélkül."],
+    "3483997382": ["eBay.de", "290 EUR", "170 EUR", "Szecessziós figurális eozin névjegytál: a német Jugendstil-gyűjtők a fő vevők."],
+    "3487243697": ["Catawiki", "600 EUR becsérték", "300 EUR minimálár", "1880 körüli, T.J.M. családi jelzéses korai Zsolnay: a szakértői leírás hozza ki az értékét."],
+    "3528589049": ["eBay.de", "450 EUR", "270 EUR", "Markup Béla-terv, Zsolnay figura: a német nyelvű piac ismeri a Zsolnay tervezőneveket."],
+    "3487247150": ["eBay.de", "590 EUR", "360 EUR", "12 személyes Pompadour készlet: a Pompadour-t az osztrák és német vevők ismerik, és a 4,2 kg-os csomag az EU-n belül olcsón szállítható."]
+  }
+}
