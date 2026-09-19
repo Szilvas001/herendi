@@ -287,12 +287,49 @@ def extract_end_time(text: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+def extract_availability(soup: BeautifulSoup, url: str) -> str:
+    """Use the matching Product offer; hidden sold templates are not evidence."""
+    from datetime import datetime, timezone
+    for tag in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = json.loads(tag.string or tag.get_text())
+        except (ValueError, TypeError):
+            continue
+        nodes = data if isinstance(data, list) else [data]
+        for node in list(nodes):
+            if isinstance(node, dict) and isinstance(node.get("@graph"), list):
+                nodes.extend(node["@graph"])
+        for node in nodes:
+            if not isinstance(node, dict) or node.get("@type") != "Product":
+                continue
+            if str(node.get("sku", "")) != listing_id(url):
+                continue
+            offer = node.get("offers", {})
+            if not isinstance(offer, dict):
+                continue
+            state = str(offer.get("availability", "")).rsplit("/", 1)[-1]
+            if state in ("OutOfStock", "SoldOut", "Discontinued"):
+                return "unavailable"
+            end = offer.get("availabilityEnds")
+            if end:
+                try:
+                    ends = datetime.fromisoformat(end)
+                    if ends.tzinfo and ends <= datetime.now(timezone.utc):
+                        return "unavailable"
+                except (ValueError, TypeError):
+                    return "unverified"
+            if state == "InStock":
+                return "in_stock"
+    return "unverified"
+
+
 def parse_listing(url: str, html: str) -> dict | None:
     """Egy termékoldalból strukturált rekord (elfogadott és elutasított is)."""
     if not html:
         return None
 
     soup = BeautifulSoup(html, "html.parser")
+    availability = extract_availability(soup, url)
     for tag in soup.find_all(["script", "style", "noscript", "svg"]):
         tag.decompose()
     title = extract_title(soup, url)
@@ -303,6 +340,14 @@ def parse_listing(url: str, html: str) -> dict | None:
     sale_type, offer_possible = detect_sale_type(html, text_norm)
     prices = extract_prices(html, text_norm, sale_type)
     rel = relevance(title, text_norm)
+    # Closed listings retain prices and even buy-button text in the HTML.
+    # Never interpret those prices as a currently available purchase.
+    unavailable = availability == "unavailable"
+    if unavailable:
+        rel["accepted"] = False
+        rel["reject_reason"] = "; ".join(filter(None, [
+            rel["reject_reason"], "elkelt / lezart hirdetes",
+        ]))
 
     record = {
         "listing_id": listing_id(url),
@@ -313,6 +358,7 @@ def parse_listing(url: str, html: str) -> dict | None:
         "offer_possible": offer_possible,
         **prices,
         "end_time": extract_end_time(text),
+        "availability": availability,
         "seller": extract_seller(text),
         "damage_flags": rel["damage_flags"],
         "suspect_flags": rel["suspect_flags"],

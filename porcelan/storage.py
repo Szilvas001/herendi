@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 FIELDS = [
     "listing_id", "brand", "title", "sale_type", "sale_type_label", "offer_possible",
     "price_huf", "price_kind", "buy_now_huf", "start_bid_huf", "current_bid_huf",
-    "bid_count", "end_time", "seller", "damage_flags", "suspect_flags",
+    "bid_count", "end_time", "availability", "seller", "damage_flags", "suspect_flags",
     "decor_hints",
     "description", "url", "accepted", "reject_reason",
 ]

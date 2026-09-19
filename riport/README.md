@@ -1,539 +1,169 @@
-# Vatera – Herendi & Zsolnay deal riport
-
-Készült: 2026-09-17 14:35 · forrás: vatera.hu élő scrape (`python run.py --no-ai`), elemzés: Claude (Claude Code munkamenetben)
-
-## Fájlok ebben a mappában
-
-| Fájl | Tartalom | db |
-|---|---|---:|
-| [README.md](README.md) | összefoglaló + Claude válogatás (áron aluli / nyugati piac) | 45 |
-| [aukcio.md](aukcio.md) | az összes aukció (licit) hirdetés, linkkel | 206 |
-| [fix-aras.md](fix-aras.md) | az összes fix áras hirdetés, linkkel | 1640 |
-| [alkukepes.md](alkukepes.md) | az összes alkuképes / irányáras hirdetés, linkkel | 475 |
-| [kiszurt.md](kiszurt.md) | kiszűrt hirdetések (utánzat, nem porcelán…) okkal | 31 |
-
-## Összefoglaló
-
-Márka szerint: Herendi: 1361, Zsolnay: 960
-
-A 2026-09-16-i élő scrape 2321 elfogadott Herendi és Zsolnay hirdetést talált: 206 aukciót, 1640 fix áras és 475 alkuképes tételt. A kínálat nagy része néhány nagy kereskedőtől jön, akik bolti árhoz közeli áron dolgoznak, így valódi áron aluli tétel kevés van. A legjobb lehetőségek a hibátlan, nagyméretű herendi figurák (sas, szajkó, foxi), a teljes méretű herendi levesestálak (Rothschild, Victoria, Apponyi Orange), az egy eladónál 20–25 ezer forintért kapható, első osztályú, jelzett Apponyi vázák, valamint néhány antik Zsolnay eozin darab (kacsás-békás tál, 1930-as eozin vázák, birkózó medvék). A nyugati továbbértékesítésnél a szállítás a fő kockázat: a nagy vázák és levesestálak törékenyek és nehezek.
-
-## Likvid, nagy árrésű tételek nyugati eladásra – összesített táblázat
-
-A Herendi és Zsolnay tételek mellett a Vaterán jellemző, nyugaton gyorsan forgó termékeket is átvizsgáltam: Tungsram elektroncsöveket, szovjet, NDK és japán objektíveket (Helios, Jupiter, Carl Zeiss Jena, Meyer-Optik, Takumar, Nikkor), filmes fényképezőgépeket (Rolleiflex, Contax, Olympus, Canon, Nikon, Pentax, Yashica, Lomo, Kiev, Zenit), órákat (Poljot 3133 változatok, Vostok, Raketa, Seiko, Junghans), retró elektronikát (Walkman, Game Boy, Nintendo, Sega, Commodore, Amiga, Atari), töltőtollakat (Pelikan, Parker) és Carl Zeiss Jena távcsöveket, 101 keresőszóval. A 3009 elfogadott hirdetésből 7 felelt meg minden feltételnek. A táblázatban ezek és a korábbi ajánlott Herendi/Zsolnay tételek szerepelnek, **a kezdő áron becsült eladási idő szerint rendezve, a leggyorsabbal kezdve**.
-
-**Kiválasztási feltételek (új tételek):** csak fix áras vagy alkuképes hirdetés, mert az aukciós ár még emelkedhet. Legalább 10 hasonló aktív eBay-hirdetés, vagyis van piac. A legkisebb elfogadható ár legfeljebb a piaci medián. A nettó haszon a medián áron legalább 60% és legalább 40 USD. A **kezdő hirdetési ár** a hasonló aktív eBay-hirdetések mediánja. Az **eladási idő ezen az áron** a piac mélységétől függ: 30 vagy több aktív hirdetésnél 2–6 hét, 15–29-nél 3–8 hét, 8–14-nél 1–3 hónap. A **legkisebb elfogadható ár** és a hozzá tartozó likviditás ugyanazzal a szabállyal készült, mint a Herendi/Zsolnay tételeknél (lásd lent, „Módszer”). A **nettó haszon** a kezdő áron számolt eladási ár a piactéri díj levonása után, mínusz a Vatera-ár. A szállítást a vevő fizeti, a vámot és a Vaterán belüli postaköltséget nem vontam le. Csöveknél, ha a hirdetés több darabot tartalmaz, az eBay-összehasonlítás darabárra készült.
-
-*Kiszűrve:* 1821 hirdetésnél nem volt felismerhető modell, 7-nél kevés az eBay-összehasonlító hirdetés, 73-nél a fedezet a piaci medián felett van, 59-nél kicsi az árrés, és 769 aukciós vagy ár nélküli.
-
-| Tétel | Kategória | Vatera ár | Kezdő hirdetési ár · piactér | Becsült eladási idő ezen az áron | Likviditás ezen az áron | Legkisebb elfogadható ár | Eladási idő és likviditás a legkisebb áron | Becsült nettó haszon a kezdő áron | Aktív eBay-kínálat (db, medián, alsó–felső negyed) | Értékelés |
-|---|---|---:|---:|---|---|---:|---|---:|---|---|
-| [Herendi Rothschild Új 6 sz étkészlet](https://www.vatera.hu/herendi-rothschild-uj-6-sz-etkeszlet-3491251307.html) | Herendi porcelán | 899 000 Ft (≈ 2 276 EUR) | 4 500 EUR · Catawiki | 2–4 hét | közepes | 2 900 EUR | 2–4 hét, közepes–magas | 1 662 EUR (73%) | nincs összehasonlítható | **Ajánlott** |
-| [2db ECC83 Tungsram. Legolcsóbb](https://www.vatera.hu/2db-ecc83-tungsram-legolcsobb-3530289641.html) (2 db) | Tungsram cső · Tungsram ECC83 | 8 500 Ft (≈ 25 USD) | 130 USD · eBay.com | 2–6 hét | magas | 40 USD | 1–4 hét, magas | 82 USD (333%) | 37 db, medián 63 USD (45–100) / darab | **Ajánlott** |
-| [Carl Zeiss Jena DDR - Tessar f2,8/50 - M42](https://www.vatera.hu/carl-zeiss-jena-ddr-tessar-f2-8-50-m42-3450444290.html) | Objektív · Tessar 50 | 8 000 Ft (≈ 23 USD) | 100 USD · eBay.com | 2–6 hét | magas | 35 USD | 1–4 hét, magas | 59 USD (254%) | 64 db, medián 97 USD (65–140) | **Ajánlott** |
-| [Zenit TTL Helios 44M 2/58 lencsével](https://www.vatera.hu/zenit-ttl-helios-44m-2-58-lencsevel-3523993349.html) | Fényképezőgép · Zenit TTL | 8 990 Ft (≈ 26 USD) | 80 USD · eBay.com | 2–6 hét | magas | 35 USD | 1–4 hét, magas | 41 USD (158%) | 80 db, medián 79 USD (52–125) | **Ajánlott** |
-| [SEGA MASTER SYSTEM II](https://www.vatera.hu/sega-master-system-ii-3508181165.html) | Retró elektronika · Sega Master System | 25 000 Ft (≈ 73 USD) | 175 USD · eBay.com | 2–6 hét | magas | 95 USD | 3–8 hét, közepes–magas | 76 USD (104%) | 73 db, medián 175 USD (90–285) | **Ajánlott** |
-| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529930949.html) | Szovjet óra · Poljot Chronograph | 60 000 Ft (≈ 175 USD) | 340 USD · eBay.com | 2–6 hét | magas | 230 USD | 3–8 hét, közepes–magas | 109 USD (63%) | 70 db, medián 334 USD (102–470) | **Ajánlott** |
-| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529931729.html) | Szovjet óra · Poljot Chronograph | 60 000 Ft (≈ 175 USD) | 340 USD · eBay.com | 2–6 hét | magas | 230 USD | 3–8 hét, közepes–magas | 109 USD (63%) | 70 db, medián 334 USD (102–470) | **Ajánlott** |
-| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529929749.html) | Szovjet óra · Poljot Chronograph | 60 000 Ft (≈ 175 USD) | 340 USD · eBay.com | 2–6 hét | magas | 230 USD | 3–8 hét, közepes–magas | 109 USD (63%) | 70 db, medián 334 USD (102–470) | **Ajánlott** |
-| [Zsolnay porcelán szecessziós névjegytál - Zsolnay eozinmázas rákos tál](https://www.vatera.hu/zsolnay-porcelan-szecesszios-nevjegytal-zsolnay-eozinmazas-rakos-tal-3483997382.html) | Zsolnay porcelán | 32 000 Ft (≈ 81 EUR) | 240 EUR · eBay.de | 3–8 hét | közepes–magas | 105 EUR | 1–4 hét, magas | 128 EUR (158%) | 16 db, medián 244 EUR (175–346) | **Ajánlott** |
-| [Herendi Rothschild ovális citromfogós levesestál](https://www.vatera.hu/herendi-rothschild-ovalis-citromfogos-levesestal-3528644864.html) | Herendi porcelán | 170 000 Ft (≈ 495 USD) | 950 USD · eBay.com | 3–8 hét | közepes–magas | 650 USD | 1–4 hét, magas | 312 USD (63%) | 38 db, medián 952 USD (750–1250) | **Ajánlott** |
-| [Nagyobb méretű ( 18 cm magas) herendi madár figura / hibátlan](https://www.vatera.hu/nagyobb-meretu-18-cm-magas-herendi-madar-figura-hibatlan-3464572610.html) | Herendi porcelán | 22 800 Ft (≈ 66 USD) | 160 USD · Etsy | 3–8 hét | közepes–magas | 85 USD | 2–6 hét, magas | 75 USD (114%) | 24 db, medián 160 USD (82–250) | **Ajánlott** |
-| [1Z997 Régi nagyméretű Herendi porcelán foxi kutya foxterrier figura](https://www.vatera.hu/1z997-regi-nagymeretu-herendi-porcelan-foxi-kutya-foxterrier-figura-3501768152.html) | Herendi porcelán | 85 000 Ft (≈ 247 USD) | 450 USD · eBay.com | 1–3 hónap | közepes | 330 USD | 1–4 hét, magas | 136 USD (55%) | 16 db, medián 428 USD (370–585) | **Ajánlott** |
-| [Ritka Antik HERENDI VÁZA 1.oszt. Bouquet de saxe (BS) KÉZZEL FESTETT HIBÁTLAN, Garancia!!](https://www.vatera.hu/ritka-antik-herendi-vaza-1-oszt-bouquet-de-saxe-bs-kezzel-festett-hibatlan-garancia-3528588389.html) | Herendi porcelán | 24 500 Ft (≈ 71 USD) | 170 USD · Etsy | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 79 USD (111%) | 67 db, medián 154 USD (85–250) | **Ajánlott** |
-| [Antik HERENDI 1. oszt. APPONYI VERT GREEN (AV) mintás kosárfonott VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-herendi-1-oszt-apponyi-vert-green-av-mintas-kosarfonott-vaza-porcelan-hibatlan-garancia-3527536409.html) | Herendi porcelán | 19 500 Ft (≈ 57 USD) | 130 USD · Etsy | 1–3 hónap | közepes | 75 USD | 3–8 hét, közepes–magas | 57 USD (100%) | 66 db, medián 110 USD (48–247) | **Ajánlott** |
-| [Antik 1.oszt. HERENDI APPONYI VERT GREEN (AV) MINTÁS VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-1-oszt-herendi-apponyi-vert-green-av-mintas-vaza-porcelan-hibatlan-garancia-3524724029.html) | Herendi porcelán | 24 500 Ft (≈ 71 USD) | 150 USD · Etsy | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 61 USD (86%) | 66 db, medián 110 USD (48–247) | **Ajánlott** |
-| [Antik HERENDI APPONYI PURPUR (AP) mintás porcelán VÁZA Hibátlan, Garancia!](https://www.vatera.hu/antik-herendi-apponyi-purpur-ap-mintas-porcelan-vaza-hibatlan-garancia-3524920469.html) | Herendi porcelán | 24 500 Ft (≈ 71 USD) | 150 USD · Etsy | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 61 USD (86%) | 66 db, medián 136 USD (75–245) | **Ajánlott** |
-| [Antik HERENDI HADIK HUSZÁR porcelán szobor Garancia HIBÁTLAN!!](https://www.vatera.hu/antik-herendi-hadik-huszar-porcelan-szobor-garancia-hibatlan-3526894709.html) | Herendi porcelán | 39 500 Ft (≈ 115 USD) | 250 USD · eBay.com | 1–3 hónap | közepes | 150 USD | 3–8 hét, közepes–magas | 98 USD (85%) | 34 db, medián 192 USD (129–300) | **Ajánlott** |
-| [1L654 Hibátlan 12 személyes Zsolnay Pompadour porcelán süteményes készlet](https://www.vatera.hu/1l654-hibatlan-12-szemelyes-zsolnay-pompadour-porcelan-sutemenyes-keszlet-3487247150.html) | Zsolnay porcelán | 72 000 Ft (≈ 182 EUR) | 380 EUR · eBay.de | 1–3 hónap | közepes | 240 EUR | 3–8 hét, közepes–magas | 149 EUR (82%) | nincs összehasonlítható | **Ajánlott** |
-| [Herendi Viktória levesestál](https://www.vatera.hu/herendi-viktoria-levesestal-3528645125.html) | Herendi porcelán | 140 000 Ft (≈ 408 USD) | 750 USD · eBay.com | 1–3 hónap | közepes | 530 USD | 3–8 hét, közepes–magas | 230 USD (56%) | 20 db, medián 735 USD (342–1100) | **Ajánlott** |
-| [Herendi Apponyi Orange 12 személyes levesestál](https://www.vatera.hu/herendi-apponyi-orange-12-szemelyes-levesestal-3527661473.html) | Herendi porcelán | 160 000 Ft (≈ 466 USD) | 850 USD · eBay.com | 1–3 hónap | közepes | 610 USD | 3–8 hét, közepes–magas | 256 USD (55%) | 65 db, medián 750 USD (400–1200) | **Ajánlott** |
-| [ANTIK ZSOLNAY BÍRKÓZÓ MEDVÉK Markup Béla porcelán szobor garancia, Hibátlan!!](https://www.vatera.hu/antik-zsolnay-birkozo-medvek-markup-bela-porcelan-szobor-garancia-hibatlan-3528589049.html) | Zsolnay porcelán | 32 500 Ft (≈ 82 EUR) | 350 EUR · eBay.de | 2–4 hónap | közepes–alacsony | 105 EUR | 1–4 hét, magas | 222 EUR (271%) | nincs összehasonlítható | **Ajánlott** |
-| [Herendi Rothschild madaras, 12 személyes, jubileumi, különleges levesestál](https://www.vatera.hu/herendi-rothschild-madaras-12-szemelyes-jubileumi-kulonleges-levesestal-3526021535.html) | Herendi porcelán | 260 000 Ft (≈ 757 USD) | 1 450 USD · eBay.com | 2–5 hónap | alacsony–közepes | 980 USD | 1–3 hónap, közepes | 476 USD (63%) | 38 db, medián 952 USD (750–1250) | **Ajánlott** |
-
-**Fontos:** a Vatera-hirdetések fotóit és állapotleírását vásárlás előtt egyenként ellenőrizd. Objektíveknél a lencse tisztasága (gomba, pára, karc), óráknál a működés és az eredeti alkatrészek, csöveknél a mért érték határozza meg a tényleges árat. A likviditás az aktív kínálatból becsült érték, lezárt eBay-eladásokat nem lehetett lekérni. Az öt Poljot Chronograph ugyanattól az eladótól, „NOS” (új, használatlan) megjelöléssel szerepel: vásárlás előtt kérj fotót a szerkezetről és a hátlapról, mert sok felújított vagy vegyes alkatrészű példány van forgalomban, ezek jóval kevesebbet érnek. A 100 USD alatti tételeknél (Zenit, Tungsram csövek) az USA-ba küldés költsége a vevő szemében drágítja a tételt: ezeket érdemes eBay.de-n, EU-n belül, vagy több darabot egy csomagban eladni.
-
-## Claude válogatás
-
-A válogatás mind a 2321 hirdetés címe, ára és eladási típusa alapján készült. A kb. 90 legígéretesebb jelöltnél elolvastam a hirdetés saját leírását és a „Termék sajátosságai” adatokat (állapot, jelzés, formaszám, méret), ezekből 45 tétel maradt. Az EUR-sávok a nyugati (eBay US/DE, Etsy, Replacements) reálisan elérhető eladási árát becsülik, kb. 395 Ft/EUR árfolyammal. Ezek szakértői becslések, nem valós idejű piaci adatok. Aukcióknál a kikiáltási árat mutatjuk, az aktuális licitet és a lejáratot vásárlás előtt a linken érdemes ellenőrizni.
-
-Összesen **45** javaslat, eladási típus szerint szétválasztva.
-
-### Aukció (licit) (7 tétel)
-
-#### [Herendi Porcelán Sas (33 cm magas, sorozatszámmal ellátott)](https://www.vatera.hu/herendi-porcelan-sas-33-cm-magas-sorozatszammal-ellatott-3526209827.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **100 000 Ft** (kikialtasi ar, 3 licit, vége: 2026.09.26. 00:11) · becsült nyugati ár: **600–1000 EUR**
-- Indoklás: Nagyméretű, 33 cm-es herendi sas az 5056-os formaszámmal, hibátlan, jelzett, az 1960-as évekből, a Herendi márkabolt becslésével. A 100 000 Ft-os kikiáltási ár kb. 255 EUR, a nagy herendi madárfigurák nyugaton ennek többszöröséért kelnek el.
-- Kockázat: Aukció, a végső ár még emelkedhet. Nagy, törékeny figura, a nemzetközi szállításhoz gondos csomagolás kell.
-- Link: <https://www.vatera.hu/herendi-porcelan-sas-33-cm-magas-sorozatszammal-ellatott-3526209827.html>
-
-#### [Herendi kávés , mokkás készlet zöld Nanking mintával , koronás címerrel](https://www.vatera.hu/herendi-kaves-mokkas-keszlet-zold-nanking-mintaval-koronas-cimerrel-3523977383.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **80 000 Ft** (kikialtasi ar, 2 licit, vége: 2026.09.19. 17:45) · becsült nyugati ár: **400–800 EUR**
-- Állapot jelzők a hirdetésben: repedes
-- Indoklás: 1945-ös herendi kávés-mokkás készlet zöld Nanking mintával és koronás címerrel: nagy kanna és 12 csésze aljjal. A címeres, régi herendi készletek nyugaton gyűjtői érdeklődést keltenek. A 80 000 Ft-os kikiáltási ár kb. 200 EUR.
-- Kockázat: Egy csészén néhány mm-es tűzrepedés van, egy csésze pótolt és nem koronás. Az eladó csak magánszemélynek értékesít. Aukció, vége 2026-09-19.
-- Link: <https://www.vatera.hu/herendi-kaves-mokkas-keszlet-zold-nanking-mintaval-koronas-cimerrel-3523977383.html>
-
-#### [Régebbi Herendi porcelán áttört kosár tál 29,5 x 19 cm](https://www.vatera.hu/regebbi-herendi-porcelan-attort-kosar-tal-29-5-x-19-cm-3526390832.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **64 999 Ft** (kikialtasi ar, 3 licit, vége: 2026.09.26. 18:26) · becsült nyugati ár: **250–450 EUR**
-- Indoklás: Régi, ritka, áttört herendi gyümölcskosár (29,5 x 19 cm), plasztikus szirmokkal és ágakkal, hibátlan, masszába nyomott jelzéssel, bevizsgálva. 64 999 Ft-os kikiáltási ár (kb. 165 EUR).
-- Kockázat: A jelzés elmosódott. Az áttört, plasztikus díszek miatt a szállítás kényes. Aukció.
-- Link: <https://www.vatera.hu/regebbi-herendi-porcelan-attort-kosar-tal-29-5-x-19-cm-3526390832.html>
-
-#### [Herendi váza Waldstein körmös porcelán hibátlan 14,8 cm ajándék minőség](https://www.vatera.hu/herendi-vaza-waldstein-kormos-porcelan-hibatlan-14-8-cm-ajandek-minoseg-3527579480.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **29 999 Ft** (kikialtasi ar, 2 licit, vége: 2026.09.29. 22:25) · becsült nyugati ár: **120–220 EUR**
-- Indoklás: Régebbi herendi Waldstein mintás, körmös lábú váza, 14 cm, hibátlan, minden jelzéssel. A Waldstein ritkábban előforduló minta, a 29 999 Ft-os kikiáltási ár (kb. 76 EUR) jó kiindulás.
-- Kockázat: Aukció, a végső ár emelkedhet.
-- Link: <https://www.vatera.hu/herendi-vaza-waldstein-kormos-porcelan-hibatlan-14-8-cm-ajandek-minoseg-3527579480.html>
-
-#### [Régebbi herendi orange victoria váza 12,5 cm](https://www.vatera.hu/regebbi-herendi-orange-victoria-vaza-12-5-cm-3528941372.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **11 999 Ft** (kikialtasi ar, 2 licit, vége: 2026.10.03. 21:56) · becsült nyugati ár: **90–160 EUR**
-- Indoklás: Kézzel festett, régebbi herendi Victoria Orange váza, 12,5 cm, hibátlan, jelzett. A 11 999 Ft-os kikiáltási ár (kb. 30 EUR) a hazai piacon is alacsony.
-- Kockázat: Aukció, a licit emelkedhet. Kis darab.
-- Link: <https://www.vatera.hu/regebbi-herendi-orange-victoria-vaza-12-5-cm-3528941372.html>
-
-#### [HERENDI PAPAGÁJ (111015)](https://www.vatera.hu/herendi-papagaj-111015-3528647255.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **13 500 Ft** (kikialtasi ar, 3 licit, vége: 2026.10.03. 06:56) · becsült nyugati ár: **80–150 EUR**
-- Indoklás: 10,8 cm-es hibátlan, kézzel festett, jelzett herendi papagáj 13 500 Ft-os kikiáltási áron (kb. 34 EUR).
-- Kockázat: Aukció. Kis figura, alacsony abszolút haszon.
-- Link: <https://www.vatera.hu/herendi-papagaj-111015-3528647255.html>
-
-#### [HERENDI NŐI PORCELÁN AKT- LUK ELEK](https://www.vatera.hu/herendi-noi-porcelan-akt-luk-elek-3528306179.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **alacsony** · Herendi
-- Ár: **120 000 Ft** (kikialtasi ar, 3 licit, vége: 2026.10.02. 05:30) · becsült nyugati ár: **400–700 EUR**
-- Indoklás: Herendi női akt Lux Elek mélynyomott jelzéssel, hibátlan. A Lux Elek-tervek gyűjtők körében keresettek, a 120 000 Ft-os kikiáltási ár (kb. 305 EUR) ehhez képest mérsékelt.
-- Kockázat: Nagyon rövid leírás, méret nélkül. Aukció, a végső ár emelkedhet.
-- Link: <https://www.vatera.hu/herendi-noi-porcelan-akt-luk-elek-3528306179.html>
-
-### Fix áras (31 tétel)
-
-#### [Herendi Rothschild madaras, 12 személyes, jubileumi, különleges levesestál](https://www.vatera.hu/herendi-rothschild-madaras-12-szemelyes-jubileumi-kulonleges-levesestal-3526021535.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **260 000 Ft** · becsült nyugati ár: **1200–2000 EUR**
-- Indoklás: A legnagyobb, 12 személyes herendi levesestál madaras Rothschild (RO) mintával, a 175 éves jubileumi kiadásból (formaszám: 2005/RO), soha nem használt, hibátlan aranyozással. 260 000 Ft (kb. 660 EUR) a jelenlegi bolti ár töredéke.
-- Kockázat: 38 cm széles, nehéz darab, a nemzetközi szállítás drága és kockázatos. Az eladó szigorú átvételi határidőt kér.
-- Link: <https://www.vatera.hu/herendi-rothschild-madaras-12-szemelyes-jubileumi-kulonleges-levesestal-3526021535.html>
-
-#### [Herendi Viktória levesestál](https://www.vatera.hu/herendi-viktoria-levesestal-3528645125.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **140 000 Ft** · becsült nyugati ár: **600–1000 EUR**
-- Indoklás: Herendi Victoria (VBO) mintás, indafogós levesestál, hibátlan, soha nem használt, ép aranyozással. A Queen Victoria minta nyugaton a legkeresettebb herendi dekor, a 140 000 Ft (kb. 355 EUR) jó beszerzési ár.
-- Kockázat: 28 cm-es, ezért a méret (6 vagy 12 személyes) a fotókon ellenőrizendő. Szállítási kockázat.
-- Link: <https://www.vatera.hu/herendi-viktoria-levesestal-3528645125.html>
-
-#### [1Z996 Nagyméretű Herendi porcelán madár szajkó figura 33 cm](https://www.vatera.hu/1z996-nagymeretu-herendi-porcelan-madar-szajko-figura-33-cm-3501767960.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **120 000 Ft** · becsült nyugati ár: **500–900 EUR**
-- Indoklás: 33 cm-es, hibátlan herendi szajkó hecsedlis ágon (formaszám: 5072), kék márkajellel. 120 000 Ft-ért (kb. 305 EUR) a bolti ár töredéke, a nagy herendi madarak nyugaton keresettek.
-- Kockázat: Vékony ágak és farok: szállításnál törésveszély.
-- Link: <https://www.vatera.hu/1z996-nagymeretu-herendi-porcelan-madar-szajko-figura-33-cm-3501767960.html>
-
-#### [1L654 Hibátlan 12 személyes Zsolnay Pompadour porcelán süteményes készlet](https://www.vatera.hu/1l654-hibatlan-12-szemelyes-zsolnay-pompadour-porcelan-sutemenyes-keszlet-3487247150.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Zsolnay
-- Ár: **72 000 Ft** · becsült nyugati ár: **350–600 EUR**
-- Indoklás: Hibátlan, 12 személyes, gazdagon aranyozott, kék szegélyes Zsolnay Pompadour süteményes készlet (29 cm-es kínáló és 12 tányér), jelzett. 72 000 Ft (kb. 180 EUR), a teljes, 12 személyes Pompadour készletek ritkák.
-- Kockázat: 4,2 kg, a szállítás csomagolásigényes.
-- Link: <https://www.vatera.hu/1l654-hibatlan-12-szemelyes-zsolnay-pompadour-porcelan-sutemenyes-keszlet-3487247150.html>
-
-#### [1U154 Hibátlan lila Apponyi mintás Herendi porcelán váza 33 cm](https://www.vatera.hu/1u154-hibatlan-lila-apponyi-mintas-herendi-porcelan-vaza-33-cm-3487346153.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **75 000 Ft** · becsült nyugati ár: **300–500 EUR**
-- Indoklás: 33 cm-es, kézzel festett, aranyozott, lila Apponyi mintás herendi füles amfóra váza (formaszám: 7176/AP), hibátlan. 75 000 Ft (kb. 190 EUR) ekkora méretű jelzett herendi vázáért kedvező.
-- Kockázat: A lejárat 2026-09-16 18:11, ellenőrizni kell, hogy elérhető-e még.
-- Link: <https://www.vatera.hu/1u154-hibatlan-lila-apponyi-mintas-herendi-porcelan-vaza-33-cm-3487346153.html>
-
-#### [Antik HERENDI HADIK HUSZÁR porcelán szobor Garancia HIBÁTLAN!!](https://www.vatera.hu/antik-herendi-hadik-huszar-porcelan-szobor-garancia-hibatlan-3526894709.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **39 500 Ft** · becsült nyugati ár: **250–450 EUR**
-- Állapot jelzők a hirdetésben: hibas
-- Indoklás: 23 cm-es antik herendi Hadik huszár (formaszám: 5526), hibátlan, garanciával. 39 500 Ft (kb. 100 EUR), ugyanez a figura egy másik hirdetésben 98 000 Ft. Egyértelműen áron aluli.
-- Kockázat: Csak masszába nyomott jelzés van, kék márkajel nincs említve, a festettséget a fotókon ellenőrizni kell.
-- Link: <https://www.vatera.hu/antik-herendi-hadik-huszar-porcelan-szobor-garancia-hibatlan-3526894709.html>
-
-#### [ANTIK ZSOLNAY BÍRKÓZÓ MEDVÉK Markup Béla porcelán szobor garancia, Hibátlan!!](https://www.vatera.hu/antik-zsolnay-birkozo-medvek-markup-bela-porcelan-szobor-garancia-hibatlan-3528589049.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Zsolnay
-- Ár: **32 500 Ft** · becsült nyugati ár: **250–450 EUR**
-- Indoklás: Antik Zsolnay birkózó medvék Markup Béla terve alapján, 32 cm, szép festéssel, hibátlan, jelzett, garanciával. 32 500 Ft (kb. 82 EUR) egy ismert tervezős, nagy Zsolnay szoborért kifejezetten áron aluli.
-- Kockázat: A 32 cm lehet hosszúság is, ezt meg kell kérdezni. Nehéz, törékeny darab.
-- Link: <https://www.vatera.hu/antik-zsolnay-birkozo-medvek-markup-bela-porcelan-szobor-garancia-hibatlan-3528589049.html>
-
-#### [Ritka Antik HERENDI VÁZA 1.oszt. Bouquet de saxe (BS) KÉZZEL FESTETT HIBÁTLAN, Garancia!!](https://www.vatera.hu/ritka-antik-herendi-vaza-1-oszt-bouquet-de-saxe-bs-kezzel-festett-hibatlan-garancia-3528588389.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **24 500 Ft** · becsült nyugati ár: **130–220 EUR**
-- Indoklás: 1. osztályú, kézzel festett herendi Bouquet de Saxe (BS) váza, 18 cm, hibátlan (piros formaszám: 7012 BS). 24 500 Ft (kb. 62 EUR), a párja (Indiai kosár mintás) ugyanennél az eladónál szintén megvan.
-- Kockázat: Párban értékesebb, érdemes a párjával együtt megvenni.
-- Link: <https://www.vatera.hu/ritka-antik-herendi-vaza-1-oszt-bouquet-de-saxe-bs-kezzel-festett-hibatlan-garancia-3528588389.html>
-
-#### [Antik 1.oszt. HERENDI APPONYI VERT GREEN (AV) MINTÁS VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-1-oszt-herendi-apponyi-vert-green-av-mintas-vaza-porcelan-hibatlan-garancia-3524724029.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **24 500 Ft** · becsült nyugati ár: **120–200 EUR**
-- Indoklás: 1. osztályú, kézzel festett herendi Apponyi Vert (AV) váza, 17 cm, hibátlan aranyozással (piros formaszám: 7027 AV). 24 500 Ft (kb. 62 EUR), a nyugati ár ennek két-háromszorosa.
-- Kockázat: Kis méret, alacsony abszolút haszon. Ugyanattól az eladótól több hasonló darab érdemes egy csomagban.
-- Link: <https://www.vatera.hu/antik-1-oszt-herendi-apponyi-vert-green-av-mintas-vaza-porcelan-hibatlan-garancia-3524724029.html>
-
-#### [Antik HERENDI APPONYI PURPUR (AP) mintás porcelán VÁZA Hibátlan, Garancia!](https://www.vatera.hu/antik-herendi-apponyi-purpur-ap-mintas-porcelan-vaza-hibatlan-garancia-3524920469.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **24 500 Ft** · becsült nyugati ár: **120–200 EUR**
-- Indoklás: Kézzel festett herendi Apponyi Purpur (AP) váza, 16 cm, hibátlan, garanciával (formaszám: 7052 AP). 24 500 Ft (kb. 62 EUR).
-- Kockázat: A leírás nem írja, hogy 1. osztályú. Kis méret, alacsony abszolút haszon.
-- Link: <https://www.vatera.hu/antik-herendi-apponyi-purpur-ap-mintas-porcelan-vaza-hibatlan-garancia-3524920469.html>
-
-#### [Antik HERENDI 1. oszt. APPONYI VERT GREEN (AV) mintás kosárfonott VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-herendi-1-oszt-apponyi-vert-green-av-mintas-kosarfonott-vaza-porcelan-hibatlan-garancia-3527536409.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **magas** · Herendi
-- Ár: **19 500 Ft** · becsült nyugati ár: **100–180 EUR**
-- Indoklás: 1. osztályú Apponyi Vert (AV) kosárfonott herendi váza, 14,5 cm, hibátlan (formaszám: 6963 AV). 19 500 Ft (kb. 50 EUR).
-- Kockázat: Kis méret, alacsony abszolút haszon.
-- Link: <https://www.vatera.hu/antik-herendi-1-oszt-apponyi-vert-green-av-mintas-kosarfonott-vaza-porcelan-hibatlan-garancia-3527536409.html>
-
-#### [Herendi Rothschild Új 6 sz étkészlet](https://www.vatera.hu/herendi-rothschild-uj-6-sz-etkeszlet-3491251307.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **899 000 Ft** · becsült nyugati ár: **3500–5500 EUR**
-- Indoklás: Új, hibátlan, 6 személyes, 26 darabos herendi Rothschild étkészlet: lapos, mély és süteményes tányérok, levesestál, pecsenyés tál, szószos stb. 899 000 Ft (kb. 2275 EUR), ami messze a bolti ár alatt van, a Rothschild étkészletek nyugaton nagyon keresettek.
-- Kockázat: Nagy tőkeigény. Sok darab, nehéz csomag, a darabonkénti ellenőrzés és a szállítás időigényes.
-- Link: <https://www.vatera.hu/herendi-rothschild-uj-6-sz-etkeszlet-3491251307.html>
-
-#### [Herendi Rothschild mintás 6sz teás garnitúra](https://www.vatera.hu/herendi-rothschild-mintas-6sz-teas-garnitura-3493100438.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **385 000 Ft** · becsült nyugati ár: **1500–2500 EUR**
-- Indoklás: Herendi Rothschild mintás 6 személyes teás garnitúra: kiöntő, cukortartó, tejkiöntő, 6 csésze és alj, hibátlan. 385 000 Ft (kb. 975 EUR), a teljes Rothschild teáskészletek nyugaton ennek másfél-kétszereséért kelnek el.
-- Kockázat: Fix ár. Az eladónak több hasonló készlete is van, ezért érdemes összevetni őket.
-- Link: <https://www.vatera.hu/herendi-rothschild-mintas-6sz-teas-garnitura-3493100438.html>
-
-#### [Zsolnay eozin - Bordázott nagyváza -1930](https://www.vatera.hu/zsolnay-eozin-bordazott-nagyvaza-1930-3273802046.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Zsolnay
-- Ár: **265 000 Ft** · becsült nyugati ár: **900–1600 EUR**
-- Indoklás: Zsolnay eozin bordázott nagyváza 1930 körülről, hibátlan, jelzett, régiségboltból. Az 1930-as eozin vázák a nyugati Art Deco piacon jól értékesíthetők, a 265 000 Ft (kb. 670 EUR) jó beszerzési ár.
-- Kockázat: A leírás csak általános bolti szöveg, méret nélkül, ezért a méretet és a jelzést meg kell kérdezni.
-- Link: <https://www.vatera.hu/zsolnay-eozin-bordazott-nagyvaza-1930-3273802046.html>
-
-#### [Zsolnay eozin - Díszváza 1930](https://www.vatera.hu/zsolnay-eozin-diszvaza-1930-3274129457.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Zsolnay
-- Ár: **220 000 Ft** · becsült nyugati ár: **800–1400 EUR**
-- Indoklás: Zsolnay eozin díszváza 1930-ból, hibátlan, jelzett, ugyanabból a régiségboltból. 220 000 Ft (kb. 555 EUR), antik eozin darabként nyugaton kétszeres áron is eladható.
-- Kockázat: Méret és pontos jelzés nincs megadva, rákérdezni kell.
-- Link: <https://www.vatera.hu/zsolnay-eozin-diszvaza-1930-3274129457.html>
-
-#### [Herendi Rothschild ovális citromfogós levesestál](https://www.vatera.hu/herendi-rothschild-ovalis-citromfogos-levesestal-3528644864.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **170 000 Ft** · becsült nyugati ár: **700–1100 EUR**
-- Indoklás: Herendi Rothschild ovális, citromfogós levesestál (formaszám: 1014/RO), soha nem használt, hibátlan. 170 000 Ft-ért (kb. 430 EUR) ritka forma.
-- Kockázat: Ugyanattól a kereskedőtől, mint a többi levesestál. Szállítási kockázat, szigorú átvételi feltételek.
-- Link: <https://www.vatera.hu/herendi-rothschild-ovalis-citromfogos-levesestal-3528644864.html>
-
-#### [Herendi Apponyi Orange 12 személyes levesestál](https://www.vatera.hu/herendi-apponyi-orange-12-szemelyes-levesestal-3527661473.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **160 000 Ft** · becsült nyugati ár: **600–1000 EUR**
-- Indoklás: 12 személyes herendi Apponyi Orange levesestál indafogóval (formaszám: 16/AOC), hibátlan, új állapotú, 24 karátos aranyozással. 160 000 Ft (kb. 405 EUR).
-- Kockázat: Az Apponyi Orange kevésbé keresett, mint a Rothschild vagy a Victoria. Szállítási kockázat.
-- Link: <https://www.vatera.hu/herendi-apponyi-orange-12-szemelyes-levesestal-3527661473.html>
-
-#### [Zsolnay eozin - Bölény 1937](https://www.vatera.hu/zsolnay-eozin-boleny-1937-3273802028.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Zsolnay
-- Ár: **140 000 Ft** · becsült nyugati ár: **450–800 EUR**
-- Indoklás: Zsolnay eozin bölény 1937-ből, hibátlan, jelzett. A régi eozin állatfigurák a gyűjtők körében keresettek, a 140 000 Ft (kb. 355 EUR) mérsékelt.
-- Kockázat: Méret nincs megadva. A modern eozin bölényektől el kell különíteni a jelzés alapján.
-- Link: <https://www.vatera.hu/zsolnay-eozin-boleny-1937-3273802028.html>
-
-#### [1E489 Viktória mintás Herendi porcelán váza 34.5 cm](https://www.vatera.hu/1e489-viktoria-mintas-herendi-porcelan-vaza-34-5-cm-3487243616.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **145 000 Ft** · becsült nyugati ár: **400–700 EUR**
-- Indoklás: 34,5 cm-es, lila Apponyi (AP) mintás herendi díszváza (formaszám: 6651/AP), hibátlan, kopásmentes aranyozással. A cím Viktória mintát ír, de a leírás szerint Apponyi. 145 000 Ft (kb. 365 EUR).
-- Kockázat: A minta a címben és a leírásban eltér, a fotókon ellenőrizendő.
-- Link: <https://www.vatera.hu/1e489-viktoria-mintas-herendi-porcelan-vaza-34-5-cm-3487243616.html>
-
-#### [Hatalmas Herendi porcelán figura - " Akt zöld lepellel " -   35 cm.-es hibátlan, jelzett szépség...](https://www.vatera.hu/hatalmas-herendi-porcelan-figura-akt-zold-lepellel-35-cm-es-hibatlan-jelzett-szepseg-3272242091.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **79 800 Ft** · becsült nyugati ár: **350–600 EUR**
-- Indoklás: Hatalmas, 35 cm-es herendi figura (Akt zöld lepellel), hibátlan és jelzett a cím szerint. 79 800 Ft (kb. 200 EUR) ekkora méretű herendi aktért kedvező.
-- Kockázat: A leírás csak az üzlet általános szövegét tartalmazza, az állapotot és a jelzést a fotókon ellenőrizni kell. Szállítási kockázat.
-- Link: <https://www.vatera.hu/hatalmas-herendi-porcelan-figura-akt-zold-lepellel-35-cm-es-hibatlan-jelzett-szepseg-3272242091.html>
-
-#### [1F470 Antik Zsolnay porcelánfajansz váza családi jelzéssel ~1880](https://www.vatera.hu/1f470-antik-zsolnay-porcelanfajansz-vaza-csaladi-jelzessel-1880-3487243697.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Zsolnay
-- Ár: **75 000 Ft** · becsült nyugati ár: **300–600 EUR**
-- Indoklás: Antik, kézzel festett, virág- és pillangódíszes vajszínű Zsolnay fajansz váza 1880 körülről, öttornyú kék családi jelzéssel (ZSOLNAY PÉCS T.J.M.). A korai, családi jelzéses darabok gyűjtői tárgyak, 75 000 Ft (kb. 190 EUR).
-- Kockázat: Kis méret (12 cm). Az állapot nincs részletezve. A lejárat 2026-09-16 18:11, ellenőrizni kell.
-- Link: <https://www.vatera.hu/1f470-antik-zsolnay-porcelanfajansz-vaza-csaladi-jelzessel-1880-3487243697.html>
-
-#### [1N564 Antik Herendi óherendi Lúdas Matyi LUX ELEK porcelán figura 24.5 cm](https://www.vatera.hu/1n564-antik-herendi-oherendi-ludas-matyi-lux-elek-porcelan-figura-24-5-cm-3487249883.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **72 000 Ft** · becsült nyugati ár: **300–550 EUR**
-- Indoklás: Hibátlan, kézzel festett, talapzatos Lúdas Matyi óherendi jelzéssel, a talapzaton LUX ELEK tervezői névvel, 24,5 cm. A Lux Elek-féle régi figurák gyűjtői tárgyak, 72 000 Ft (kb. 180 EUR) kedvező ár.
-- Kockázat: A lejárat 2026-09-16 18:11 volt, a hirdetés addigra lezárulhatott vagy újraindulhatott, a linken ellenőrizendő.
-- Link: <https://www.vatera.hu/1n564-antik-herendi-oherendi-ludas-matyi-lux-elek-porcelan-figura-24-5-cm-3487249883.html>
-
-#### [1Z997 Régi nagyméretű Herendi porcelán foxi kutya foxterrier figura](https://www.vatera.hu/1z997-regi-nagymeretu-herendi-porcelan-foxi-kutya-foxterrier-figura-3501768152.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **85 000 Ft** · becsült nyugati ár: **300–500 EUR**
-- Indoklás: Régi, nagyméretű (33,5 cm hosszú), festett herendi foxterrier, hibátlan, jelzett. A kutyafigurák az angolszász piacon különösen jól fogynak, a 85 000 Ft (kb. 215 EUR) ehhez képest kedvező.
-- Kockázat: Formaszám nincs megadva, a festés minőségét a fotókon érdemes ellenőrizni.
-- Link: <https://www.vatera.hu/1z997-regi-nagymeretu-herendi-porcelan-foxi-kutya-foxterrier-figura-3501768152.html>
-
-#### [1Z775 Régi nagyméretű Herendi porcelán madár szajkó figura 19.7 cm](https://www.vatera.hu/1z775-regi-nagymeretu-herendi-porcelan-madar-szajko-figura-19-7-cm-3499799522.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **85 000 Ft** · becsült nyugati ár: **250–400 EUR**
-- Indoklás: 19,7 cm-es, kézzel festett, hibátlan herendi szajkó (formaszám: 5108), jelzett. 85 000 Ft (kb. 215 EUR) mellett nyugati eladásnál van árrés.
-- Kockázat: Kisebb a haszon, a szállítási és platformköltség jelentős része elvisz belőle.
-- Link: <https://www.vatera.hu/1z775-regi-nagymeretu-herendi-porcelan-madar-szajko-figura-19-7-cm-3499799522.html>
-
-#### [Herendi papagáj](https://www.vatera.hu/herendi-papagaj-3493102247.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **25 000 Ft** · becsült nyugati ár: **120–220 EUR**
-- Indoklás: 13 cm-es hibátlan, jelzett herendi papagáj 25 000 Ft-ért (kb. 63 EUR). Ugyanez az eladó egy 14 cm-es papagájt 45 000 Ft-ért kínál, ez a darab ehhez képest is olcsó.
-- Kockázat: Formaszám és festési változat nincs megadva.
-- Link: <https://www.vatera.hu/herendi-papagaj-3493102247.html>
-
-#### [Nagyobb méretű ( 18 cm magas) herendi madár figura / hibátlan](https://www.vatera.hu/nagyobb-meretu-18-cm-magas-herendi-madar-figura-hibatlan-3464572610.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **22 800 Ft** · becsült nyugati ár: **120–200 EUR**
-- Indoklás: 18 cm-es, hibátlan herendi madárfigura 22 800 Ft-ért (kb. 58 EUR). Ekkora méretű festett herendi madár nyugaton kétszer-háromszor ennyiért is eladható.
-- Kockázat: A faj, a festés és a formaszám nincs megadva. Magánszemély, korlátozott átvétel.
-- Link: <https://www.vatera.hu/nagyobb-meretu-18-cm-magas-herendi-madar-figura-hibatlan-3464572610.html>
-
-#### [RITKA Antik HERENDI SZENT LÁSZLÓ porcelán szobor Garancia, Hibátlan!!](https://www.vatera.hu/ritka-antik-herendi-szent-laszlo-porcelan-szobor-garancia-hibatlan-3527136749.html)
-
-- **Áron aluli** · bizalom: **kozepes** · Herendi
-- Ár: **14 500 Ft** · becsült nyugati ár: **80–150 EUR**
-- Indoklás: Antik, jelzett herendi Szent László szobor, hibátlan, garanciával, mindössze 14 500 Ft-ért (kb. 37 EUR). Ritkán előforduló téma, a hazai árhoz képest is olcsó.
-- Kockázat: Csak 10 cm-es, így a nyugati eladási érték korlátozott.
-- Link: <https://www.vatera.hu/ritka-antik-herendi-szent-laszlo-porcelan-szobor-garancia-hibatlan-3527136749.html>
-
-#### [Antik Zsolnay, Nikelszky szőlős váza](https://www.vatera.hu/antik-zsolnay-nikelszky-szolos-vaza-3526996043.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **alacsony** · Zsolnay
-- Ár: **220 000 Ft** · becsült nyugati ár: **700–1200 EUR**
-- Indoklás: Antik Zsolnay alapmázas szőlőmotívumos váza, Nikelszky Géza terve (1930), 35 cm, hibátlan. A nagy szecessziós, illetve art deco Zsolnay vázák nyugaton keresettek, a 220 000 Ft (kb. 555 EUR) ehhez képest mérsékelt.
-- Kockázat: A hirdetés szerint nem jelzett, ezért az eredetiség és a tervező szakértői ellenőrzést igényel.
-- Link: <https://www.vatera.hu/antik-zsolnay-nikelszky-szolos-vaza-3526996043.html>
-
-#### [Herendi ANTIK 1890- 1900 6db tányér garnitúra](https://www.vatera.hu/herendi-antik-1890-1900-6db-tanyer-garnitura-3502089875.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **alacsony** · Herendi
-- Ár: **125 000 Ft** · becsült nyugati ár: **400–700 EUR**
-- Indoklás: 6 darabos antik herendi tányérsor 1890 és 1900 közöttről, 25 cm, hibátlan. A 19. századi herendi tányérok nyugati aukciókon keresettek, a 125 000 Ft (kb. 315 EUR) mérsékelt ár.
-- Kockázat: A minta nincs megnevezve, a kor és a jelzés a fotókon ellenőrizendő.
-- Link: <https://www.vatera.hu/herendi-antik-1890-1900-6db-tanyer-garnitura-3502089875.html>
-
-#### [Antik Ritka ZSOLNAY SÁRKÁNYGYÍKOS KÍNÁLÓ Nagyméretű EOZIN kosártál Alapmázas 27 cm!](https://www.vatera.hu/antik-ritka-zsolnay-sarkanygyikos-kinalo-nagymeretu-eozin-kosartal-alapmazas-27-cm-3527645609.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **alacsony** · Zsolnay
-- Ár: **44 500 Ft** · becsült nyugati ár: **250–500 EUR**
-- Állapot jelzők a hirdetésben: repedes
-- Indoklás: Nagyméretű (27 cm) antik Zsolnay eozin kosártál két harcoló sárkánygyík fogantyúval, törés- és repedésmentes. Ritka, gyűjtői forma 44 500 Ft-ért (kb. 113 EUR).
-- Kockázat: Nincs rajta jelzés, ezért az eredetiség nem igazolt. Égetés közbeni mázhálósodás (hárisz) látható.
-- Link: <https://www.vatera.hu/antik-ritka-zsolnay-sarkanygyikos-kinalo-nagymeretu-eozin-kosartal-alapmazas-27-cm-3527645609.html>
-
-#### [Zsolnay porcelán szecessziós névjegytál - Zsolnay eozinmázas rákos tál](https://www.vatera.hu/zsolnay-porcelan-szecesszios-nevjegytal-zsolnay-eozinmazas-rakos-tal-3483997382.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **alacsony** · Zsolnay
-- Ár: **32 000 Ft** · becsült nyugati ár: **150–300 EUR**
-- Indoklás: Zsolnay eozin mázas szecessziós rákos névjegytál, jelzett. 32 000 Ft-ért (kb. 80 EUR) a figurális eozin névjegytálak nyugaton jóval drágábbak.
-- Kockázat: A leírás csak általános bolti szöveg, a kor, a méret és az állapot nem ismert.
-- Link: <https://www.vatera.hu/zsolnay-porcelan-szecesszios-nevjegytal-zsolnay-eozinmazas-rakos-tal-3483997382.html>
-
-### Alkuképes / irányáras (7 tétel)
-
-#### [Herendi Indiai Óriás Váza](https://www.vatera.hu/herendi-indiai-orias-vaza-3496021163.html)
-
-- **Áron aluli** · bizalom: **kozepes** · Herendi
-- Ár: **335 000 Ft** · becsült nyugati ár: **1500–2500 EUR**
-- Indoklás: 65 cm-es herendi Indiai kosár mintás óriás váza, hibátlan, a hirdetés szerint 670 000 Ft-os bolti áron. Alkuképes 335 000 Ft-os irányár (kb. 850 EUR), miközben ugyanez az eladó egy hasonló vázát fix 550 000 Ft-ért kínál. Van egy második, azonos hirdetés is (3496026254).
-- Kockázat: 65 cm-es, nagyon nehéz és törékeny, nemzetközileg szinte csak raklapon szállítható. Inkább hazai továbbértékesítésre vagy személyes átvételre való.
-- Link: <https://www.vatera.hu/herendi-indiai-orias-vaza-3496021163.html>
-
-#### [Antik Zsolnay kacsa és béka Multicolor eozin tál 260808](https://www.vatera.hu/antik-zsolnay-kacsa-es-beka-multicolor-eozin-tal-260808-3517637429.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Zsolnay
-- Ár: **130 000 Ft** · becsült nyugati ár: **600–1100 EUR**
-- Indoklás: Antik Zsolnay eozin tál kacsa- és békadísszel, az 1920–30-as évekből, ritka indigókék, labrador hatású mázzal, jelzett, a peremén tervezői szignóval. A 130 000 Ft-os alkuképes ár (kb. 330 EUR) a nyugati Art Nouveau/eozin piac árainak töredéke.
-- Kockázat: A kacsa fején tűhegynyi kopás van. A körpecsétnek csak a helye látszik, a jelzést fotón ellenőrizni kell.
-- Link: <https://www.vatera.hu/antik-zsolnay-kacsa-es-beka-multicolor-eozin-tal-260808-3517637429.html>
-
-#### [Herendi táncoló csikósok.](https://www.vatera.hu/herendi-tancolo-csikosok-3337061861.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **kozepes** · Herendi
-- Ár: **150 000 Ft** · becsült nyugati ár: **500–900 EUR**
-- Indoklás: Kézzel festett herendi táncoló csikós pár, darabonként 30 cm, teljesen hibátlan. Alkuképes, 150 000 Ft a párra (kb. 380 EUR), a magyaros herendi figurák párban nyugaton jól értékesíthetők.
-- Kockázat: Formaszám és jelzés részletei nincsenek megadva. Két nagy figura szállítása.
-- Link: <https://www.vatera.hu/herendi-tancolo-csikosok-3337061861.html>
-
-#### [Herendi, Lux Elek - Madonna](https://www.vatera.hu/herendi-lux-elek-madonna-3506808263.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **80 000 Ft** · becsült nyugati ár: **400–700 EUR**
-- Indoklás: 36 cm magas, kézzel festett herendi Madonna, hibátlan, 1960-as évek, jelzett. Nagy méretű vallási témájú herendi figura, alkuképes 80 000 Ft-os áron (kb. 200 EUR).
-- Kockázat: A cím Lux Elek tervet említ, de a leírás ezt nem igazolja. A méret miatt drága és kockázatos a szállítás.
-- Link: <https://www.vatera.hu/herendi-lux-elek-madonna-3506808263.html>
-
-#### [Ritka Ophélia Herendi porcelán szobor - 53272](https://www.vatera.hu/ritka-ophelia-herendi-porcelan-szobor-53272-3487483862.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **80 000 Ft** · becsült nyugati ár: **350–600 EUR**
-- Indoklás: 28 cm-es herendi Ophélia figura (karcolt formaszám: 5875), hibátlan, XX. század második feléből. Alkuképes, 80 000 Ft-os irányár (kb. 200 EUR), lealkudható.
-- Kockázat: A hirdetés lejárata 2026-09-16 19:56, gyorsan kell dönteni. Festetlen vagy festett változat a fotókon ellenőrizendő.
-- Link: <https://www.vatera.hu/ritka-ophelia-herendi-porcelan-szobor-53272-3487483862.html>
-
-#### [Herendi, Lux Elek - Fésülködő](https://www.vatera.hu/herendi-lux-elek-fesulkodo-3506808083.html)
-
-- **Áron aluli + nyugati piac** · bizalom: **kozepes** · Herendi
-- Ár: **60 000 Ft** · becsült nyugati ár: **350–600 EUR**
-- Indoklás: 38 cm magas, kézzel festett herendi Fésülködő nőalak, hibátlan, mélynyomott jelzéssel. Ugyanannál az eladónál, mint a Madonna, alkuképes 60 000 Ft-os áron (kb. 150 EUR).
-- Kockázat: A Lux Elek tervezői hivatkozást ellenőrizni kell. Nagy figura, szállítási kockázat.
-- Link: <https://www.vatera.hu/herendi-lux-elek-fesulkodo-3506808083.html>
-
-#### [Nikelszky Géza Zsolnay körpecsétes madaras váza - 53870](https://www.vatera.hu/nikelszky-geza-zsolnay-korpecsetes-madaras-vaza-53870-3515048009.html)
-
-- **Nyugati piacon jól eladható** · bizalom: **alacsony** · Zsolnay
-- Ár: **580 000 Ft** · becsült nyugati ár: **1500–3000 EUR**
-- Indoklás: Zsolnay madaras váza Nikelszky Géza terve alapján, domború, öttornyos körpecséttel és ZSOLNAY PÉCS körirattal (formaszám: 5330), 18,5 cm. A körpecsétes korai Zsolnay darabok nemzetközi aukciókon magas áron kelnek el.
-- Kockázat: Már az 580 000 Ft-os irányár (kb. 1470 EUR) is magas. Az állapot nincs leírva. A haszon csak alkuval reális.
-- Link: <https://www.vatera.hu/nikelszky-geza-zsolnay-korpecsetes-madaras-vaza-53870-3515048009.html>
-
-## Hol, mennyiért és milyen gyorsan adhatók el a fix áras tételek
-
-Csak a válogatás 31 fix áras tétele. A táblázat 2026-09-16-i piaci kutatáson alapul: az aktív eBay-kínálaton (eBay.com és eBay.de, a PicClick tükrén keresztül) és a webes keresővel talált lezárt eladásokon, aukciós eredményeken. **A fenti válogatás EUR-becslései a kutatás előtt készültek. Ahol eltérnek, ez a táblázat az irányadó.** Több tételnél a kutatás lefelé módosította a becslést, például egy nagy herendi szajkó (5072) az eBay-en 224 USD-ért kelt el.
-
-### Módszer
-
-- **Kezdő hirdetési ár:** az az ár, amelyen érdemes feltölteni a hirdetést. Az aktív összehasonlítható hirdetések mediánjához igazodik, ha az a fedezet felett van. Etsyn és eBay-en ajánlattétellel együtt, Catawikin ez a kért becsérték.
-- **Legkisebb elfogadható ár (fedezet + 10%):** a Vatera-ár átváltva (1 EUR = 395 Ft, 1 EUR = 1,15 USD), elosztva (1 − piactéri díj)-jal, plusz 10% minimális haszon, felfelé kerekítve. Díjak: eBay.com 15%, eBay.de 13%, Etsy 12%, Catawiki 12,5%. A szállítást a vevő fizeti.
-- **Likviditás és eladási idő:** az ár helye az aktív összehasonlítható eBay-hirdetések között. A legolcsóbb negyedben (≤ alsó kvartilis) **magas**, jellemzően 1–4 hét. Az alsó kvartilis és a medián között **közepes–magas**, 3–8 hét. A medián és a felső kvartilis között **közepes**, 1–3 hónap. A felső kvartilis felett **alacsony**, 3–6+ hónap, vagy nem kel el. Ahol kevés az összehasonlító hirdetés, vagy azok nem ugyanolyan tárgyak, ott a besorolást kézzel, a talált eladási adatok alapján módosítottam, ezt a megjegyzés jelzi.
-- **Catawiki:** kurált aukció. Az idő a befogadás (kb. 1 hét) és a 7 napos aukció együtt. A „legkisebb elfogadható” itt a minimálár, a likviditás pedig annak az esélye, hogy a licit eléri.
-- **Korlát:** az eBay, a Catawiki, az Etsy és a WorthPoint lezárt eladási oldalait nem lehetett közvetlenül lekérni (403 / captcha). Ezért a kereslet oldalát csak a keresővel talált szórványos eladások mutatják, a likviditás becslés. Feltöltés előtt érdemes saját eBay-fiókból a „Sold items” szűrővel ellenőrizni.
-
-**Értékelés:** *Ajánlott* = a legkisebb elfogadható ár a piaci medián alatt vagy körül van, reálisan 3 hónapon belül haszonnal eladható. *Szűk árrés* = eladható, de kevés a haszon vagy lassú. *Nem ajánlott* = a piaci ár nem fedezi a Vatera-árat, a díjat és a minimális hasznot, vagy nincs igazolt kereslet ezen az áron.
-
-### A javasolt piacterek
-
-- **eBay.com (USA):** A legnagyobb Herendi-gyűjtői vevőkör, sok „sold” referenciaár. Díj: kb. 13–15% értékesítési díj a teljes összegre (szállítással együtt), plusz nemzetközi díj. Nagy értékű figurákhoz, levesestálakhoz, teáskészlethez. Az USA-ba küldött csomagokra 2025 óta vám van, a kis értékűekre is (EU-áru: kb. 15%). Az eBay International Shipping ezt a vevőnél beszedi, de a teljes ár emiatt magasabb lesz a vevőnek.
-- **eBay.de (Németország/EU):** Az osztrák és német vevők ismerik a Zsolnayt és a Pompadourt. Az EU-n belül nincs vám, és a szállítás olcsóbb. Díj külföldi eladóként kb. 11–13% plusz nemzetközi díj. Zsolnay figurákhoz, készletekhez, a jelzés nélküli darabokhoz („Zsolnay zugeschrieben”).
-- **Etsy (USA/EU):** Vintage lakberendezési vevők, alacsonyabb díjak: 0,20 USD feltöltési díj, 6,5% tranzakciós díj és kb. 3–4% fizetési díj. Az Etsy offsite hirdetései miatt ehhez eseti 12–15% jöhet. Kisebb, 50–250 USD-s tárgyakhoz. Szabály: vintage kategóriában a tárgynak legalább 20 évesnek kell lennie, ezt feltöltés előtt ellenőrizd a jelzés alapján.
-- **Catawiki (EU, kurált aukció):** Szakértő ellenőrzi és fogadja be a tételt, ami a jelzés nélküli vagy antik daraboknál hitelességet ad. Az európai vevők a Zsolnay eozint és az antik herendi darabokat jól fizetik. Eladói jutalék 12,5%, a szállítást a vevő fizeti. Minimálárral indítható, így nem kel el áron alul.
-
-**Összesítés:** Ajánlott: 15 tétel · Szűk árrés: 8 tétel · Nem ajánlott: 8 tétel
-
-### eBay.com (13 tétel)
-
-| Tétel | Vatera ár | Kezdő hirdetési ár | Becsült eladási idő ezen az áron | Likviditás ezen az áron | Legkisebb elfogadható ár | Eladási idő és likviditás a legkisebb áron | Aktív eBay-kínálat (db, medián, alsó–felső negyed) | Értékelés | Megjegyzés |
-|---|---:|---:|---|---|---:|---|---|---|---|
-| [Herendi Rothschild madaras, 12 személyes, jubileumi, különleges levesestál](https://www.vatera.hu/herendi-rothschild-madaras-12-szemelyes-jubileumi-kulonleges-levesestal-3526021535.html) | 260 000 Ft (≈ 757 USD) | 1 450 USD | 2–5 hónap | alacsony–közepes | 980 USD | 1–3 hónap, közepes | 38 db, medián 952 USD (750–1250) | **Ajánlott** | A legnagyobb, 12 személyes jubileumi forma, ezért a medián felett is indokolt. Kézi korrekció: a konkurencia többsége kisebb tál. |
-| [Herendi Viktória levesestál](https://www.vatera.hu/herendi-viktoria-levesestal-3528645125.html) | 140 000 Ft (≈ 408 USD) | 750 USD | 1–3 hónap | közepes | 530 USD | 3–8 hét, közepes–magas | 20 db, medián 735 USD (342–1100) | **Ajánlott** | Queen Victoria tál, új ára 1 645 USD (2 qt). A 28 cm-es méret miatt valószínűleg a kisebb változat. |
-| [Antik HERENDI HADIK HUSZÁR porcelán szobor Garancia HIBÁTLAN!!](https://www.vatera.hu/antik-herendi-hadik-huszar-porcelan-szobor-garancia-hibatlan-3526894709.html) | 39 500 Ft (≈ 115 USD) | 250 USD | 1–3 hónap | közepes | 150 USD | 3–8 hét, közepes–magas | 34 db, medián 192 USD (129–300) | **Ajánlott** | Sok konkurens (34 aktív). Egy 2017-es aukciós becslés 50–100 USD volt, ezért a hirdetési árból lehet, hogy engedni kell. |
-| [Herendi Rothschild ovális citromfogós levesestál](https://www.vatera.hu/herendi-rothschild-ovalis-citromfogos-levesestal-3528644864.html) | 170 000 Ft (≈ 495 USD) | 950 USD | 3–8 hét | közepes–magas | 650 USD | 1–4 hét, magas | 38 db, medián 952 USD (750–1250) | **Ajánlott** | A legjobb arány: a legkisebb elfogadható ár a konkurens Rothschild levesestálak alsó negyedében van. Új ár 1 945–2 205 USD, aukción 1 722 USD. |
-| [Herendi Apponyi Orange 12 személyes levesestál](https://www.vatera.hu/herendi-apponyi-orange-12-szemelyes-levesestal-3527661473.html) | 160 000 Ft (≈ 466 USD) | 850 USD | 1–3 hónap | közepes | 610 USD | 3–8 hét, közepes–magas | 65 db, medián 750 USD (400–1200) | **Ajánlott** | Nagy a kínálat (65 aktív Chinese Bouquet/Rust tál), a címben a „12 person / large” méretet emeld ki. |
-| [1Z997 Régi nagyméretű Herendi porcelán foxi kutya foxterrier figura](https://www.vatera.hu/1z997-regi-nagymeretu-herendi-porcelan-foxi-kutya-foxterrier-figura-3501768152.html) | 85 000 Ft (≈ 247 USD) | 450 USD | 1–3 hónap | közepes | 330 USD | 1–4 hét, magas | 16 db, medián 428 USD (370–585) | **Ajánlott** | Az aktív foxterrier-figurák 370–585 USD között vannak, a legkisebb elfogadható ár ezek alatt. |
-| [1Z996 Nagyméretű Herendi porcelán madár szajkó figura 33 cm](https://www.vatera.hu/1z996-nagymeretu-herendi-porcelan-madar-szajko-figura-33-cm-3501767960.html) | 120 000 Ft (≈ 349 USD) | 595 USD | 2–4 hónap | alacsony–közepes | 460 USD | 1–3 hónap, közepes | 7 db, medián 595 USD (320–595) | **Szűk árrés** | Csak 7 aktív konkurens, és egy ugyanilyen 5072-es szajkó 224 USD-ért kelt el. A korábbi 500–900 EUR-s becslés túlzó volt. |
-| [1U154 Hibátlan lila Apponyi mintás Herendi porcelán váza 33 cm](https://www.vatera.hu/1u154-hibatlan-lila-apponyi-mintas-herendi-porcelan-vaza-33-cm-3487346153.html) | 75 000 Ft (≈ 218 USD) | 450 USD | 3–6 hónap | alacsony | 290 USD | 2–4 hónap, alacsony–közepes | 66 db, medián 136 USD (75–245) | **Szűk árrés** | Az aktív Apponyi Purple vázák többsége kicsi, így egy 33 cm-es amfórával kevés a közvetlen konkurencia, de kevés a vevő is. |
-| [Herendi Rothschild mintás 6sz teás garnitúra](https://www.vatera.hu/herendi-rothschild-mintas-6sz-teas-garnitura-3493100438.html) | 385 000 Ft (≈ 1 121 USD) | 1 950 USD | 3–6+ hónap | alacsony | 1 500 USD | 3–6 hónap, alacsony | 27 db, medián 500 USD (345–650) | **Szűk árrés** | Az aktív Rothschild teáskészletek többsége hiányos vagy 2 személyes (medián 500 USD), teljes 6 személyes készletre kevés az adat. Kockázatos. |
-| [1E489 Viktória mintás Herendi porcelán váza 34.5 cm](https://www.vatera.hu/1e489-viktoria-mintas-herendi-porcelan-vaza-34-5-cm-3487243616.html) | 145 000 Ft (≈ 422 USD) | 750 USD | 3–6+ hónap | alacsony | 550 USD | 3–6+ hónap, alacsony | 66 db, medián 136 USD (75–245) | **Nem ajánlott** | A fedezethez szükséges 550 USD messze az aktív Apponyi Purple vázák felső negyede (245 USD) felett van. Nagy váza, de igazolt kereslet ezen az áron nincs. |
-| [Hatalmas Herendi porcelán figura - " Akt zöld lepellel " -   35 cm.-es hibátlan, jelzett szépség...](https://www.vatera.hu/hatalmas-herendi-porcelan-figura-akt-zold-lepellel-35-cm-es-hibatlan-jelzett-szepseg-3272242091.html) | 79 800 Ft (≈ 232 USD) | 450 USD | 3–6+ hónap | alacsony | 310 USD | 2–4 hónap, alacsony | nincs összehasonlítható | **Nem ajánlott** | Nincs összehasonlítható aktív hirdetés. Herendi aktokra talált aukciós becslések 20–300 USD. |
-| [1N564 Antik Herendi óherendi Lúdas Matyi LUX ELEK porcelán figura 24.5 cm](https://www.vatera.hu/1n564-antik-herendi-oherendi-ludas-matyi-lux-elek-porcelan-figura-24-5-cm-3487249883.html) | 72 000 Ft (≈ 210 USD) | 320 USD | 3–6+ hónap | alacsony | 280 USD | 3–6+ hónap, alacsony | 99 db, medián 130 USD (70–215) | **Nem ajánlott** | 99 aktív Lúdas Matyi-hirdetés, medián 130 USD. Egy Lux Elek-jelzésű példány Magyarországon 26 000 Ft-ért kelt el aukción. A Vatera-ár túl magas. Piactér eBay.com-ra módosítva. |
-| [1Z775 Régi nagyméretű Herendi porcelán madár szajkó figura 19.7 cm](https://www.vatera.hu/1z775-regi-nagymeretu-herendi-porcelan-madar-szajko-figura-19-7-cm-3499799522.html) | 85 000 Ft (≈ 247 USD) | 395 USD | 3–6+ hónap | alacsony | 330 USD | 3–6 hónap, alacsony | 7 db, medián 595 USD (320–595) | **Nem ajánlott** | A kisebb (5108) szajkó a nagy változatnál is olcsóbban kel el, az pedig 224 USD-ért. A fedezet nem teljesül. |
-
-### eBay.de (5 tétel)
-
-| Tétel | Vatera ár | Kezdő hirdetési ár | Becsült eladási idő ezen az áron | Likviditás ezen az áron | Legkisebb elfogadható ár | Eladási idő és likviditás a legkisebb áron | Aktív eBay-kínálat (db, medián, alsó–felső negyed) | Értékelés | Megjegyzés |
-|---|---:|---:|---|---|---:|---|---|---|---|
-| [1L654 Hibátlan 12 személyes Zsolnay Pompadour porcelán süteményes készlet](https://www.vatera.hu/1l654-hibatlan-12-szemelyes-zsolnay-pompadour-porcelan-sutemenyes-keszlet-3487247150.html) | 72 000 Ft (≈ 182 EUR) | 380 EUR | 1–3 hónap | közepes | 240 EUR | 3–8 hét, közepes–magas | nincs összehasonlítható | **Ajánlott** | Kézi besorolás: egy 12 darabos Pompadour tányérkészlet C$400-ért, egy 6+1-es süteményes készlet 371 USD-ért volt hirdetve. |
-| [ANTIK ZSOLNAY BÍRKÓZÓ MEDVÉK Markup Béla porcelán szobor garancia, Hibátlan!!](https://www.vatera.hu/antik-zsolnay-birkozo-medvek-markup-bela-porcelan-szobor-garancia-hibatlan-3528589049.html) | 32 500 Ft (≈ 82 EUR) | 350 EUR | 2–4 hónap | közepes–alacsony | 105 EUR | 1–4 hét, magas | nincs összehasonlítható | **Ajánlott** | Kézi besorolás: a nagy (kb. 30 cm) Markup-féle birkózó medvék eBay-en és Etsyn is aktívak, de lezárt ár nem volt elérhető. A legkisebb elfogadható ár a kis medvefigurák mediánja körül van, így könnyen eladható. |
-| [Zsolnay porcelán szecessziós névjegytál - Zsolnay eozinmázas rákos tál](https://www.vatera.hu/zsolnay-porcelan-szecesszios-nevjegytal-zsolnay-eozinmazas-rakos-tal-3483997382.html) | 32 000 Ft (≈ 81 EUR) | 240 EUR | 3–8 hét | közepes–magas | 105 EUR | 1–4 hét, magas | 16 db, medián 244 EUR (175–346) | **Ajánlott** | A legnagyobb arányos árrés: hasonló eozin rák/homár tálak 199–420 USD, az eBay.de medián 244 EUR. A méretet és a jelzést meg kell kérdezni. |
-| [Antik Ritka ZSOLNAY SÁRKÁNYGYÍKOS KÍNÁLÓ Nagyméretű EOZIN kosártál Alapmázas 27 cm!](https://www.vatera.hu/antik-ritka-zsolnay-sarkanygyikos-kinalo-nagymeretu-eozin-kosartal-alapmazas-27-cm-3527645609.html) | 44 500 Ft (≈ 113 EUR) | 290 EUR | 3–6 hónap | alacsony | 145 EUR | 1–3 hónap, közepes–alacsony | nincs összehasonlítható | **Szűk árrés** | Jelzés nélküli darab, mindössze 1 aktív hasonló eBay.de-hirdetés van. Csak „Zsolnay zugeschrieben” megnevezéssel adható el. |
-| [Zsolnay eozin - Bölény 1937](https://www.vatera.hu/zsolnay-eozin-boleny-1937-3273802028.html) | 140 000 Ft (≈ 354 EUR) | 450 EUR | 3–6+ hónap | alacsony | 450 EUR | 3–6+ hónap, alacsony | 25 db, medián 144 EUR (93–438) | **Nem ajánlott** | Eozin bölény aukciós becslés 200–400 USD, az eBay.de medián 144 EUR. A fedezet nem teljesül. |
-
-### Etsy (7 tétel)
-
-| Tétel | Vatera ár | Kezdő hirdetési ár | Becsült eladási idő ezen az áron | Likviditás ezen az áron | Legkisebb elfogadható ár | Eladási idő és likviditás a legkisebb áron | Aktív eBay-kínálat (db, medián, alsó–felső negyed) | Értékelés | Megjegyzés |
-|---|---:|---:|---|---|---:|---|---|---|---|
-| [Ritka Antik HERENDI VÁZA 1.oszt. Bouquet de saxe (BS) KÉZZEL FESTETT HIBÁTLAN, Garancia!!](https://www.vatera.hu/ritka-antik-herendi-vaza-1-oszt-bouquet-de-saxe-bs-kezzel-festett-hibatlan-garancia-3528588389.html) | 24 500 Ft (≈ 71 USD) | 170 USD | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 67 db, medián 154 USD (85–250) | **Ajánlott** | Párban (az Indiai kosár mintás párjával) könnyebben és drágábban eladható. |
-| [Antik 1.oszt. HERENDI APPONYI VERT GREEN (AV) MINTÁS VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-1-oszt-herendi-apponyi-vert-green-av-mintas-vaza-porcelan-hibatlan-garancia-3524724029.html) | 24 500 Ft (≈ 71 USD) | 150 USD | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 66 db, medián 110 USD (48–247) | **Ajánlott** | Kis haszon. Egészen kicsi Apponyi vázák eBay-en már 35–60 EUR-tól elérhetők, ezért a 17 cm-es méretet és az 1. osztályt emeld ki. |
-| [Antik HERENDI APPONYI PURPUR (AP) mintás porcelán VÁZA Hibátlan, Garancia!](https://www.vatera.hu/antik-herendi-apponyi-purpur-ap-mintas-porcelan-vaza-hibatlan-garancia-3524920469.html) | 24 500 Ft (≈ 71 USD) | 150 USD | 1–3 hónap | közepes | 90 USD | 3–8 hét, közepes–magas | 66 db, medián 136 USD (75–245) | **Ajánlott** | Kis haszon, ugyanaz a logika, mint az AV vázánál. |
-| [Antik HERENDI 1. oszt. APPONYI VERT GREEN (AV) mintás kosárfonott VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-herendi-1-oszt-apponyi-vert-green-av-mintas-kosarfonott-vaza-porcelan-hibatlan-garancia-3527536409.html) | 19 500 Ft (≈ 57 USD) | 130 USD | 1–3 hónap | közepes | 75 USD | 3–8 hét, közepes–magas | 66 db, medián 110 USD (48–247) | **Ajánlott** | Kis haszon. |
-| [Nagyobb méretű ( 18 cm magas) herendi madár figura / hibátlan](https://www.vatera.hu/nagyobb-meretu-18-cm-magas-herendi-madar-figura-hibatlan-3464572610.html) | 22 800 Ft (≈ 66 USD) | 160 USD | 3–8 hét | közepes–magas | 85 USD | 2–6 hét, magas | 24 db, medián 160 USD (82–250) | **Ajánlott** | Kis abszolút haszon (kb. 20–90 USD). |
-| [Herendi papagáj](https://www.vatera.hu/herendi-papagaj-3493102247.html) | 25 000 Ft (≈ 73 USD) | 140 USD | 1–3 hónap | közepes | 95 USD | 1–2 hónap, közepes | 52 db, medián 124 USD (89–299) | **Szűk árrés** | Kis herendi papagájok eBay-en 20–69 USD-ért is elkeltek, a 13 cm-es méretet emeld ki. |
-| [RITKA Antik HERENDI SZENT LÁSZLÓ porcelán szobor Garancia, Hibátlan!!](https://www.vatera.hu/ritka-antik-herendi-szent-laszlo-porcelan-szobor-garancia-hibatlan-3527136749.html) | 14 500 Ft (≈ 42 USD) | 95 USD | 2–4 hónap | alacsony | 55 USD | 1–2 hónap, közepes–alacsony | nincs összehasonlítható | **Szűk árrés** | Nincs összehasonlítható hirdetés, szűk vevőkör. Kis tétel, kis haszon. |
-
-### Catawiki (6 tétel)
-
-| Tétel | Vatera ár | Kért becsérték | Becsült eladási idő ezen az áron | Likviditás ezen az áron | Minimálár | Eladási idő és likviditás a legkisebb áron | Aktív eBay-kínálat (db, medián, alsó–felső negyed) | Értékelés | Megjegyzés |
-|---|---:|---:|---|---|---:|---|---|---|---|
-| [Herendi Rothschild Új 6 sz étkészlet](https://www.vatera.hu/herendi-rothschild-uj-6-sz-etkeszlet-3491251307.html) | 899 000 Ft (≈ 2 276 EUR) | 4 500 EUR | 2–4 hét | közepes | 2 900 EUR | 2–4 hét, közepes–magas | nincs összehasonlítható | **Ajánlott** | Kézi besorolás: kiterjedt Rothschild étkészlet a Bonhamsnál 8 750 USD-ért kelt el, a Doyle 2025-ös becslése 6–8 ezer USD volt. Tőkeigényes. Ha a Catawikin nem éri el a minimálárat, darabonként eBay.com-on lassabban, de magasabb összértéken eladható. |
-| [1F470 Antik Zsolnay porcelánfajansz váza családi jelzéssel ~1880](https://www.vatera.hu/1f470-antik-zsolnay-porcelanfajansz-vaza-csaladi-jelzessel-1880-3487243697.html) | 75 000 Ft (≈ 190 EUR) | 350 EUR | 2–4 hét | alacsony | 240 EUR | 2–4 hét, közepes | 62 db, medián 100 USD (42–330) | **Szűk árrés** | A korai családi jelzés gyűjtői érték, de 12 cm-es kis darab, az aktív antik Zsolnay vázák mediánja 100 USD. |
-| [Herendi ANTIK 1890- 1900 6db tányér garnitúra](https://www.vatera.hu/herendi-antik-1890-1900-6db-tanyer-garnitura-3502089875.html) | 125 000 Ft (≈ 316 EUR) | 600 EUR | 2–4 hét | alacsony | 400 EUR | 2–4 hét, alacsony–közepes | 69 db, medián 149 USD (99–248) | **Szűk árrés** | Az aktív antik herendi tányérok darabonként 99–248 USD-ért vannak, a minta és a jelzés ismerete nélkül bizonytalan. Ha a licit nem éri el a minimálárat, újra kell indítani. |
-| [Zsolnay eozin - Bordázott nagyváza -1930](https://www.vatera.hu/zsolnay-eozin-bordazott-nagyvaza-1930-3273802046.html) | 265 000 Ft (≈ 671 EUR) | 1 100 EUR | 2–4 hét | alacsony | 850 EUR | 2–4 hét, alacsony | 81 db, medián 283 EUR (164–580) | **Nem ajánlott** | Az aktív eozin vázák felső negyede 580 EUR, a minimálár ennél magasabb. Csak akkor érdemes, ha kiderül, hogy nagy és többszínű (a többszínű eozin sokszoros értékű lehet). |
-| [Zsolnay eozin - Díszváza 1930](https://www.vatera.hu/zsolnay-eozin-diszvaza-1930-3274129457.html) | 220 000 Ft (≈ 557 EUR) | 950 EUR | 2–4 hét | alacsony | 710 EUR | 2–4 hét, alacsony | 81 db, medián 283 EUR (164–580) | **Nem ajánlott** | Mint a bordázott nagyváza: a méret és a színek ismerete nélkül a minimálár a piac felett van. |
-| [Antik Zsolnay, Nikelszky szőlős váza](https://www.vatera.hu/antik-zsolnay-nikelszky-szolos-vaza-3526996043.html) | 220 000 Ft (≈ 557 EUR) | 1 000 EUR | 2–4 hét | alacsony | 710 EUR | 2–4 hét, alacsony | nincs összehasonlítható | **Nem ajánlott** | Jelzés nélküli, a Nikelszky-attribúció nem igazolt. A Catawiki valószínűleg nem fogadja be, és igazolt kereslet sincs. |
-
-A díjak és a vámszabályok a 2026 elején ismert szintek, feltöltés előtt ellenőrizd őket az adott piactéren. A szállítási költséget mindenhol a vevőre hárítsd, és a nagy darabokat (levesestálak, 30 cm feletti vázák, étkészlet) dupla dobozban, biztosítással küldd. Az árak a hibátlan, a hirdetésben leírt állapotra vonatkoznak: ha átvételkor sérülést vagy eltérő jelzést találsz, az árat ahhoz kell igazítani.
-
-### Források
-
-- [PicClick – aktív eBay.com-hirdetések (pl. Herend Rothschild tureen)](https://picclick.com/?q=herend+rothschild+tureen)
-- [PicClick – aktív eBay.de-hirdetések (pl. Zsolnay Eosin Vase)](https://picclick.de/?q=zsolnay+eosin+vase)
-- [New Orleans Auction – Herend Rothschild Bird tureen, 1 722 USD](https://www.neworleansauction.com/auction-lot/herend-rothschild-bird-soup-tureen-and-tray_A7122D1BD8)
-- [1stDibs – Herend tureens](https://www.1stdibs.com/buy/herend-tureen/)
-- [Nehas China – Herend Queen Victoria tureen, új ár](https://www.nehaschina.com/herend-queen-victoria-soup-tureen-with-branch-2-qt-vbo-01014-0-02/)
-- [Bonhams – Herend Rothschild Bird dinner service](https://bonhams.com/auctions/22504/lot/1594)
-- [Doyle – Herend Rothschild Bird dinner service (2025)](https://doyle.com/auction/lot/lot-692---herend-porcelain-rothschild-bird-pattern-dinner-service/?lot=1432373&sd=1)
-- [eBay – Herend jay 5072 eladás](https://www.ebay.com/itm/405914033871)
-- [Bidsquare/Kodner – Herend Hadik Hussar 5526](https://www.bidsquare.com/online-auctions/kodner/herend-hadik-hussar-soldier-porcelain-figurine-5526-724102)
-- [Herend – Hadik huszár új ár](https://herend.com/en/product/hadik-hussar-05526000C)
-- [eBay – Herend Apponyi Purpur 7193 váza](https://www.ebay.com/itm/285472695468)
-- [eBay – Herend parrot](https://www.ebay.com/shop/herend-parrot?_nkw=herend+parrot)
-- [Darabanth – Herendi Lúdas Matyi (Lux Elek) aukció](https://www.darabanth.com/en/online-auction/333/categories~Porcelain-ceramics-glassware/Chinaware-Porcelain~500008/Herendi-porcelan-Ludas-Matyi-kezzel-festett-hibatlan-jelzett-Lux-Elek-m-20-cm-h-25-cm~II1861266/)
-- [Toomey & Co. – Zsolnay eozin vázák, 1 703 USD](https://www.toomeyco.com/auctions/2023/11/keramics-rookwood-american-european-art-pottery/295)
-- [Invaluable – Zsolnay árak](https://www.invaluable.com/blog/inside-the-archives-zsolnay-porcelain-prices/)
-- [LiveAuctioneers – Zsolnay bison](https://www.liveauctioneers.com/price-result/zsolnay-pecs-hungary-buffalo-bison-porcelain-figurine/)
-- [1stDibs – Zsolnay crayfish card tray](https://www.1stdibs.com/furniture/decorative-objects/bowls-baskets/decorative-dishes-vide-poche/zsolnay-pecs-crayfish-snake-card-tray-metallic-eosin-glaze/id-f_18353612)
-- [eBay – Zsolnay Fighting Bears (Markup)](https://www.ebay.com/itm/326441674153)
-- [WorthPoint – Zsolnay Pompadour dessert set](https://www.worthpoint.com/worthopedia/zsolnay-pompadour-dessert-set-plate-460736266)
-- [eBay Community – sell-through arányok a gyűjtői kategóriában](https://community.ebay.com/t5/Selling/What-is-a-good-Listings-90-days-sold-ratio/td-p/33118576)
-
-## Adatminőségi korlátok
-
-- A scraper `description` mezője a hirdetés leírása helyett az oldal kategóriamenüjét menti. A válogatott tételek leírását ezért közvetlenül a letöltött oldalak „Eladó leírása” és „Termék sajátosságai” blokkjából olvastam ki. Javítás kell a `porcelan/parsing.py` `extract_description` függvényébe.
-- A minta-, sérülés- és gyanújelzések (*minta*, *sérülés*, *gyanú*) a teljes oldalszövegből jönnek, beleértve az ajánlósávot is. Ezért zajosak: pl. a „viktoria” vagy a „repedes” sok olyan hirdetésnél megjelenik, amelyre nem vonatkozik. A típusonkénti listákban tájékoztató jellegűek.
-- Néhány nem porcelán tétel is átment a szűrőn (pl. „Pécs, Zsolnay kút” képeslapok, Zsolnay-emlékérmék, szakkönyv), mert a címük nem tartalmaz kizáró szót. Ezek a válogatásba nem kerültek be.
-- Aukcióknál az ár a kikiáltási ár. Az aktuális licitet és a licitszámot a parser nem mindig olvassa ki megbízhatóan, ezért a linken ellenőrizendő.
-
----
-
-A becsült nyugati árak szakértői becslések, nem valós idejű piaci adatok. Nagy értékű vásárlás előtt érdemes eBay „sold” listákkal és a hirdetés fotóival (jelzés, sérülés) ellenőrizni.
+# Vatera – friss döntési riport
+
+Ellenőrzés: 2026-09-19T15:33:44.029006+00:00 (UTC).
+
+**Bizonyítottan nagy likviditású és nagy nettó árrésű vétel: nincs igazolva.** A friss Vatera-adatok rendelkezésre állnak, de friss, azonos kivitelű és állapotú lezárt nyugati eladásokból nem sikerült ellenőrizhető mintát szerezni. Ez nem bizonyítja, hogy nincs jó vétel; azt jelenti, hogy a szükséges bizonyíték hiányzik.
+
+## Mit futtattunk?
+
+101 keresőkifejezés első találati oldaláról 2347 egyedi terméklinket gyűjtöttünk (0 sikertelen keresőkifejezés). A keresőkártyákból 157 felismerhető, fix áras jelölt maradt; 71 modellcsoport két legolcsóbb jelöltjéből összesen 104 termékoldalt ellenőriztünk részletesen. Ebből 101 felelt meg a parser elfogadási feltételeinek, rendelkezett készletjelzéssel és rögzített vagy irányárral. Ez célzott minta, nem a teljes Vatera értékelése. A teljes termékoldal-letöltést megszakítottuk a célzott ellenőrzés javára; az abból származó részadatokat nem nevezzük teljes futásnak. Emellett a régi összesített táblázat mind a 22 jelöltjét újraellenőriztük.
+
+A futtatott új modell `decision_model.py`: determinisztikus költség- és stresszszámítás. **Új LLM-modell API-futtatása nem történt**, mert nincs API-kulcs. A régi árbecsléseket nem nevezzük friss piaci vagy realizált eladási áraknak.
+
+## Elsőként ellenőrizendő korábbi jelöltek
+
+- **Zsolnay birkózó medvék, 32 500 Ft:** a régi 350 EUR becslésből még a csökkentett árforgatókönyv is pozitív lehet, de az előző riportban sincs hozzá összehasonlítható piaci minta. Ugyanilyen Markup Béla figura lezárt eladásai nélkül nem minősül ajánlott vételnek.
+- **Tungsram ECC83 pár, 8 500 Ft:** az eladó csak a fűtőszálat mérte; csőteszteres mérés, zaj- és mikrofonikusság-ellenőrzés szükséges. A tesztelt/NOS csövek ára nem vihető át automatikusan erre a párra.
+- **Poljot kronográfok, 60 000 Ft:** az eladó szerint működnek, de nincs szervizinformáció. Az eredetiség és a szerkezet ellenőrzése, valamint a szerviztartalék után a korábbi 63%-os haszon nem tartható biztos becslésnek.
+
+## Költségmodell és korlátai
+
+Tervezési feltételezések, nem aktuális díj- vagy árfolyamajánlatok: 395 HUF/EUR; 395/1,15 HUF/USD; 18% összesített piactéri/fizetési/devizaköltség; 10% eladási ár arányos kockázati tartalék. Alap: 2 000 Ft belföldi posta, 2 000 Ft csomagolás, 6 000 Ft külföldi posta, 5 000 Ft ellenőrzés. Porcelán: 4 000 Ft csomagolás, 10 000 Ft külföldi posta, külön tesztdíj nélkül. Készlet/levesestál: 8 000 és 30 000 Ft. Poljot: 20 000 Ft ellenőrzési/szerviztartalék. A postát ebben a konzervatív forgatókönyvben az eladó viseli. Ha a vevő fizeti, a rá jutó díjakkal együtt újra kell számolni. Adó, munkaidő és tőkeköltség nincs benne; ezért a szám adózás előtti fedezet, nem végső nettó nyereség.
+
+Alapeset: a **korábbi, nem ellenőrzött nyugati árbecslés 80%-a**; stressz: 60%-a. Ezek érzékenységi forgatókönyvek, nem kalibrált ár-előrejelzések. ROI = fedezet / (vételár + fix költségek). A vételi plafon a 30% cél-ROI-t biztosító matematikai felső határ az alapeseti feltételek mellett, nem vételi ajánlás. Az aktív hirdetésszám nem mér eladási sebességet; minden jelölt likviditása ismeretlen.
+
+## A korábbi 22 jelölt újraszámítása
+
+ROI szerint rendezve; a pozitív szám sem bizonyítja az elérhető piaci árat.
+
+| Termék | Friss Vatera ár (Ft) | Feltételezett eladási ár: alap / stressz | Fedezet: alap / stressz (Ft) | ROI alap | Vételi plafon (Ft) | Döntés |
+|---|---:|---:|---:|---:|---:|---|
+| [ANTIK ZSOLNAY BÍRKÓZÓ MEDVÉK Markup Béla porcelán szobor garancia, Hibátlan!!](https://www.vatera.hu/antik-zsolnay-birkozo-medvek-markup-bela-porcelan-szobor-garancia-hibatlan-3528589049.html) | 32 500 | 280 / 210 EUR | 31 132 / 11 224 | 64.2% | 45 255 | Nincs elég ár-összehasonlítás |
+| [Zsolnay porcelán szecessziós névjegytál - Zsolnay eozinmázas rákos tál](https://www.vatera.hu/zsolnay-porcelan-szecesszios-nevjegytal-zsolnay-eozinmazas-rakos-tal-3483997382.html) | 32 000 | 192 / 144 EUR | 6 605 / -7 046 | 13.8% | 26 003 | Költségekkel nem elég erős |
+| [2db ECC83 Tungsram. Legolcsóbb](https://www.vatera.hu/2db-ecc83-tungsram-legolcsobb-3530289641.html) | 8 500 | 104 / 78 USD | 2 220 / -4 210 | 9.4% | 4 784 | Költségekkel nem elég erős |
+| [Herendi Rothschild Új 6 sz étkészlet](https://www.vatera.hu/herendi-rothschild-uj-6-sz-etkeszlet-3491251307.html) | 899 000 | 3 600 / 2 700 EUR | 84 840 / -171 120 | 9.0% | 747 569 | Nincs elég ár-összehasonlítás |
+| [Herendi Rothschild ovális citromfogós levesestál](https://www.vatera.hu/herendi-rothschild-ovalis-citromfogos-levesestal-3528644864.html) | 170 000 | 760 / 570 USD | -22 049 / -69 037 | -10.5% | 104 577 | Költségekkel nem elég erős |
+| [Antik HERENDI HADIK HUSZÁR porcelán szobor Garancia HIBÁTLAN!!](https://www.vatera.hu/antik-herendi-hadik-huszar-porcelan-szobor-garancia-hibatlan-3526894709.html) | 39 500 | 200 / 150 USD | -6 039 / -18 404 | -10.9% | 22 046 | Költségekkel nem elég erős |
+| [1Z997 Régi nagyméretű Herendi porcelán foxi kutya foxterrier figura](https://www.vatera.hu/1z997-regi-nagymeretu-herendi-porcelan-foxi-kutya-foxterrier-figura-3501768152.html) | 85 000 | 360 / 270 USD | -11 970 / -34 228 | -11.9% | 52 484 | Költségekkel nem elég erős |
+| [SEGA MASTER SYSTEM II](https://www.vatera.hu/sega-master-system-ii-3508181165.html) | 25 000 | 140 / 105 USD | -5 377 / -14 033 | -13.4% | 11 632 | Költségekkel nem elég erős |
+| [Carl Zeiss Jena DDR - Tessar f2,8/50 - M42](https://www.vatera.hu/carl-zeiss-jena-ddr-tessar-f2-8-50-m42-3450444290.html) | 8 000 | 80 / 60 USD | -3 216 / -8 162 | -14.0% | 218 | Költségekkel nem elég erős |
+| [Herendi Apponyi Orange 12 személyes levesestál](https://www.vatera.hu/herendi-apponyi-orange-12-szemelyes-levesestal-3527661473.html) | 160 000 | 680 / 510 USD | -31 833 / -73 875 | -15.9% | 89 359 | Költségekkel nem elég erős |
+| [Ritka Antik HERENDI VÁZA 1.oszt. Bouquet de saxe (BS) KÉZZEL FESTETT HIBÁTLAN, Garancia!!](https://www.vatera.hu/ritka-antik-herendi-vaza-1-oszt-bouquet-de-saxe-bs-kezzel-festett-hibatlan-garancia-3528588389.html) | 24 500 | 136 / 102 USD | -6 867 / -15 275 | -17.0% | 9 871 | Költségekkel nem elég erős |
+| [Herendi Viktória levesestál](https://www.vatera.hu/herendi-viktoria-levesestal-3528645125.html) | 140 000 | 600 / 450 USD | -31 617 / -68 713 | -17.6% | 74 140 | Költségekkel nem elég erős |
+| [Nagyobb méretű ( 18 cm magas) herendi madár figura / hibátlan](https://www.vatera.hu/nagyobb-meretu-18-cm-magas-herendi-madar-figura-hibatlan-3464572610.html) | 22 800 | 128 / 96 USD | -7 145 / -15 059 | -18.4% | 8 349 | Költségekkel nem elég erős |
+| [1L654 Hibátlan 12 személyes Zsolnay Pompadour porcelán süteményes készlet](https://www.vatera.hu/1l654-hibatlan-12-szemelyes-zsolnay-pompadour-porcelan-sutemenyes-keszlet-3487247150.html) | 72 000 | 304 / 228 EUR | -25 542 / -47 157 | -22.8% | 26 505 | Nincs elég ár-összehasonlítás |
+| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529930949.html) | 60 000 | 272 / 204 USD | -22 733 / -39 550 | -25.3% | 21 743 | Költségekkel nem elég erős |
+| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529931729.html) | 60 000 | 272 / 204 USD | -22 733 / -39 550 | -25.3% | 21 743 | Költségekkel nem elég erős |
+| [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529929749.html) | 60 000 | 272 / 204 USD | -22 733 / -39 550 | -25.3% | 21 743 | Költségekkel nem elég erős |
+| [Antik 1.oszt. HERENDI APPONYI VERT GREEN (AV) MINTÁS VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-1-oszt-herendi-apponyi-vert-green-av-mintas-vaza-porcelan-hibatlan-garancia-3524724029.html) | 24 500 | 120 / 90 USD | -10 823 / -18 243 | -26.7% | 6 828 | Költségekkel nem elég erős |
+| [Antik HERENDI APPONYI PURPUR (AP) mintás porcelán VÁZA Hibátlan, Garancia!](https://www.vatera.hu/antik-herendi-apponyi-purpur-ap-mintas-porcelan-vaza-hibatlan-garancia-3524920469.html) | 24 500 | 120 / 90 USD | -10 823 / -18 243 | -26.7% | 6 828 | Költségekkel nem elég erős |
+| [Antik HERENDI 1. oszt. APPONYI VERT GREEN (AV) mintás kosárfonott VÁZA porcelán HIBÁTLAN, Garancia!](https://www.vatera.hu/antik-herendi-1-oszt-apponyi-vert-green-av-mintas-kosarfonott-vaza-porcelan-hibatlan-garancia-3527536409.html) | 19 500 | 104 / 78 USD | -9 780 / -16 210 | -27.6% | 3 784 | Költségekkel nem elég erős |
+| [Zenit TTL Helios 44M 2/58 lencsével](https://www.vatera.hu/zenit-ttl-helios-44m-2-58-lencsevel-3523993349.html) | 8 990 | 64 / 48 USD | -8 163 / -12 119 | -34.0% | 0 | Költségekkel nem elég erős |
+| [Herendi Rothschild madaras, 12 személyes, jubileumi, különleges levesestál](https://www.vatera.hu/herendi-rothschild-madaras-12-szemelyes-jubileumi-kulonleges-levesestal-3526021535.html) | – | – | – | – | – | Nincs ellenőrzött beszerzési ár |
+
+## Új, ellenőrizendő jelöltek a friss keresésből
+
+A modellnevek regex-alapú csoportok; kivitel, tartozékok, állapot és eredetiség külön ellenőrzést igényel. Az alábbi lista modellnév, azon belül ár szerint rendezett kutatási lista, **nem likviditási vagy nyereségrangsor**. Nyugati eladási bizonyíték nélkül nem gyártunk hozzá hasznot vagy eladási időt.
+
+| Modellcsoport | Termék | Friss ár (Ft) | Ellenőrizendő eladói leírás |
+|---|---|---:|---|
+| Amiga 500 | [Amiga 500 / 500+ / 2000 kapcsoló nélküli boot selector](https://www.vatera.hu/amiga-500-500-2000-kapcsolo-nelkuli-boot-selector-3513216749.html) | 8 500 | Amiga 500 / 500+ / 2000 kapcsoló nélküli boot selector Az Even CIA chipet ebbe kell berakni és a CIA foglalatba az egészet. Ügyelni kell a chip irányokra, jelezve van a selectoron. |
+| Amiga 500 | [8Mb Autoconfig Fast Ram Amiga 500/500+, Amiga 1000, Amiga 2000 gépekbe](https://www.vatera.hu/8mb-autoconfig-fast-ram-amiga-500-500-amiga-1000-amiga-2000-gepekbe-3509500547.html) | 10 890 | 8Mb Autoconfig Fast Ram Amiga 500/500+ Amiga 1000 Amiga 2000 gépekbe A 68000 CPU alá kell berakni, a képeken látható módon. 8Mb Fast Ram-ot ad Amiga 500, Amiga 500+, Amiga 1000, Am |
+| Atari 2600 | [ATARI 2600 SMURF játék](https://www.vatera.hu/atari-2600-smurf-jatek-3503919650.html) | 4 000 | Képen látható állapotban előre utalás után postázom (csak MPL) személyesen Vácon tudom átadni HÉTKÖZNAP áfa mentes számlát adok - cégre is 2605180800 |
+| Atari 2600 | [Atari 2600 Hell Driver](https://www.vatera.hu/atari-2600-hell-driver-3517864469.html) | 10 000 | Atari 2600 Hell Driver, jó állapotban, hibátlan működéssel. Személyes átvétel Budapesten XI kerületben lehetséges, további pontokra Foxposttal küldjük előre utalás után a vevő terh |
+| Canon AV-1 | [X CANON AV 1 FÉNYKÉPEZŐGÉP REVUENON 80-200 MM OBJEKTÍVVEL RETRO RÉGI FILMES](https://www.vatera.hu/x-canon-av-1-fenykepezogep-revuenon-80-200-mm-objektivvel-retro-regi-filmes-3527499194.html) | 29 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK CANON AV 1  TIPUSÚ FÉNYKÉPEZŐGÉP REVUENON 80-200 MM OBJEKTíV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELC |
+| Commodore 64 | [Commodore 64 PLA helyettesítő 906114-01 /  251064-01](https://www.vatera.hu/commodore-64-pla-helyettesito-906114-01-251064-01-3509500532.html) | 3 000 | Commodore 64 PLA helyettesítő 906114-01 /  251064-01 Az eredeti 906114-01 vagy  251064-01 PLA chip helyére. Sajnos az említett chip hajlamos az elhalálozásra az idő múlásával, már  |
+| Commodore 64 | [Commodore 1530 C2N C64 magnó  - Commodore 64 számítógéphez](https://www.vatera.hu/commodore-1530-c2n-c64-magno-commodore-64-szamitogephez-3513626135.html) | 3 500 | Commodore 1530 C2N C64 magnó  - Commodore 64 számítógéphez teker jobbra balra,a lejátszás nem ment nálam magánszemélyként garanciát nem tudok vállalni! Licitálás előtt kérlek olvas |
+| Domiplan 50 | [MEYER OPTIC RÉGI FÉNYKÉPEZŐGÉP OBJEKTíV GYŰJTŐKNEK ZEBRA DOMIPLAN 50 MM EXAKTA BAJONETTEL](https://www.vatera.hu/meyer-optic-regi-fenykepezogep-objektiv-gyujtoknek-zebra-domiplan-50-mm-exakta-bajonettel-3530567009.html) | 9 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK DOMIPLAN 50 MM FÉNYKÉPEZŐGÉP OBJEKTÍV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN SAJNA NEM ÉRTEK HOZZÁ SOKAT SEGÍTENI NEM TUDOK !  !!! KIPRÓBÁLÁST T |
+| Domiplan 50 | [MEYER OPTIC ZEBRA DOMIPLAN 50 MM RÉGI FÉNYKÉPEZŐGÉP OBJEKTíV GYŰJTŐKNEK EXAKTA BAJONETTEL](https://www.vatera.hu/meyer-optic-zebra-domiplan-50-mm-regi-fenykepezogep-objektiv-gyujtoknek-exakta-bajonettel-3527494484.html) | 9 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK DOMIPLAN 50 MM FÉNYKÉPEZŐGÉP OBJEKTÍV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN SAJNA NEM ÉRTEK HOZZÁ SOKAT SEGÍTENI NEM TUDOK !  !!! KIPRÓBÁLÁST T |
+| Exakta Varex | [Exakta Varex IIb fényképezőgép isco westrocolor 50mm](https://www.vatera.hu/exakta-varex-iib-fenykepezogep-isco-westrocolor-50mm-3498503114.html) | 34 900 | Nagyon Szép állapotban Tökéletesen működik Redőny Szép,  nem lyukas. Karcmentes lencsékkel |
+| Flektogon 35 | [Exakta vx 1000 carl zeiss flektogon 2,8/35 optikával fényképezőgép.](https://www.vatera.hu/exakta-vx-1000-carl-zeiss-flektogon-2-8-35-optikaval-fenykepezogep-3417469442.html) | 75 000 | Exakta vx 1000 carl zeiss flektogon 2,8/35 optikával fényképezőgép. |
+| Game Boy Color | [Nintendo Gameboy Color Pikachu konzol](https://www.vatera.hu/nintendo-gameboy-color-pikachu-konzol-3507994181.html) | 50 000 | Nintendo Gameboy Color Pikachu konzol, jó állapotban, hibátlan működéssel. Személyes átvétel Budapesten XI kerületben lehetséges, további pontokra Foxposttal küldjük előre utalás u |
+| Game Boy Pocket | [Nintendo Gameboy Pocket konzol](https://www.vatera.hu/nintendo-gameboy-pocket-konzol-3529445549.html) | 22 000 | Nintendo Gameboy Pocket konzol, szép állapotban, hibátlan működéssel, elemfedele hiányzik. Személyes átvétel Budapesten XI kerületben lehetséges, további pontokra Foxposttal küldjü |
+| Helios 44 | [RÉGI FÉNYKÉPEZŐGÉP RETRO HELIOS 44M -4 OBJEKTíV SZÉP ÁLLAPOTBAN](https://www.vatera.hu/regi-fenykepezogep-retro-helios-44m-4-objektiv-szep-allapotban-3528805889.html) | 9 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK FÉNYKÉPEZŐGÉP HELIOS 44-M-4 OBJEKTíV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN RENDELTETÉSSZERŰ MŰKÖDÉSÉRŐL NINCS INFÓM  |
+| Helios 44 | [X ZENIT 12 xp  RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO HELIOS 44M-4 MM OBJEKTíV](https://www.vatera.hu/x-zenit-12-xp-regi-fenykepezogep-vaz-retro-helios-44m-4-mm-objektiv-3529563587.html) | 14 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ZENIT XP 12 TIPUSÚ FÉNYKÉPEZŐGÉP HELIOS 44-M  MM OBJEKTíV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSAT |
+| Industar 50 | [Zorki-6 + Industar-50 3,5/50mm](https://www.vatera.hu/zorki-6-industar-50-3-5-50mm-3478921583.html) | 18 500 | Zorki-6 + Industar-50 3,5/50mm A fényképezőgép váza megkímélt állapotban van, használati nyomokkal, az objektív kiváló, karcmentes. A készülék működését nem teszteltük. Magyarorszá |
+| Industar 50 | [Zorkip 4 Industar 50 3,5/50](https://www.vatera.hu/zorkip-4-industar-50-3-5-50-3478921613.html) | 18 500 | Zorkip 4 Industar 50 3,5/50 A fényképezőgép váza megkímélt állapotban van, használati nyomokkal, az objektív kiváló, karcmentes. A készülék működését nem teszteltük. Magyarországi  |
+| Industar 61 | [INDUSTAR 61 L/D RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO OBJEKTíV OPTIKA](https://www.vatera.hu/industar-61-l-d-regi-fenykepezogep-vaz-retro-objektiv-optika-3527494031.html) | 7 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK INDUSTAR  TIPUSÚ FÉNYKÉPEZŐGÉP OPTIKA HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN RENDELTETÉSSZERŰ MŰKÖDÉSÉRŐL NINCS INFÓM |
+| Jupiter 8 | [Kiev 4 RF Contax kópia Jupiter 8 50mm F2.0 objektívvel (Lásd a leírást!) fényképezőgép](https://www.vatera.hu/kiev-4-rf-contax-kopia-jupiter-8-50mm-f2-0-objektivvel-lasd-a-leirast-fenykepezogep-3505476245.html) | 15 999 | Nagyon szép állapot! A zár kicsit össze vissza dolgozik. Töbnyire jópár tekerés kell, hogy beakadjon. Távmérő jó. Fénymérő reagál. Az objektív poros belül. Lásd a fotókat! Donornak |
+| Kine Exakta | ["Pre War" Kine Exakta Carl Zeiss Tessar 50mm F2.8 bevonatmentes objektív](https://www.vatera.hu/pre-war-kine-exakta-carl-zeiss-tessar-50mm-f2-8-bevonatmentes-objektiv-3516064409.html) | 54 999 | Korai, háború előtti Exakta Kine-hez gyártott bevonatmentes objektív. Blende finom. A fókusz jól jár. Nincs gomba vagy fátyol. Koncentrikus mikrokarcok az első elemen. Lásd az utol |
+| Lomo LC-A | [LOMO LC-A analóg fényképezőgép](https://www.vatera.hu/lomo-lc-a-analog-fenykepezogep-3513268682.html) | 19 900 | Működőképes, a ház fényszigetelése felújításra szorul. A képeken látható állapotban. A pénz beérkezése után küldöm a terméket. |
+| Mamiya 645 | [Mamiya 645 Super / Pro 120 film back](https://www.vatera.hu/mamiya-645-super-pro-120-film-back-3413515397.html) | 47 000 | Mamiya 645 Super / Pro 120 film back, complete, in very good working condition Located in Slovakia, sending safely packed via Packeta to Hungary |
+| Minox 35 | [Makulátlan Minox 35 GL 35mm film kompakt fényképezőgép](https://www.vatera.hu/makulatlan-minox-35-gl-35mm-film-kompakt-fenykepezogep-3502466216.html) | 26 999 | Működik. Zár OK. Fénymérő ok. Nincs gomba vagy fátyol. Nézőke tiszta. Sorszámegyező doboz, papír és gép. A tok szétfeslett oldalt és a patent fül hiányzik. V27PX elemmel működik, a |
+| Minox 35 | [Makulátlan Minox 35 ML 35mm film kompakt fényképezőgép](https://www.vatera.hu/makulatlan-minox-35-ml-35mm-film-kompakt-fenykepezogep-3515943629.html) | 39 999 | Működik. Zár OK. Fénymérő ok. Nincs gomba vagy fátyol. Nézőke tiszta. Sorszámegyező papír és gép. P mód ok, zárseb és lamella állítás fényviszonyoknak megfelelőel megfigyelhető nyi |
+| Nikkor 105 2.5 | [Non AI Nikon Nikkor-P Auto 105mm F2.5 objektív](https://www.vatera.hu/non-ai-nikon-nikkor-p-auto-105mm-f2-5-objektiv-3500066822.html) | 54 999 | Nincs gomba vagy fátyol. Pár erősebb porszem. A képalkotást nem befolyásolja. Finom fókusz és olajmentes blende. Sorszámegyező doboz. |
+| Nikkor 50 1.4 | [Nikon AF Nikkor 50mm f/1.4D objektív](https://www.vatera.hu/nikon-af-nikkor-50mm-f-1-4d-objektiv-3514037309.html) | 60 000 | Eladó a kiváló állapotú, keveset használt, por-, gomba- és karcmentes Nikon AF Nikkor 50mm f/1.4D objektív első, hátsó sapkával, gumi napellenzővel, és adok hozzá egy 52mm-es HOYA  |
+| Nikkor 50 1.4 | [Nikon AF-S Nikkor 50mm f/1.4G objektív](https://www.vatera.hu/nikon-af-s-nikkor-50mm-f-1-4g-objektiv-3514034909.html) | 70 000 | Eladó a jó állapotban lévő, keveset használt, por-, gomba- és karcmentes Nikon AF-S Nikkor 50mm f/1.4G objektív gyári dobozában, tartozékaival: napellenző, első és hátsó sapka, szü |
+| Nikon FM2 | [Nikon FM 2 fényképezőgép](https://www.vatera.hu/nikon-fm-2-fenykepezogep-3518125529.html) | 150 000 | Nikon FM 2 fényképezőgép eredeti állapotban táskával plussz optikával Nikon FE 2 50mm, vakuval,gyári állapotban. Eredeti papirok stb. |
+| Nintendo 64 | [Nintendo 64 konzol](https://www.vatera.hu/nintendo-64-konzol-3514875569.html) | 30 000 | Nintendo 64 konzol, jó állapotban, hibátlan működéssel, kontrollerrel, táppal és AV kábellel. Személyes átvétel Budapesten XI kerületben lehetséges, további pontokra Foxposttal kül |
+| Nintendo NES | [NINTENDO NES - működik](https://www.vatera.hu/nintendo-nes-mukodik-3491378540.html) | 23 000 | Képen látható mindenféle kiegészítő nélkül, csak a gép ! a képen szereplő játék se jár hozzá ! előre utalás után postázom (csak MPL) személyesen Vácon tudom átadni HÉTKÖZNAP ÁFA me |
+| Nintendo NES | [Nes nintendo konzol csomag](https://www.vatera.hu/nes-nintendo-konzol-csomag-3511224629.html) | 32 000 | mint a képeken, rendben működik A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fontosnak, ezért kell a kérdéseket feltenni, és a felmerü |
+| Olympus OM-10 | [Olympus OM10 tükörreflexes kamera](https://www.vatera.hu/olympus-om10-tukorreflexes-kamera-3500390969.html) | 50 000 | Alig használt kamera, f=50mm 1:1,8 -as optikával. Bőrtokkal. Részletes leírás a hálón könnyen található. |
+| Olympus Pen EE | [OLYMPUS PEN EE RÉGI FÉNYKÉPEZŐGÉP RETRO ZUIKO 30 MM OBJEKTÍV](https://www.vatera.hu/olympus-pen-ee-regi-fenykepezogep-retro-zuiko-30-mm-objektiv-3528823949.html) | 19 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK OLYMPUS PEN FÉNYKÉPEZŐGÉP ZUIKO 30 MM OBJEKTíV A KÉPEKEN LÁTHATÓ ÁLLAGBAN TISZTITANI BIZTOSAN KELL RENDELTETÉSSZERŰ MŰKÖDÉSÉRŐL NINCS INFÓM FELHÚZ |
+| Olympus XA | [Olympus XA-2 kompakt fényképezőgép](https://www.vatera.hu/olympus-xa-2-kompakt-fenykepezogep-3529305449.html) | 29 999 | Lejárt filmmel tesztelve. Minden funkció működik. Régi fényzáró szivacsok. Szuper állapot. 14 nap visszavásárlási garancia. |
+| Olympus mju | [Olympus mju zoom kompakt analóg fényképezőgép](https://www.vatera.hu/olympus-mju-zoom-kompakt-analog-fenykepezogep-3530672849.html) | 40 000 | mint a képeken, elemet beletéve vaku jó zuum jó, elcsettinthető filmmel nem próbáltam A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fon |
+| Olympus mju | [Olympus mju zoom 105 kompakt analóg fényképezőgép](https://www.vatera.hu/olympus-mju-zoom-105-kompakt-analog-fenykepezogep-3530697749.html) | 40 000 | mint a képeken, elemet beletéve vaku jó zuum jó, elcsettinthető filmmel nem próbáltam, van benne régi film kijelző fényképezés hatására átvált számol A termék minden adatáról a tén |
+| Pancolar 50 | [PRAKTICA M42-VLC3, CARL ZEISS PANCOLAR 1,8/50 OBJEKTÍV  -  1976, RETRO FÉNYKÉPEZŐGÉP  !!!](https://www.vatera.hu/praktica-m42-vlc3-carl-zeiss-pancolar-1-8-50-objektiv-1976-retro-fenykepezogep-3526902833.html) | 48 000 | ELADÓ A KÉPEN LÁTHATÓ ÁLLAPOTBAN, A KÉPEK AZ AUKCIÓ TÁRGYÁT KÉPEZŐ TERMÉKRŐL KÉSZÜLNEK. TÖKÉLETESEN NAGYÍTHATÓAK. ELVILEG MŰKÖDIK, A KAR ELHÚZÁSÁRA KIOLD. |
+| Pancolar 50 | [Exakta VX 1000 fényképezőgép Zeiss Pancolar 50mm F2.0 objektív stb](https://www.vatera.hu/exakta-vx-1000-fenykepezogep-zeiss-pancolar-50mm-f2-0-objektiv-stb-3505480742.html) | 56 999 | A váz szép és működik. Pancolar objektív. 50mm F2.0 Szép, dinamikus blende. Nincs gomba vagy fátyol. A fókusz kemény. A műanyag gyűrű a fókusz állításánál szabadon forog. Universar |
+| Pentacon 135 | [PENTACON 135 MM 2,8 FÉNYKÉPEZŐGÉP OBJEKTíV MENETES CSATLAKOZÁSSAL](https://www.vatera.hu/pentacon-135-mm-2-8-fenykepezogep-objektiv-menetes-csatlakozassal-3528837731.html) | 11 999 | PENTACON 135 MM 2,8 FÉNYKÉPEZŐGÉP OBJEKTíV MENETES CSATLAKOZÁSSAL AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK PENTACON 135 MM FÉNYKÉPEZŐGÉP OBJEKTÍV MENETES CSATLAKOZÁSSAL HASZNÁLT DE KORÁHO |
+| Pentacon 135 | [X ZENIT 11  RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO PENTACON 135 MM OBJEKTíV SZÉP ÁLLAPOTBAN](https://www.vatera.hu/x-zenit-11-regi-fenykepezogep-vaz-retro-pentacon-135-mm-objektiv-szep-allapotban-3528882326.html) | 17 999 | X ZENIT 11  RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO PENTACON 135 MM OBJEKTíV SZÉP ÁLLAPOTBAN AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ZENIT 11 TIPUSÚ FÉNYKÉPEZŐGÉP PENTACON 135 MM OBJEKTíV ,HASZNÁLT |
+| Pentacon 50 | [PENTACON ELECTRIC MC 50 MM FÉNYKÉPEZŐGÉP OBJEKTíV MENETS CSATLAKOZÁSSAL](https://www.vatera.hu/pentacon-electric-mc-50-mm-fenykepezogep-objektiv-menets-csatlakozassal-3527499512.html) | 11 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK PENTACON ELECTIC 50 MM FÉNYKÉPEZŐGÉP OBJEKTÍV HASZNÁLT DE KORÁHOZ KÉPEST NAGYON SZÉP  ÁLLAPOTBAN SAJNA NEM ÉRTEK HOZZÁ SOKAT SEGÍTENI NEM TUDOK !  |
+| Pentax Espio | [Pentax espio 160  filmes fényképezőgép](https://www.vatera.hu/pentax-espio-160-filmes-fenykepezogep-3521972189.html) | 19 000 | mint a képeken,  müködik, vaku is, filmmel nem nem próbáltam A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fontosnak, ezért kell a kérd |
+| Pentax Spotmatic | [Pentax Spotmatic SP SLR fényképezőgép és Pentacon 135mm F2.8 electric objektív](https://www.vatera.hu/pentax-spotmatic-sp-slr-fenykepezogep-es-pentacon-135mm-f2-8-electric-objektiv-3530630549.html) | 35 999 | ALKU NÉLKÜL! A váz jól működik. A zár minden sebességen szépen dolgozik. 1mp is rendben.  A függöny nem lóg bele az expoba. Időzítő ok. A tükör és a fókuszüveg ép, tiszta. A fényzá |
+| PlayStation 1 | [Ps1, playstation 1 konzol csomag](https://www.vatera.hu/ps1-playstation-1-konzol-csomag-3527703569.html) | 20 000 | mint a képeken,  szép állapotban, működik, a nagyon karcos lemezeket lassabban olvassa, a kevésbé karcost egyből! A termék minden adatáról a tényeknek megfelelően adok tájékoztatás |
+| Poljot Chronograph | [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529931729.html) | 60 000 | Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra *Az óra szépen müködik *Minden funkciója müködik *Dátumot váltja *Eredeti Mechanikus Poljot Chronograph szerkezet *Króm |
+| Poljot Chronograph | [Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra](https://www.vatera.hu/szovjet-nagyon-szep-nos-poljot-chronograph-mechanikus-karora-3529929749.html) | 60 000 | Szovjet nagyon szép NOS Poljot Chronograph Mechanikus karóra *Az óra szépen müködik *Minden funkciója müködik *Dátumot váltja *Eredeti Mechanikus Poljot Chronograph szerkezet *Króm |
+| Praktica LTL | [X PRAKTICA LTL FÉNYKÉPEZŐGÉP ANTIK RÉGI GYŰJTŐKNEK AUS JENA 50 MM OBJEKTíV](https://www.vatera.hu/x-praktica-ltl-fenykepezogep-antik-regi-gyujtoknek-aus-jena-50-mm-objektiv-3527499539.html) | 11 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK PRAKTICA TIPUSÚ FÉNYKÉPEZŐGÉP AUS JENA 50 MM OBJEKTIV A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATTAN RENDELTETÉSSZERŰ MŰKÖDÉSÉRŐL NINCS INFÓM  |
+| Praktica LTL | [X PRAKTICA LTL FÉNYKÉPEZŐGÉP ANTIK RÉGI GYŰJTŐKNEK PENTACON 135 MM OBJEKTíV](https://www.vatera.hu/x-praktica-ltl-fenykepezogep-antik-regi-gyujtoknek-pentacon-135-mm-objektiv-3528882917.html) | 15 999 | X PRAKTICA LTL FÉNYKÉPEZŐGÉP ANTIK RÉGI GYŰJTŐKNEK PENTACON 135 MM OBJEKTíV AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK PRAKTICA TIPUSÚ FÉNYKÉPEZŐGÉP PENTACON 135 MM OBJEKTIV A KÉPEKEN LÁTHA |
+| Praktica MTL | [Praktica MTL5 fényképezőgép  pentacon 1.8 50mm m42](https://www.vatera.hu/praktica-mtl5-fenykepezogep-pentacon-1-8-50mm-m42-3520679129.html) | 28 900 | Újszerű állapotban Eredeti dobozában Tökéletesen működik Karcmentes lencsékkel |
+| Rollei SL35 + Planar 50 | [ROLLEIFLEX ROLLEI SL35 QBM BAJONETT CARL ZEISS PLANAR F1.8 50MM HFT fényképezőgép](https://www.vatera.hu/rolleiflex-rollei-sl35-qbm-bajonett-carl-zeiss-planar-f1-8-50mm-hft-fenykepezogep-3465258995.html) | 49 999 | Zaridok jok. 1mp is. Fenymero mokudik, a mert ertekek jonak tunnek. Idozito ok. Objektiv. QBM Nincs gomba, nincs fatyol, kozepes por. Blende dinamikus, nincs olaj. Fokusz finom. |
+| Rollei SL35 + Planar 50 | [ROLLEIFLEX ROLLEI SL35 QBM BAJONETT CARL ZEISS PLANAR F1.4 50MM HFT lencse fényképezőgép](https://www.vatera.hu/rolleiflex-rollei-sl35-qbm-bajonett-carl-zeiss-planar-f1-4-50mm-hft-lencse-fenykepezogep-3435467240.html) | 64 999 | Lebonyolítás kizárólag 2025 Január 1. után. Zaridok jok. 1mp is. Fenymero mokudik, a mert ertekek jonak tunnek. Idozito ok. Lencse. QBM Nincs gomba, nincs fátyol, minimalis por. Bl |
+| Rolleiflex | [Rollei rolleiflex sárga szűrő R3](https://www.vatera.hu/rollei-rolleiflex-sarga-szuro-r3-3471962621.html) | 10 990 | Nagyon Szép állapotban Karcmentes üvegek |
+| Rolleiflex | [Rolleiflex Rolleifix gyorscsatlakozó](https://www.vatera.hu/rolleiflex-rolleifix-gyorscsatlakozo-3474636623.html) | 11 900 | Nagyon Szép állapotban Tökéletesen működik |
+| Rolleiflex 3.5 | [Rolleiflex 3,5 TLR fényképezőgép 1951. Automat Model 4 /MX](https://www.vatera.hu/rolleiflex-3-5-tlr-fenykepezogep-1951-automat-model-4-mx-3518605109.html) | 225 000 | Rolleiflex 6x6 TLR, filmmel tesztelve. 12/12 jó! (Az utolsó pár db. ff. bemutató kép ezzel készült) Gyártó: Franke & Heidecke, Németország, Braunschweig, 1951-52. Sorozatszám: 1238 |
+| Sega Master System | [Sega Master System II Játék Konzol - Alex Kidd beépített játékkal](https://www.vatera.hu/sega-master-system-ii-jatek-konzol-alex-kidd-beepitett-jatekkal-3513633221.html) | 16 000 | Sega Master System II Játék Konzol - Alex Kidd beépített játékkal -teszteltem működik csak a konzol és egy ajándék1 kontroller az aukció tárgya a kontroller törődést igényel ,nem m |
+| Sega Master System | [[ABC] SEGA Master System I, ritka konzol (1552)](https://www.vatera.hu/abc-sega-master-system-i-ritka-konzol-1552-3527165102.html) | 40 000 | általános információk: Az aukció tárgyát a képen látható tárgy(ak) képezik, ezen kívül mást nem adok. A termék állapotát kérlek a képek alapján mérd fel, ha valami nem tiszta inkáb |
+| Sega Mega Drive | [Sega megadrive konzol csomag](https://www.vatera.hu/sega-megadrive-konzol-csomag-3528314909.html) | 24 000 | mint a képeken, szép állapotban , rendben működik A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fontosnak, ezért kell a kérdéseket felt |
+| Sega Mega Drive | [Sega Megadrive 2 konzol](https://www.vatera.hu/sega-megadrive-2-konzol-3529446329.html) | 30 000 | Sega Megadrive 2 konzol, jó állapotban, hibátlan működéssel, 1db kontrollerrel, táppal és RF kábellel. Toejam & Earl játékkal. Személyes átvétel Budapesten XI kerületben lehetséges |
+| Sonnar 135 | [1I359 Carl Zeiss Jena Sonnar fényképezőgép 4/135 objektív](https://www.vatera.hu/1i359-carl-zeiss-jena-sonnar-fenykepezogep-4-135-objektiv-3487458293.html) | 22 000 | Régi német fényképezőgép objektíve. Porvédő kupakjai is megvannak. Valószínűleg működőképes állapotban van. Feliratok: CARL ZEISS JENA SONNAR 4/135 4877504 GERMANY Szélesség: 5.5 c |
+| Sony Walkman WM-DD | [WALKMAN - SONY WM-DD2 - SONY WALKMAN DDII](https://www.vatera.hu/walkman-sony-wm-dd2-sony-walkman-ddii-3490078469.html) | 78 000 | Képen látható állapotban elem bele volt folyva, elemről nem működik, adapterről minden funkció működik eredeti hordtáskával + fülessel (működik) - egy csavar hiány kopások karcok k |
+| Sturmanskie | [Sturmanskie Sputnik S vd786811421 karóra](https://www.vatera.hu/sturmanskie-sputnik-s-vd786811421-karora-3300198383.html) | 74 000 | Sturmanskie Sputnik S vd786811421 karóra Sturmanskie Sputnik S vd786811421+++++++++++++++++++++++++++++++++++ |
+| Super Nintendo | [Snes super nintendo konzol csomag](https://www.vatera.hu/snes-super-nintendo-konzol-csomag-3511223669.html) | 42 000 | mint a képeken, rendben működik a start gombot erősebben kell nyomni A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fontosnak, ezért kel |
+| Tair 3 | [TAIR-3 300MM F4.5 TELEPHOTO SNIPER objektív Zenit 12s fényképezőgép](https://www.vatera.hu/tair-3-300mm-f4-5-telephoto-sniper-objektiv-zenit-12s-fenykepezogep-3435468404.html) | 54 999 | Optikailag kifogástalan. Az F gyűrű csak akkor forgatható, ha az objektív "felvan húzva". Forgasd a piros gombos gyűrűt az óramutató járásával megegyezően stop-ig! (12 óra állás) M |
+| Takumar 55 1.8 | [TAKUMAR ASAHI FÉNYKÉPEZŐGÉP OPTIKA OBJEKTíV 55 MM 1:1,8 MENETES CSATLAKOZÁSSAL](https://www.vatera.hu/takumar-asahi-fenykepezogep-optika-objektiv-55-mm-1-1-8-menetes-csatlakozassal-3527494043.html) | 14 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ASAHI 55 MM FÉNYKÉPEZŐGÉP OBJEKTÍV HASZNÁLT  A KÉPEKEN LÁTHATÓ ÁLLAPOTBAN TISZTITANI BIZTOSAN KELL ! SAJNA NEM ÉRTEK HOZZÁ SOKAT SEGÍTENI NEM TUDO |
+| Takumar 55 1.8 | [TAKUMAR ASAHI FÉNYKÉPEZŐGÉP OPTIKA OBJEKTíV 55 MM 1:1,8 MENETES CSATLAKOZÁSSAL](https://www.vatera.hu/takumar-asahi-fenykepezogep-optika-objektiv-55-mm-1-1-8-menetes-csatlakozassal-3528882662.html) | 17 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ASAHI 55 MM FÉNYKÉPEZŐGÉP OBJEKTÍV HASZNÁLT  A KÉPEKEN LÁTHATÓ ÁLLAPOTBAN TISZTITANI BIZTOSAN KELL ! SAJNA NEM ÉRTEK HOZZÁ SOKAT SEGÍTENI NEM TUDO |
+| Tessar 50 | [Carl Zeiss Jena DDR - Tessar f2,8/50 - M42](https://www.vatera.hu/carl-zeiss-jena-ddr-tessar-f2-8-50-m42-3450444290.html) | 8 000 | A képeken látható állapotban. |
+| Tessar 50 | [Altix Tessar 2.8/50 Fényképezőgép tokjával.](https://www.vatera.hu/altix-tessar-2-8-50-fenykepezogep-tokjaval-3512808122.html) | 10 000 | Altix Tessar 2.8/50 Fényképezőgép tokjával.A tokja hibás.Képeken látható állapotban.A gép működik..Postázás bármelyik csomagküldő szolgálattal. |
+| Trioplan 50 | [Altix-n Trioplan 1:2,9/50 Mayer optic](https://www.vatera.hu/altix-n-trioplan-1-2-9-50-mayer-optic-3478908527.html) | 14 500 | Altix-n Trioplan 1:2,9/50 Mayer optic A fényképezőgép megkímélt állapotban van, használati nyomokkal, a képek szerint. A készülék működését nem teszteltük. Magyarországi Erste bank |
+| Tungsram ECC40 | [rádiócső, elektroncső ecc40 Tungsram régi](https://www.vatera.hu/radiocso-elektroncso-ecc40-tungsram-regi-3496110542.html) | 15 000 | Bemutatom nektek a Tungsram ECC40 egy rendkívül ritka, fekete anódos változatát. Az audiofil körökben ezt a csövet a Rimlock triódák "szent gráljának" tekintik. Hangzás: A fekete a |
+| Tungsram ECC40 | [rádiócső, elektroncső ecc40 2db  Tungsram fekete anódos](https://www.vatera.hu/radiocso-elektroncso-ecc40-2db-tungsram-fekete-anodos-3503541446.html) | 20 000 | Bemutatom nektek a Tungsram ECC40 egy rendkívül ritka, fekete anódos változatát. Az audiofil körökben ezt a csövet a Rimlock triódák "szent gráljának" tekintik. Hangzás: A fekete a |
+| Tungsram ECC81 | [rádiócső, elektroncső ecc81 tungsram](https://www.vatera.hu/radiocso-elektroncso-ecc81-tungsram-3496315685.html) | 15 000 | Eladó egy magyar Tungsram gyártó által gyártott, vintage ECC81 rádiócső (12AT7-nek megfelelő). Ez egy klasszikus, megbízható változat, amely a Tungsram jellegzetes dizájnjáról és t |
+| Tungsram ECC81 | [rádiócső, elektroncső ecc81 Tungsram régi](https://www.vatera.hu/radiocso-elektroncso-ecc81-tungsram-regi-3496109879.html) | 25 000 | Eladó: egy ritka, korai változata a Tungsram ECC81-nek. Magyar gyártmány. Analógok: 12AT7, ECC801S, CV4024. Specifikációk: Magas megbízhatóság és tartósság, jellemző a korai Tungsr |
+| Tungsram ECC82 | [rádiócső, elektroncső ecc82 Tungsram](https://www.vatera.hu/radiocso-elektroncso-ecc82-tungsram-3496316423.html) | 15 000 | Eladó két eredeti, Tungsram (Magyarország) gyártmányú ECC82 (12AU7) rádiócső. Az európai vákuumcső-tervezés klasszikusa, időtálló. A csövek jellemzői: Kialakítás: Szürke hegesztett |
+| Tungsram ECC82 | [rádiócső, elektroncső ecc82 tungsram fólia getter](https://www.vatera.hu/radiocso-elektroncso-ecc82-tungsram-folia-getter-3496315256.html) | 15 000 | Eladó egy legendás és ritka ECC82 rádiócső (hasonló a 12AU7-hez) a magyar Tungsram gyártótól. Ez egy korai gyártású modell az 1950-es évek végéről, amelyet tömör fóliakorongos gett |
+| Tungsram ECL82 | [ECL82 elektroncső.  Tungsram.](https://www.vatera.hu/ecl82-elektroncso-tungsram-3530909723.html) | 3 800 | A képen látható elektroncső , újnak látható.  Nem tesztelt. |
+| Tungsram EF86 | [rádiócső, elektroncső ef86 Tungsram](https://www.vatera.hu/radiocso-elektroncso-ef86-tungsram-3496317251.html) | 10 000 | Eladó három ritka, alacsony zajszintű, Tungsram (Magyarország) gyártmányú EF86 pentóda. Ezek a vintage minőség etalonjai. A csövek jellemzői: Konstrukció: Tömör anód. Minden cső be |
+| Tungsram EL84 | [rádiócső, elektroncső el84 tungsram fólia getter](https://www.vatera.hu/radiocso-elektroncso-el84-tungsram-folia-getter-3496088033.html) | 4 000 | A Tungsram csövek nem túl ismertek, de az idő múlásával egyre nagyobb elismerésben részesülnek. Sajnos termékeik még gyorsabban tűnnek el a kínálatból. Ha egy muzikális, mégis dina |
+| Tungsram EL84 | [Elektroncsö el84 tungsram](https://www.vatera.hu/elektroncso-el84-tungsram-3503501780.html) | 5 000 | Elektroncsö el84 tungsram 40 db van |
+| Tungsram EZ80 | [rádiócső, elektroncső ez80 Tungsram](https://www.vatera.hu/radiocso-elektroncso-ez80-tungsram-3496111103.html) | 5 000 | Eladó egy kiváló minőségű EZ80 kenotron a magyar Tungsram gyártótól. Hangzás: A Tungsram kenotron használata a hagyományos diódák vagy olcsó elektroncsövek helyett a vintage rajong |
+| Tungsram EZ81 | [rádiócső, elektroncső ez81 Tungsram](https://www.vatera.hu/radiocso-elektroncso-ez81-tungsram-3496111154.html) | 7 000 | Eladó egy kiváló minőségű EZ81 kenotron a magyar Tungsram gyártótól. Hangzás: A Tungsram kenotron használata a hagyományos diódák vagy olcsó elektroncsövek helyett a vintage rajong |
+| Tungsram PCL85 | [Tungsram PCL85](https://www.vatera.hu/tungsram-pcl85-3531308564.html) | 1 200 | Eladók a képen látható elektroncsövek. ujszerű állapotban. Garancia nincs, szállitás a vevő költségére előre utalás után. Az ár 1 db-ra vonatkozik. Fűtés rendben. |
+| Voigtländer Bessa | [Voigtlander Bessa 66 - Voigtar f3,5/75 - 6x6 120 film](https://www.vatera.hu/voigtlander-bessa-66-voigtar-f3-5-75-6x6-120-film-3492163625.html) | 10 000 | A képeken látható állapotban. A lassabb sebességek nem pontosak. |
+| Voigtländer Vitessa | [Voigtlander Vitessa T fényképezőgép szett](https://www.vatera.hu/voigtlander-vitessa-t-fenykepezogep-szett-3499290962.html) | 42 900 | Nagyon Szép állapotban Tökéletesen működik 135mm objektív sapkák nélkül Tokkal |
+| Voigtländer Vito | [VOIGTLANDER VITO FÉNYKÉPEZŐ GÉP](https://www.vatera.hu/voigtlander-vito-fenykepezo-gep-3343146044.html) | 12 345 | FOTÓKON LÁTHATÓ EREDETI MEGKÍMÉLT ÁLLAPOTBAN |
+| Voigtländer Vito | [Voigtlander camera vito cl fenykepezőgép](https://www.vatera.hu/voigtlander-camera-vito-cl-fenykepezogep-3261483386.html) | 14 567 | A fotokon lathato megkimelt,ujszeru mukodo allapotban tokkal egyutt 1900 as evek kozepe |
+| Vostok Komandirskie | [Szovjet Szép Wostok Komandirskie 17 köves Mechanikus  karóra](https://www.vatera.hu/szovjet-szep-wostok-komandirskie-17-koves-mechanikus-karora-3527647169.html) | 18 000 | Szovjet Szép Wostok Komandirskie 17 köves Mechanikus karóra *Az óra szépen müködik *Eredeti Mechanikus Wostok szerkezet *Krómozott eredeti tok *Eredeti szép számlap *Acél hátlap *S |
+| Vostok Komandirskie | [Szovjet Szép Wostok Komandirskie 17 köves Mechanikus  karóra](https://www.vatera.hu/szovjet-szep-wostok-komandirskie-17-koves-mechanikus-karora-3527646749.html) | 18 000 | Szovjet Szép Wostok Komandirskie 17 köves Mechanikus karóra *Az óra szépen müködik *Eredeti Mechanikus Wostok szerkezet *Krómozott eredeti tok *Eredeti szép számlap *Acél hátlap *S |
+| Yashica Electro 35 | [YASHICA ELECTRO 35 MC CAMERA RETRO FÉNYKÉPEZŐGÉP RÉGI YASHINON DX 40 MM OBJEKTíV](https://www.vatera.hu/yashica-electro-35-mc-camera-retro-fenykepezogep-regi-yashinon-dx-40-mm-objektiv-3528837461.html) | 14 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK YASHICA TIPUSÚ FÉNYKÉPEZŐGÉP A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATTAN DE KIPRÓBÁLÁSÁRA TESZTELÉSÉRE NINCS MÓDOM ÉS NEM IS VÁLLALOM SAJNA |
+| Yashica Electro 35 | [YASHICA ELECTRO 35 MC CAMERA RETRO FÉNYKÉPEZŐGÉP RÉGI YASHINON DX 40 MM OBJEKTíV](https://www.vatera.hu/yashica-electro-35-mc-camera-retro-fenykepezogep-regi-yashinon-dx-40-mm-objektiv-3528882902.html) | 14 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK YASHICA TIPUSÚ FÉNYKÉPEZŐGÉP A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATTAN DE KIPRÓBÁLÁSÁRA TESZTELÉSÉRE NINCS MÓDOM ÉS NEM IS VÁLLALOM SAJNA |
+| Yashica T4 | [Yashica t5 filmes fényképezőgép, leirással, tokkal](https://www.vatera.hu/yashica-t5-filmes-fenykepezogep-leirassal-tokkal-3530711249.html) | 180 000 | mint a képeken, elemet beletéve vaku jó , elcsettinthető filmmel nem próbáltam A termék minden adatáról a tényeknek megfelelően adok tájékoztatást. Nem tudom ki mit tart fontosnak, |
+| Zeiss Ikon Contessa | [Zeiss Ikon Contessa 35 távmérős fényképezőgép](https://www.vatera.hu/zeiss-ikon-contessa-35-tavmeros-fenykepezogep-3500504330.html) | 29 900 | Szép állapotban Tökéletesen működik Tok nélkül |
+| Zeiss Ikon Contessa | [Contessa Nettel Adoro Compur photo fénylépezőgép with Carl Zeiss Jena.](https://www.vatera.hu/contessa-nettel-adoro-compur-photo-fenylepezogep-with-carl-zeiss-jena-3417472007.html) | 95 000 | Contessa Nettel Adoro Compur photo fénylépezőgép with Carl Zeiss Jena. |
+| Zeiss Ikon Ikonta | [Zeiss Ikon Ikonta 520/18 (Baby Ikonta) - f6,3/50 - 127 film - Ritka!](https://www.vatera.hu/zeiss-ikon-ikonta-520-18-baby-ikonta-f6-3-50-127-film-ritka-3481694291.html) | 12 000 | A képek szerinti állapotban. Műszakilag rendben van. |
+| Zeiss Ikonta 521 | [Carl Zeiss Ikon Ikonta 521 Vertikális! 4.5x6cm 120film Tessar 75mm F3.5](https://www.vatera.hu/carl-zeiss-ikon-ikonta-521-vertikalis-4-5x6cm-120film-tessar-75mm-f3-5-3505990013.html) | 49 999 | Ritka vertikális alap orientáció. Nincs gomba vagy fátyol. A zár jól dolgozik. B és 1s is rendben. A kihuzat ép. Blende és a fókusz finom. Nincs filmtesztelve. Mechanikailag garant |
+| Zenit E | [Régi , retró Zenit E fényképezőgép](https://www.vatera.hu/regi-retro-zenit-e-fenykepezogep-3524233709.html) | 6 000 | Régi , retró , analóg , filmes szovjet gyártású Zenit E fényképezőgép eladó. Teszteletlen. |
+| Zenit E | [X ZENIT E RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO INDUSTAR 50-2  OBJEKTíV](https://www.vatera.hu/x-zenit-e-regi-fenykepezogep-vaz-retro-industar-50-2-objektiv-3528886907.html) | 9 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ZENIT TIPUSÚ FÉNYKÉPEZŐGÉP HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATTAN RENDELTETÉSSZERŰ MŰKÖDÉSÉRŐ |
+| Zenit ET | [X ZENIT ET RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO VIVITAR 80-200 MM OBJEKTíV](https://www.vatera.hu/x-zenit-et-regi-fenykepezogep-vaz-retro-vivitar-80-200-mm-objektiv-3527499185.html) | 12 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ZENIT ET TIPUSÚ FÉNYKÉPEZŐGÉP VIVITAR 80-200 MM OBJEKTíV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATT |
+| Zenit ET | [X ZENIT ET RÉGI FÉNYKÉPEZŐGÉP VÁZ RETRO HELIOS 44M -4 OBJEKTíV IGEN SZÉP ÁLLAPOTBAN](https://www.vatera.hu/x-zenit-et-regi-fenykepezogep-vaz-retro-helios-44m-4-objektiv-igen-szep-allapotban-3527499542.html) | 14 999 | AZ AUKCIÓ TÁRGYA 1 DB RETRO ANTIK ZENIT ET TIPUSÚ FÉNYKÉPEZŐGÉP HELIOS 44-M-4 OBJEKTíV HASZNÁLT DE KORÁHOZ KÉPEST JÓ ÁLLAPOTBAN A KÉPEKEN LÁTHATÓ ÁLLAGBAN FELHÚZHATÓ ÉS ELCSATTAN R |
+| Zenit TTL | [Zenit TTL Helios 44M 2/58 lencsével](https://www.vatera.hu/zenit-ttl-helios-44m-2-58-lencsevel-3523993349.html) | 8 990 | Eladó Zenit gép Helios lencsével.  Szép állapotban. |
+| Zenit TTL | [ZENIT TTL fényképezőgép + HANIMEX X150 vaku](https://www.vatera.hu/zenit-ttl-fenykepezogep-hanimex-x150-vaku-3523246955.html) | 14 000 | ZENIT TTL szovjet tükörreflexes fényképezőgép, kiváló állapotban. Objektív: HELIOS-44M 2/58 Fókusz: 0.55m-től Rekesz: 2; 2,8; 4; 5,6; 8; 11; 16 Záridő: 1/500; 1/250; 1/125; 1/60; 1 |
+| Zorki 4 | [ZORKI 4K fényképezőgép 3,5/50](https://www.vatera.hu/zorki-4k-fenykepezogep-3-5-50-3478921043.html) | 25 000 | ZORKI 4K fényképezőgép 3,5/50 Analog fényképezőgép, nincs tesztelve filmmel. . Megvigyázott állapotú a képek szerint. Magyarországi Erste bankszámlára történő befizetés után, Magya |
+
+## Ellenőrizhetőség
+
+- [Bemeneti pillanatkép és futási adatok](decision-evidence.json)
+- [Hitelesítés, kérésfolyam, kulcsok és tokenek](../AUTHENTICATION.md)
+- [Előző riport – archivált, nem aktuális ajánlás](korabbi-2026-09-17.md)
+- [Új modell](../elemzes/decision_model.py) · [riport újragenerálása](../elemzes/build_decision_report.py)
+
+A PicClick friss lekérése HTTP 502-vel sikertelen volt. A nyilvános eBay-keresés aktív hirdetéseket adott, de nem ellenőrzött, időablakhoz kötött lezárt eladási mintát. Az eBay [Tungsram kínálata](https://www.ebay.com/b/Tungsram-12ax7/64627/bn_7023391671) csak aktív ár- és állapotellenőrzésre használható, likviditás igazolására nem.

@@ -8,3 +8,5 @@ out/
 *.csv
 *.json
 !tests/fixtures/*.json
+
+!riport/decision-evidence.json

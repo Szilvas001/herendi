@@ -1,5 +1,29 @@
 # Vatera – Herendi & Zsolnay deal finder
 
+## Friss döntési riport és hitelesítés
+
+- [2026-09-19-i újraszámított riport](riport/README.md): élő Vatera-ellenőrzés,
+  teljesebb költségmodell, külön jelölt piaci bizonytalanságok.
+- [Hitelesítés, komponensek, kérésfolyam, kulcs- és tokenkezelés](AUTHENTICATION.md).
+- A régi aktívhirdetés-alapú likviditási becslések nem bizonyított eladási idők.
+  A `decision_model.py` ezért nem becsül időt az aktív kínálat darabszámából.
+
+Az új ellenőrzés megismétlése a repó gyökeréből (API-kulcs nélkül):
+
+```bash
+PYTHONPATH=. python elemzes/screen_current.py
+PYTHONPATH=. python elemzes/refresh_decisions.py
+PYTHONPATH=. python elemzes/build_decision_report.py riport/decision-evidence.json
+python -m unittest discover -s tests -v
+```
+
+A riport generálása a mentett bemenetből hálózat nélkül is megismételhető
+(csak a harmadik parancs). Az új modell költségforgatókönyv, nem betanított
+árprediktor és nem egy másik LLM API-hívása. A nyugati alapárak korábbi,
+nem realizált árbecslések; a költségek és devizakurzusok tervezési feltevések.
+
+## Eredeti scraper és opcionális Claude-elemzés
+
 Vatera piactér scraper + Claude Opus 5 elemzés: kigyűjti a **Herendi** és
 **Zsolnay** porcelán hirdetéseket, eladási típus szerint szétválogatva tárolja
 őket, majd a három listát külön-külön átadja a Claude API-nak, ami kiválasztja
