@@ -1,5 +1,7 @@
 # Vatera – friss döntési riport
 
+**Új, célzott exportkutatás:** [Három magyar exportjelölt, ROI-val és időforgatókönyvvel](hungarian-top3.md). [Dashboard és indítás](../dashboard/README.md). Ellenőrzés: 2026-09-19 19:41 UTC; 482 keresőkártya, 30 termékoldal. Az alábbiakban a korábbi, szélesebb riport olvasható.
+
 Ellenőrzés: 2026-09-19T15:33:44.029006+00:00 (UTC).
 
 **Bizonyítottan nagy likviditású és nagy nettó árrésű vétel: nincs igazolva.** A friss Vatera-adatok rendelkezésre állnak, de friss, azonos kivitelű és állapotú lezárt nyugati eladásokból nem sikerült ellenőrizhető mintát szerezni. Ez nem bizonyítja, hogy nincs jó vétel; azt jelenti, hogy a szükséges bizonyíték hiányzik.

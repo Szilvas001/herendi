@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="hu"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hungarian Finds — export döntéstámogatás</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#173d39;background:#f5f3ec}*{box-sizing:border-box}body{margin:0}header{background:#163f39;color:#faf7ed;padding:28px 5vw}header span{color:#c4d8ad;font-size:12px;letter-spacing:2px}h1{font-family:Georgia,serif;font-weight:400;font-size:40px;margin:10px 0}main{max-width:1250px;margin:auto;padding:28px}h2{font-size:20px}.notice{border-left:4px solid #b48539;background:#fff7e4;padding:16px;line-height:1.6}.controls,.metrics{display:flex;gap:18px;flex-wrap:wrap;margin:24px 0}.controls label{display:flex;flex-direction:column;gap:7px;font-size:13px}input,select,button{font:inherit;padding:9px;border:1px solid #bdc8bf;border-radius:6px;background:white}input{width:135px}button{cursor:pointer;color:#16483e}article,.metric{background:white;border:1px solid #dce1d7;border-radius:12px;padding:22px}.metric{flex:1;min-width:150px}.metric strong{display:block;font-size:28px;margin-top:10px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}article h2{font-family:Georgia,serif;font-size:25px;line-height:1.25;min-height:62px}.tag{font-size:11px;letter-spacing:1px;color:#84612c}article p{line-height:1.6;font-size:14px}a{color:#116b5b}dl{display:grid;grid-template-columns:1fr 1fr;gap:14px 8px;font-size:13px}dd{margin:0;text-align:right;font-weight:600}.negative{color:#ae3933}.positive{color:#18705a}.detail{border-top:1px solid #dde3db;padding-top:12px}footer{margin:28px 0;color:#5a6c63;font-size:13px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px;background:#fff}td,th{padding:14px;text-align:left;border-bottom:1px solid #dee4db;white-space:nowrap}#error{color:#a33}button:focus,a:focus,input:focus,select:focus{outline:3px solid #b39049} @media(max-width:850px){.grid{grid-template-columns:1fr}h1{font-size:30px}main{padding:16px}}
+</style>
+<header><span>HUNGARIAN FINDS / RESEARCH DESK</span><h1>Magyar tárgyak. Nemzetközi lehetőségek.</h1><p>Három jelölt • átlátható költségek • ellenőrizhető források</p></header>
+<main><p id="error" role="alert"></p><div class="notice" id="notice"></div>
+<section class="controls" aria-label="Forgatókönyv">
+<label>Célpiac<select id="market"><option value="eu">Nyugat-Európa / EU</option><option value="us">USA — többletköltség</option></select></label>
+<label>Eladási árszint<select id="scenario"><option value="base">Alapeseti feltételezés</option><option value="stress">Stressz / alacsony ár</option><option value="high">Magas ár / lassabb eladás</option></select></label>
+<label>Tervezési HUF / EUR<input id="fx" type="number" value="395" min="1" step="1"></label>
+<label>Díjak (%)<input id="fee" type="number" value="18" min="0" max="60"></label>
+<label>Kockázati tartalék (%)<input id="risk" type="number" value="10" min="0" max="50"></label>
+<label>USA extra / tétel (Ft)<input id="extra" type="number" value="15000" min="0" step="1000"></label>
+<button id="download">Forgatókönyv letöltése (JSON)</button></section>
+<section class="metrics" id="metrics"></section><section class="grid" id="cards"></section>
+<h2>Összehasonlítás a kiinduló vételárral</h2><div class="tablewrap"><table><thead><tr><th>Jelölt</th><th>Vételár</th><th>Teljes tőke</th><th>Fedezet</th><th>ROI</th><th>30% ROI vételi plafon</th></tr></thead><tbody id="rows"></tbody></table></div>
+<footer id="foot"></footer></main><script src="data.js"></script><script src="app.js"></script></html>

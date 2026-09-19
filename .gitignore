@@ -10,3 +10,5 @@ out/
 !tests/fixtures/*.json
 
 !riport/decision-evidence.json
+!riport/hungarian-top3.json
+!riport/hungarian-scan-audit.json

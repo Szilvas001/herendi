@@ -1,0 +1,189 @@
+{
+  "checked_at": "2026-09-19T19:41:14.161033+00:00",
+  "seconds": 112.1,
+  "budget_seconds": 210,
+  "scope": "Targeted Vatera sample; not whole-market coverage",
+  "searches": [
+    {
+      "term": "herendi nyúl",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+ny%C3%BAl&p=1",
+      "ok": true
+    },
+    {
+      "term": "herendi figura",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+figura&p=1",
+      "ok": true
+    },
+    {
+      "term": "herendi apponyi",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+apponyi&p=1",
+      "ok": true
+    },
+    {
+      "term": "zsolnay eozin",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+eozin&p=1",
+      "ok": true
+    },
+    {
+      "term": "zsolnay medve",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+medve&p=1",
+      "ok": true
+    },
+    {
+      "term": "zsolnay teknős",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+tekn%C5%91s&p=1",
+      "ok": true
+    },
+    {
+      "term": "hollóházi szász",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=holl%C3%B3h%C3%A1zi+sz%C3%A1sz&p=1",
+      "ok": true
+    },
+    {
+      "term": "gorka váza",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=gorka+v%C3%A1za&p=1",
+      "ok": true
+    },
+    {
+      "term": "tungsram ecc83",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=tungsram+ecc83&p=1",
+      "ok": true
+    },
+    {
+      "term": "tungsram e88cc",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=tungsram+e88cc&p=1",
+      "ok": true
+    },
+    {
+      "term": "ajka kristály",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=ajka+krist%C3%A1ly&p=1",
+      "ok": true
+    },
+    {
+      "term": "pécsi kesztyű",
+      "page": 1,
+      "url": "https://www.vatera.hu/listings/index.php?q=p%C3%A9csi+keszty%C5%B1&p=1",
+      "ok": true
+    },
+    {
+      "term": "herendi nyúl",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+ny%C3%BAl&p=2",
+      "ok": true
+    },
+    {
+      "term": "herendi figura",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+figura&p=2",
+      "ok": true
+    },
+    {
+      "term": "herendi apponyi",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=herendi+apponyi&p=2",
+      "ok": true
+    },
+    {
+      "term": "zsolnay eozin",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+eozin&p=2",
+      "ok": true
+    },
+    {
+      "term": "zsolnay medve",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+medve&p=2",
+      "ok": true
+    },
+    {
+      "term": "zsolnay teknős",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=zsolnay+tekn%C5%91s&p=2",
+      "ok": true
+    },
+    {
+      "term": "hollóházi szász",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=holl%C3%B3h%C3%A1zi+sz%C3%A1sz&p=2",
+      "ok": true
+    },
+    {
+      "term": "gorka váza",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=gorka+v%C3%A1za&p=2",
+      "ok": true
+    },
+    {
+      "term": "tungsram ecc83",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=tungsram+ecc83&p=2",
+      "ok": true
+    },
+    {
+      "term": "tungsram e88cc",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=tungsram+e88cc&p=2",
+      "ok": true
+    },
+    {
+      "term": "ajka kristály",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=ajka+krist%C3%A1ly&p=2",
+      "ok": true
+    },
+    {
+      "term": "pécsi kesztyű",
+      "page": 2,
+      "url": "https://www.vatera.hu/listings/index.php?q=p%C3%A9csi+keszty%C5%B1&p=2",
+      "ok": true
+    }
+  ],
+  "errors": [],
+  "http": {
+    "cache_hit": 0,
+    "fetched": 54,
+    "failed": 0,
+    "antibot": 0
+  },
+  "candidate_count": 482,
+  "selected": [
+    {
+      "listing_id": "3430331234",
+      "title": "-AS979- Régi Zsolnay Porcelán Szobor Figura Birkózó Marakodó Medve Pár",
+      "url": "https://www.vatera.hu/as979-regi-zsolnay-porcelan-szobor-figura-birkozo-marakodo-medve-par-3430331234.html",
+      "price_huf": 12990,
+      "sale_type": "fix",
+      "availability": "in_stock",
+      "end_time": "2026.09.25. 17:56"
+    },
+    {
+      "listing_id": "3530289641",
+      "title": "2db ECC83 Tungsram. Legolcsóbb",
+      "url": "https://www.vatera.hu/2db-ecc83-tungsram-legolcsobb-3530289641.html",
+      "price_huf": 8500,
+      "sale_type": "fix",
+      "availability": "in_stock",
+      "end_time": "2026.10.07. 12:24"
+    },
+    {
+      "listing_id": "3487242653",
+      "title": "1D781 Régi Herendi porcelán nyúl nyuszi pár ~5 cm",
+      "url": "https://www.vatera.hu/1d781-regi-herendi-porcelan-nyul-nyuszi-par-5-cm-3487242653.html",
+      "price_huf": 7800,
+      "sale_type": "fix",
+      "availability": "in_stock",
+      "end_time": "2026.09.20. 18:26"
+    }
+  ]
+}
