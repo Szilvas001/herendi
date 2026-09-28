@@ -29,14 +29,14 @@ HALOZATI_UJRAPROBA = 8
 UJRAPROBA_SZUNET_SEC = 600
 
 LEPESEK = [
-    ("Vatera átemelése + Darabanth realizált árak",
+    ("Chairish: általános porcelán korpusz (nyugati ár)",
+     ["harvest-pg", "--source", "chairish", "--corpus", "general"]),
+    ("Galéria Savaria: általános porcelán korpusz (magyar ár)",
+     ["harvest-pg", "--source", "galeriasavaria", "--corpus", "general"]),
+    ("Vatera átemelése + Darabanth pótlás",
      ["harvest-pg", "--from-sqlite", "--source", "darabanth"]),
-    ("Galéria Savaria: márkás", ["harvest-pg", "--source", "galeriasavaria"]),
-    ("Chairish: márkás (nyugati ár)", ["harvest-pg", "--source", "chairish"]),
-    ("Chairish: általános porcelán korpusz", ["harvest-pg", "--source", "chairish",
-                                              "--corpus", "general"]),
-    ("Galéria Savaria: általános porcelán korpusz", ["harvest-pg", "--source", "galeriasavaria",
-                                                     "--corpus", "general"]),
+    ("Galéria Savaria: márkás pótlás", ["harvest-pg", "--source", "galeriasavaria"]),
+    ("Chairish: márkás pótlás", ["harvest-pg", "--source", "chairish"]),
 ]
 
 

@@ -124,5 +124,26 @@ class ParticioNevTest(unittest.TestCase):
             pg._particio_nev("")
 
 
+
+class FrontierKulcsTest(unittest.TestCase):
+    """A két korpusz ugyanazt az URL-t külön feladatként kezeli.
+
+    Ha a frontier kulcsa csak (source, url) volna, az általános korpusz futása
+    minden URL-t késznek látna a márkás futás után, és nulla tétellel állna le.
+    """
+
+    def test_kulcsban_benne_van_a_kind(self):
+        from porcelan import harvest_pg
+        ddl = " ".join(harvest_pg.FRONTIER_DDL.split())
+        self.assertIn("PRIMARY KEY (source, url, kind)", ddl)
+        self.assertNotIn("PRIMARY KEY (source, url)", ddl)
+
+    def test_felvesz_utkozeskezelese_a_harmas_kulcsra_megy(self):
+        import inspect
+
+        from porcelan import harvest_pg
+        forras = inspect.getsource(harvest_pg._felvesz)
+        self.assertIn("ON CONFLICT (source, url, kind)", forras)
+
 if __name__ == "__main__":
     unittest.main()

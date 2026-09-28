@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS {pg.SEMA}.harvest_frontier (
     attempts   integer NOT NULL DEFAULT 0,
     last_error text,
     updated_at timestamptz NOT NULL DEFAULT now(),
-    PRIMARY KEY (source, url)
+    -- A kulcsban a `kind` is benne van: ugyanaz az URL külön feladat a márkás és
+    -- az általános korpuszban. Enélkül a második korpusz mindent késznek látna.
+    PRIMARY KEY (source, url, kind)
 );
 CREATE INDEX IF NOT EXISTS ix_frontier_nyitott
     ON {pg.SEMA}.harvest_frontier (source, kind, status);
@@ -52,7 +54,7 @@ def _most() -> datetime:
 
 def _felvesz(conn, source: str, url: str, kind: str) -> None:
     conn.execute(f"INSERT INTO {pg.SEMA}.harvest_frontier (source, url, kind) VALUES (%s,%s,%s) "
-                 f"ON CONFLICT (source, url) DO NOTHING", (source, url, kind))
+                 f"ON CONFLICT (source, url, kind) DO NOTHING", (source, url, kind))
 
 
 def _kovetkezo(conn, source: str, kind: str):
@@ -61,10 +63,10 @@ def _kovetkezo(conn, source: str, kind: str):
         f"AND status='pending' ORDER BY url LIMIT 1", (source, kind)).fetchone()
 
 
-def _lezar(conn, source: str, url: str, status: str, hiba: str | None = None) -> None:
+def _lezar(conn, source: str, url: str, kind: str, status: str, hiba: str | None = None) -> None:
     conn.execute(f"UPDATE {pg.SEMA}.harvest_frontier SET status=%s, last_error=%s, "
-                 f"attempts=attempts+1, updated_at=now() WHERE source=%s AND url=%s",
-                 (status, (hiba or "")[:500] or None, source, url))
+                 f"attempts=attempts+1, updated_at=now() WHERE source=%s AND url=%s AND kind=%s",
+                 (status, (hiba or "")[:500] or None, source, url, kind))
 
 
 def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | None = None,
@@ -109,11 +111,11 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
                 if valasz is None or valasz.status != 200:
                     raise RuntimeError(f"HTTP {getattr(valasz, 'status', '-')}")
             except DisallowedError as exc:
-                _lezar(conn, source, url, "skipped", str(exc))
+                _lezar(conn, source, url, "sitemap" + utotag, "skipped", str(exc))
                 continue
             except (RuntimeError, ValueError) as exc:
                 stat["hiba"] += 1
-                _lezar(conn, source, url, "failed", str(exc))
+                _lezar(conn, source, url, "sitemap" + utotag, "failed", str(exc))
                 continue
             alsitemapek, tetelek = forras.sitemap_alatt(url, valasz.text)
             for u in alsitemapek:
@@ -122,7 +124,7 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
                 _felvesz(conn, source, u, "item" + utotag)
             stat["sitemap"] += 1
             stat["tetel_talalt"] += len(tetelek)
-            _lezar(conn, source, url, "done")
+            _lezar(conn, source, url, "sitemap" + utotag, "done")
 
         # 2. termékoldalak
         while (sor := _kovetkezo(conn, source, "item" + utotag)) is not None:
@@ -132,32 +134,32 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
             try:
                 valasz = fetcher.get(url, ttl=settings.get("http.cache_ttl_detail_sec", 86400))
             except DisallowedError as exc:
-                _lezar(conn, source, url, "skipped", str(exc))
+                _lezar(conn, source, url, "item" + utotag, "skipped", str(exc))
                 continue
             if valasz is None or valasz.status in (404, 410):
-                _lezar(conn, source, url, "gone", "a tétel már nem elérhető")
+                _lezar(conn, source, url, "item" + utotag, "gone", "a tétel már nem elérhető")
                 continue
             if valasz.status != 200 or not valasz.text:
                 stat["hiba"] += 1
-                _lezar(conn, source, url, "failed", f"HTTP {valasz.status}")
+                _lezar(conn, source, url, "item" + utotag, "failed", f"HTTP {valasz.status}")
                 continue
             stat["termekoldal"] += 1
             adatpont = forras.adatpont(url, valasz.text)
             if adatpont is None:
                 stat["kihagyva"] += 1
                 stat["okok"]["nincs schema.org Product"] = stat["okok"].get("nincs schema.org Product", 0) + 1
-                _lezar(conn, source, url, "skipped", "nincs schema.org Product")
+                _lezar(conn, source, url, "item" + utotag, "skipped", "nincs schema.org Product")
                 continue
             adatpont["observed_at"] = _most()
             ok = pg.ervenyes(adatpont)
             if ok is not None:
                 stat["kihagyva"] += 1
                 stat["okok"][ok] = stat["okok"].get(ok, 0) + 1
-                _lezar(conn, source, url, "skipped", ok)
+                _lezar(conn, source, url, "item" + utotag, "skipped", ok)
                 continue
             pg.beir(conn, adatpont)
             stat["bekerult"] += 1
-            _lezar(conn, source, url, "done")
+            _lezar(conn, source, url, "item" + utotag, "done")
 
     except BlockedError as exc:
         allapot = "blocked"
