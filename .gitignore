@@ -25,3 +25,6 @@ config/settings.toml
 
 # Futási napló és adat-pillanatképek
 gyujtes.log
+
+# Adat-pillanatkep a repoban (export_adat.py keszíti)
+!data_export/*.json
