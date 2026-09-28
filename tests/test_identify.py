@@ -119,3 +119,25 @@ class NoSelfEvidenceTest(unittest.TestCase):
         est = SkuPricer(df).estimate("HU", "Herendi|711|VBO", "ismeretlen", exclude_refs={"111"})
         self.assertEqual(est["n_exact"], 1)            # csak a MÁSIK eladás számít
         self.assertAlmostEqual(est["mu"], 10.5)
+
+
+class HerendCatalogTest(unittest.TestCase):
+    def test_sku_split(self):
+        from porcelan.catalog import parse_herend_sku
+        self.assertEqual(parse_herend_sku("03464000SPEB"),
+                         {"form_no": "3464", "part": "0", "knob": "00", "pattern_code": "SPEB"})
+        self.assertEqual(parse_herend_sku("20300091FORET")["knob"], "91")
+        self.assertIsNone(parse_herend_sku("ZAL-R 91989"))
+
+
+class WafChallengeTest(unittest.TestCase):
+    def test_202_challenge_is_blocked_not_empty_page(self):
+        from unittest import mock
+        with IsolatedEnv():
+            from porcelan.net import BlockedError, Fetcher
+            resp = mock.Mock(status_code=202, content=b"", text="", url="https://www.vatera.hu/x",
+                             headers={"x-amzn-waf-action": "challenge"})
+            f = Fetcher(min_delay=0, respect_robots=False)
+            f.session = mock.Mock(get=mock.Mock(return_value=resp))
+            with self.assertRaises(BlockedError):
+                f.get("https://www.vatera.hu/listings/index.php?q=herendi")

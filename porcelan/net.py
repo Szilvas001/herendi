@@ -163,6 +163,12 @@ class Fetcher:
                 time.sleep(min(30, 2 ** attempt))
                 continue
             net_fail = False
+            waf = resp.headers.get("x-amzn-waf-action") or ("Incapsula" in (resp.text or "")[:3000] and "incapsula")
+            if waf or (resp.status_code == 202 and not resp.content):
+                # bot-védelmi kihívás (pl. AWS WAF challenge, Incapsula): nem oldjuk meg, nem kerüljük meg
+                self.stats["blocked"] += 1
+                self._blocked_hosts.add(host)
+                raise BlockedError(f"bot-védelmi kihívás ({waf or 'HTTP 202 üres válasz'}): {url}")
             if resp.status_code in (403, 429):
                 self.stats["blocked"] += 1
                 if settings.get("http.stop_on_block", True):

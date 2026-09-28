@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import re
 from pathlib import Path
 
 import numpy as np
@@ -237,3 +238,84 @@ def sku_from_title(title: str) -> str | None:
     i = identify_text(title)
     return i.sku_key if i.form_no and i.pattern else None
 
+
+
+# ---------------------------------------------------------------------------
+# herend.com hivatalos katalógus (robots.txt: minden engedélyezett; sitemap.xml)
+# ---------------------------------------------------------------------------
+HEREND_SITEMAP = "https://herend.com/sitemap.xml"
+_HEREND_SKU = re.compile(r"^(\d{5})(\d)(\d{2})([A-Z0-9][A-Z0-9\-]*)?$")
+
+
+def parse_herend_sku(code: str) -> dict | None:
+    """'03464000SPEB' → formaszám 3464, alkatrész 0, fogantyú 00, minta SPEB."""
+    m = _HEREND_SKU.match((code or "").strip().upper())
+    if not m:
+        return None
+    return {"form_no": m.group(1).lstrip("0") or "0", "part": m.group(2), "knob": m.group(3),
+            "pattern_code": m.group(4) or None}
+
+
+def parse_herend_product(url: str, html: str) -> dict | None:
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html or "", "html.parser")
+    props = {}
+    for it in soup.select(".description__table__item"):
+        parts = [x.get_text(" ", strip=True) for x in it.find_all(["span", "div"])]
+        if len(parts) >= 2:
+            props[parts[0]] = parts[1]
+    code = props.get("Cikkszám")
+    if not code:
+        return None
+    sku = parse_herend_sku(code)
+    if not sku:
+        return None
+    title = soup.title.get_text(" ", strip=True) if soup.title else ""
+    name = title.split(" - ")[0].strip() or code
+    dims = []
+    for k in ("Magasság", "Átmérő", "Szélesség", "Hossz"):
+        m = re.match(r"([\d.,]+)\s*mm", props.get(k, ""))
+        if m:
+            dims.append(float(m.group(1).replace(",", ".")) / 10)
+    img = re.search(r"https://herend\.com/image\?src=(uploads%2Fimages%2Fproducts%2F[^&\"')]+)", html or "")
+    image_url = f"https://herend.com/image?src={img.group(1)}&w=512&h=512" if img else None
+    f = text.extract(name)
+    return {"brand": "Herendi", "form_no": sku["form_no"], "pattern_code": sku["pattern_code"],
+            "name": f"{name} ({code})", "object_type": f["object_type"], "size_cm": max(dims) if dims else None,
+            "retail_price": None, "currency": None, "retail_market": None, "source": "herend.com",
+            "url": url, "image_url": image_url,
+            "extra": {"code": code, "part": sku["part"], "knob": sku["knob"], "props": props}}
+
+
+def crawl_herend_catalog(conn=None, fetcher=None, limit: int | None = None, progress=None) -> dict:
+    """A hivatalos herend.com katalógus bejárása a sitemapből (folytatható: a már meglévő
+    cikkszámokat nem tölti le újra). Ár a statikus oldalon nincs; cikkszám, név, méret, kép van."""
+    from .net import BlockedError, Fetcher, NetworkError
+    conn = conn or db.get_conn()
+    fetcher = fetcher or Fetcher()
+    sm = fetcher.get(HEREND_SITEMAP, ttl=86400)
+    if sm is None or sm.status != 200:
+        raise RuntimeError("herend.com sitemap nem tölthető")
+    urls = [u for u in re.findall(r"<loc>([^<]+)</loc>", sm.text) if "/termek/" in u and "/en/" not in u]
+    done = {r[0] for r in conn.execute("SELECT url FROM catalog_items WHERE source='herend.com'")}
+    todo = [u for u in urls if u not in done][: limit or None]
+    stats = {"sitemap_products": len(urls), "already": len(done), "fetched": 0, "stored": 0, "failed": 0}
+    for i, u in enumerate(todo, 1):
+        try:
+            resp = fetcher.get(u, ttl=30 * 86400)
+        except (BlockedError, NetworkError) as exc:
+            stats["stopped"] = str(exc)
+            break
+        stats["fetched"] += 1
+        item = parse_herend_product(u, resp.text if resp else "")
+        if item:
+            upsert_catalog_item(conn, item)
+            stats["stored"] += 1
+        else:
+            stats["failed"] += 1
+        if i % 25 == 0:
+            conn.commit()
+            if progress:
+                progress(i / len(todo), f"herend.com: {i}/{len(todo)} termékoldal")
+    conn.commit()
+    return stats

@@ -66,6 +66,8 @@ def main(argv=None) -> int:
     sub.add_parser("data-volume", help="tanítóadat-mennyiség a célokhoz képest")
     sub.add_parser("identify", help="pontos termékazonosítás (formaszám+mintakód) szövegből és képből")
     sub.add_parser("sku-eval", help="cikkszám-szintű piaci ár pontossága (±10% cél), zajszint, szükséges eladásszám")
+    cc = sub.add_parser("crawl-catalog", help="hivatalos herend.com katalógus (sitemap; folytatható)")
+    cc.add_argument("--limit", type=int)
     icat = sub.add_parser("import-catalog", help="termékkatalógus CSV (cikkszám, név, méret, hivatalos ár, kép)")
     icat.add_argument("paths", nargs="+", type=Path)
     s = sub.add_parser("score", help="becslések frissítése")
@@ -166,6 +168,10 @@ def main(argv=None) -> int:
         res["sales_needed"] = {m: sku_model.sales_needed(v["sigma"] or 0.35)
                                for m, v in res["params"]["sigma_by_market"].items()}
         _print(res)
+    elif a.cmd == "crawl-catalog":
+        from . import catalog
+        _print(catalog.crawl_herend_catalog(conn, limit=a.limit,
+                                            progress=lambda f, m: logging.info(m)))
     elif a.cmd == "import-catalog":
         from . import catalog
         for path in a.paths:
