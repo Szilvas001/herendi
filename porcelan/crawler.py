@@ -27,7 +27,10 @@ from .sources import Card, Source, Task, get_source
 
 log = logging.getLogger(__name__)
 
-PRI_ENDED_AUCTION, PRI_DETAIL, PRI_CATEGORY, PRI_FULL = 5, 30, 20, 90
+# A sorrend: lezárult aukció végeredménye, majd a márkás termékoldalak (ezek hozzák
+# az árat), és csak utána a kategóriák széles bejárása. Ha a kategóriák mennének
+# előbb, egy nagy kategóriafán a termékoldalak órákig nem indulnának el.
+PRI_ENDED_AUCTION, PRI_DETAIL, PRI_CATEGORY, PRI_FULL = 5, 10, 20, 90
 
 
 class _Stop(Exception):

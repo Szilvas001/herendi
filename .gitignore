@@ -28,3 +28,7 @@ gyujtes.log
 
 # Adat-pillanatkep a repoban (export_adat.py keszíti)
 !data_export/*.json
+
+# Helyi PostgreSQL-furt adatai
+pgdata/
+pg_harvest.log

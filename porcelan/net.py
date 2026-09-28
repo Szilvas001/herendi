@@ -11,6 +11,7 @@ from __future__ import annotations
 import gzip
 import hashlib
 import logging
+import re
 import threading
 import time
 import urllib.robotparser
@@ -26,8 +27,19 @@ log = logging.getLogger(__name__)
 
 GZIP_MAGIC = bytes([0x1F, 0x8B])   # .gz fájltörzs felismerése
 
-BLOCK_MARKERS = ("cf-chl", "challenge-platform", "turnstile", "g-recaptcha", "hcaptcha",
-                 "captcha", "unusual traffic", "access denied", "are you a robot")
+# Ezek önmagukban is kihívást jelentenek: sértetlen tartalmi oldalon nem fordulnak elő.
+BLOCK_MARKERS = ("cf-chl", "unusual traffic", "are you a robot",
+                 "checking your browser", "verifying you are human")
+
+# Ezek viszont hétköznapi oldalakon is ott vannak: a Cloudflare szkriptje minden
+# általa kiszolgált oldalon, a captcha-widget pedig a bejelentkezési űrlapon. Csak
+# akkor jelentenek kihívást, ha az oldal maga is interstitial (lásd `block_marker`).
+GYENGE_MARKERS = ("challenge-platform", "turnstile", "g-recaptcha", "hcaptcha",
+                  "captcha", "access denied")
+
+# Kihívásoldal-címek (a tartalmi oldal címe sosem ilyen).
+KIHIVAS_CIMEK = ("just a moment", "attention required", "egy pillanat",
+                 "access denied", "security check", "ddos-guard", "please wait")
 
 
 class BlockedError(RuntimeError):
@@ -141,8 +153,28 @@ class Fetcher:
 
     @staticmethod
     def block_marker(text: str) -> str | None:
+        """Kihívásoldal-e a válasz.
+
+        Az erős jelzők önmagukban döntenek. A gyenge jelzők (Cloudflare-szkript,
+        captcha-widget a bejelentkezésnél) csak akkor, ha az oldal egyébként is
+        interstitialnak látszik: kihívás-cím, vagy rövid oldal alig pár linkkel.
+        Enélkül minden Cloudflare mögötti oldal tévesen blokkoltnak látszana, és a
+        bejárás ok nélkül állna le.
+        """
         low = (text or "")[:200_000].lower()
-        return next((m for m in BLOCK_MARKERS if m in low), None)
+        eros = next((m for m in BLOCK_MARKERS if m in low), None)
+        if eros:
+            return eros
+        gyenge = next((m for m in GYENGE_MARKERS if m in low), None)
+        if not gyenge:
+            return None
+        cim = re.search(r"<title[^>]*>(.*?)</title>", low, re.S)
+        if cim and any(k in cim.group(1) for k in KIHIVAS_CIMEK):
+            return gyenge
+        linkek = low.count("<a ")
+        if len(low) < 50_000 and linkek < 10:
+            return gyenge          # rövid oldal, alig navigáció: interstitial
+        return None
 
     # -- public --------------------------------------------------------------
     def get(self, url: str, ttl: float = 0, binary: bool = False) -> Response | None:

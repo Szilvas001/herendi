@@ -214,3 +214,39 @@ max_mdape = 0.10                  # cél: a modellezett és a valódi piaci ár 
 min_precise_within_10pct = 0.90   # a "pontos ár" jelzésű becslések legalább 90%-a legyen ±10%-on belül
 interval_coverage_tolerance = 0.10
 require_beats_baseline = true
+
+[postgres]
+# Helyi, rendszergazda nélkül indított fürt (pgdata/), a telepített szolgáltatás 5432-je helyett 5433.
+host = "127.0.0.1"
+port = 5433
+dbname = "porcelan"
+user = "porcelan"
+password = "herendi_local"
+
+# ---------------------------------------------------------------------------
+# Több forrású gyűjtés PostgreSQL-be (python -m porcelan harvest-pg)
+# ---------------------------------------------------------------------------
+# Feltétel minden adatpontra: legalább 3 kép, érdemi leírás, ár. Ezt az adatbázis
+# CHECK-je is kikényszeríti. A forrás a partíciót választja: minden hely külön
+# táblába ír. Csak olyan forrás legyen bekapcsolva, amelynek a robots.txt-je
+# engedi a bejárást, és amely nem ad bot-ellenőrzést.
+
+[harvest.galeriasavaria]
+enabled = true
+market = "HU"
+sitemap_url = "https://galeriasavaria.hu/sitemap/sitemap.xml"
+item_url_pattern = "/termekek/reszletek/"
+slug_patterns = [
+  "herend", "zsolnay", "eozin", "eosin", "pirogranit",
+]
+
+# Az alábbiak ellenőrizve, de egyelőre kikapcsolva:
+#  - axioart: tételenként egyetlen kép, a háromképes feltételt nem teljesíti,
+#    és a leütési árak előfizetéshez kötöttek.
+#  - jofogas: HTTP 429-cel válaszol, a bejárást a forrás korlátozza.
+[harvest.axioart]
+enabled = false
+market = "HU"
+sitemap_url = "https://axioart.com/index_sitemap.xml"
+item_url_pattern = "/tetel/"
+slug_patterns = ["herend", "zsolnay", "eozin", "eosin", "pirogranit"]

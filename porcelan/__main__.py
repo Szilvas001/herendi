@@ -68,6 +68,13 @@ def main(argv=None) -> int:
     sub.add_parser("sku-eval", help="cikkszám-szintű piaci ár pontossága (±10%% cél), zajszint, szükséges eladásszám")
     cc = sub.add_parser("crawl-catalog", help="hivatalos herend.com katalógus (sitemap; folytatható)")
     cc.add_argument("--limit", type=int)
+    hp = sub.add_parser("harvest-pg", help="több forrású gyűjtés PostgreSQL-be (kép+leírás+ár, folytatható)")
+    hp.add_argument("--source", help="egy forrás neve; üresen az összes bekapcsolt")
+    hp.add_argument("--max-requests", type=int, help="kéréskeret forrásonként")
+    hp.add_argument("--time-budget", type=float, help="időkeret másodpercben, forrásonként")
+    hp.add_argument("--from-sqlite", action="store_true",
+                    help="a helyi SQLite Vatera-adatának átemelése is")
+    sub.add_parser("pg-status", help="a PostgreSQL-korpusz állapota forrásonként")
     icat = sub.add_parser("import-catalog", help="termékkatalógus CSV (cikkszám, név, méret, hivatalos ár, kép)")
     icat.add_argument("paths", nargs="+", type=Path)
     s = sub.add_parser("score", help="becslések frissítése")
@@ -123,6 +130,27 @@ def main(argv=None) -> int:
         if a.images:
             from . import images
             _print({"images": images.download_pending(conn)})
+    elif a.cmd == "harvest-pg":
+        from . import harvest_pg, pg, pg_ingest
+        pg.adatbazis_letrehoz()
+        eredmeny = {}
+        if a.from_sqlite:
+            eredmeny["sqlite_atemeles"] = pg_ingest.vatera_atemel(conn)
+        forrasok = [a.source] if a.source else harvest_pg.osszes_forras()
+        for nev in forrasok:
+            eredmeny[nev] = harvest_pg.gyujt(nev, max_kerés=a.max_requests,
+                                             ido_keret_sec=a.time_budget)
+        with pg.connect() as pgc:
+            eredmeny["osszesites"] = pg.statisztika(pgc)
+        _print(eredmeny)
+        return 0 if all(v.get("status") in (None, "completed", "interrupted")
+                        for v in eredmeny.values() if isinstance(v, dict)) else 2
+    elif a.cmd == "pg-status":
+        from . import pg
+        pg.adatbazis_letrehoz()
+        with pg.connect() as pgc:
+            pg.sema_letrehoz(pgc)
+            _print({"forrasok": pg.statisztika(pgc)})
     elif a.cmd == "import-ebay":
         from . import importers
         _print(importers.import_ebay_api(conn))
