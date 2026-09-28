@@ -58,6 +58,14 @@ queries_zsolnay = [
 ]
 # Márkanév nélküli porcelánkínálat: képi előszűréshez (CLIP) kerül be.
 queries_generic = ["porcelán figura", "kézzel festett porcelán", "porcelán váza", "antik porcelán"]
+# Általános korpusz a Vateráról (márkanév nélkül is): kártyaszintű ár + kép az előtanításhoz.
+# python -m porcelan crawl --corpus general
+queries_general_corpus = [
+  "porcelán", "porcelán figura", "porcelán váza", "porcelán tányér", "porcelán készlet", "kerámia váza",
+  "hollóházi", "alföldi porcelán", "drasche", "kalocsai porcelán", "meisseni", "bécsi porcelán",
+  "rosenthal", "villeroy", "royal copenhagen", "goebel", "hummel", "lladro", "majolika", "fajansz",
+  "gorka", "kerámia figura", "iparművész kerámia", "antik kerámia",
+]
 # Induló kategória-URL-ek (a crawler a találati oldalakon talált kategórialinkekből továbbiakat is felvesz).
 seed_categories = []
 category_keywords = ["porcelan", "keramia", "herend", "zsolnay", "antik", "regiseg"]
@@ -75,6 +83,42 @@ queries = ["herendi", "zsolnay", "herendi porcelán", "zsolnay eozin"]
 enabled = false
 marketplace = "EBAY_US"
 queries = ["herend porcelain", "herend figurine", "zsolnay eosin", "zsolnay porcelain"]
+
+[ebay_harvest]
+# Tömeges, folytatható gyűjtés a hivatalos Browse API-ból KÉPEKKEL (python -m porcelan harvest-ebay).
+# A Browse API alap kvótája napi 5000 hívás; hívásonként 200 tétel → napi akár ~1 millió tétel-megtekintés.
+marketplace = "EBAY_US"
+min_delay_sec = 0.3
+max_calls_per_run = 4500           # a napi kvóta alatt marad
+max_images_per_item = 4
+price_min_usd = 1.0
+price_max_usd = 50000.0
+# Üresen hagyva: lekérdezés kategóriaszűrés nélkül. Kategóriaazonosítók: eBay Taxonomy API
+# (pl. porcelán/kerámia kategóriák) – ellenőrizd a getCategoryTree-vel, mielőtt beírod.
+category_ids = []
+queries_herend_zsolnay = [
+  "herend", "herend porcelain", "herend figurine", "herend fishnet", "herend rothschild", "herend apponyi",
+  "herend queen victoria", "herend chinese bouquet", "herend vase", "herend tureen", "herend teapot",
+  "herend bunny", "herend bird", "herend dog", "herend cat", "herend hungary",
+  "zsolnay", "zsolnay eosin", "zsolnay pecs", "zsolnay vase", "zsolnay figurine", "zsolnay porcelain",
+]
+# Általános porcelán/kerámia korpusz az ELŐTANÍTÁSHOZ: az ár szerkezetét (méret, forma, festés,
+# készlet, állapot, gyártói szint) sokkal nagyobb mintán tanulja meg a modell.
+queries_general = [
+  "porcelain figurine", "porcelain vase", "porcelain plate", "porcelain bowl", "porcelain teapot",
+  "porcelain tea set", "porcelain dinner set", "porcelain tureen", "porcelain box", "hand painted porcelain",
+  "antique porcelain", "vintage porcelain", "fine china", "bone china", "ceramic vase", "art pottery",
+  "majolica", "meissen", "royal copenhagen", "bing grondahl", "lladro", "hummel", "wedgwood",
+  "royal doulton", "royal crown derby", "limoges", "augarten", "rosenthal", "nymphenburg", "kpm porcelain",
+  "capodimonte", "sevres", "villeroy boch", "royal worcester", "noritake", "hollohaza", "lomonosov",
+  "goebel", "royal dux", "pirkenhammer", "ginori", "bavaria porcelain", "dresden porcelain",
+]
+
+[targets]
+# Adatmennyiségi célok (dashboard-kijelzés és a "validált" feltétel része).
+general_records_with_images = 200000   # előtanítás: általános porcelán/kerámia kép+ár pár
+hz_records_with_images = 20000         # finomhangolás: Herendi/Zsolnay kép+ár pár (HU+US)
+realized_prices_per_market = 3000      # kalibráció/validáció: realizált ár piaconként
 
 [fx]
 as_of = "2026-09-28"
@@ -110,6 +154,10 @@ intl_shipping_huf_large = 45000   # nagy tárgy vagy készlet
 import_duty_rate = 0.15
 duty_paid_by_seller = true
 
+[vision]
+# Finomhangolt képenkóder használata, ha van (python -m porcelan finetune-vision → models/vision/CURRENT).
+use_finetuned = true
+
 [ranking]
 min_confidence_to_recommend = 0.35
 auction_uncertainty_penalty = 0.5  # aukció: a jelenlegi licit nem végleges ár
@@ -119,7 +167,11 @@ min_discount_pct_flag = 15         # ennyi %-kal a várható eladási érték al
 
 [validation]
 # A "validált" státusz feltételei (tesztkészleten, realizált ártípusokon mérve).
+# Képalapú becsléshez nagy tanítóhalmaz kell: ennyi Herendi/Zsolnay tanítósor és képes sor piaconként.
+min_train_rows_per_market = 10000
+min_train_rows_with_images = 10000
 min_realized_test_samples_per_brand = 50
-max_mdape = 0.35
+max_mdape = 0.10                  # cél: a modellezett és a valódi piaci ár eltérése legfeljebb 10%
+min_precise_within_10pct = 0.90   # a "pontos ár" jelzésű becslések legalább 90%-a legyen ±10%-on belül
 interval_coverage_tolerance = 0.10
 require_beats_baseline = true

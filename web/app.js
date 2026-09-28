@@ -22,7 +22,7 @@ const ASSUMPTION_FIELDS = [
   ['us.intl_shipping_huf_large', 'USA posta, nagy (Ft)'],
   ['us.import_duty_rate', 'USA vám/tarifa'],
 ];
-let defaults = {}, overrides = {}, offset = 0, lastJob = null, loading = false;
+let defaults = {}, overrides = {}, offset = 0, lastJob = null, loading = false, modelStatus = '';
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem('hz.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
@@ -69,6 +69,14 @@ async function loadStatus() {
   pd.textContent = `Aktív hirdetés: ${active} · legfrissebb adat ${relTime(s.newest_observation)}`;
   pd.className = 'pill ' + (age === null || age > 48 ? 'warn' : 'ok');
   $('warnings').innerHTML = (s.warnings || []).map((w) => `<div>${esc(w)}</div>`).join('');
+  const fmtN = (n) => new Intl.NumberFormat('hu-HU').format(n);
+  const vol = s.volume || [];
+  $('volume').innerHTML = vol.map((g) => `<div class="vrow"><span>${esc(g.label)}</span>
+    <div class="vbar" role="progressbar" aria-valuenow="${g.pct}" aria-valuemin="0" aria-valuemax="100"><div style="width:${Math.min(100, g.pct || 0)}%"></div></div>
+    <span>${fmtN(g.have)} / ${fmtN(g.target)} (${g.pct}%)</span></div>`).join('')
+    + (s.pending_image_downloads ? `<div class="vrow"><span>Letöltésre váró kép</span><span></span><span>${fmtN(s.pending_image_downloads)}</span></div>` : '');
+  const hz = vol.find((g) => g.key === 'hz_records_with_images');
+  if (hz) $('volume-summary').textContent = `Tanítóadat a célokhoz képest – Herendi/Zsolnay képes: ${fmtN(hz.have)} / ${fmtN(hz.target)}`;
   const running = (s.jobs || []).find((j) => j.status === 'running' || j.status === 'queued');
   showJob(running || (lastJob && s.jobs.find((j) => j.id === lastJob)));
 }
@@ -76,7 +84,7 @@ async function loadStatus() {
 function showJob(j) {
   const bar = $('jobbar');
   if (!j) { bar.hidden = true; return; }
-  const labels = { crawl: 'Adatgyűjtés', import_csv: 'CSV import', import_repo: 'Import', images: 'Képfeldolgozás', train: 'Tanítás', score: 'Pontozás', pipeline: 'Teljes feldolgozás' };
+  const labels = { harvest_ebay: 'eBay-gyűjtés', finetune_vision: 'Képenkóder finomhangolás', learning_curve: 'Tanulási görbe', crawl: 'Adatgyűjtés', import_csv: 'CSV import', import_repo: 'Import', images: 'Képfeldolgozás', train: 'Tanítás', score: 'Pontozás', pipeline: 'Teljes feldolgozás' };
   bar.hidden = false;
   const active = j.status === 'running' || j.status === 'queued';
   let msg = j.message || '';
@@ -146,13 +154,15 @@ function estBox(label, m, selected, native) {
   if (!m) return `<div class="${selected ? 'sel' : ''}">${label}<b>–</b><small>nincs becslés</small></div>`;
   const nat = native && m.currency === 'USD' ? ` · ${usd(m.value_native.q50)}` : '';
   return `<div class="${selected ? 'sel' : ''}">${label}<b>${ft(m.value_huf.q50)}</b>
-    <small>${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)}${nat}</small><br><small>megbízhatóság ${pct(m.confidence)}</small></div>`;
+    <small>${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)}${nat}</small><br><small>±10%-on belül: ${m.p_within_10 == null ? '–' : pct(m.p_within_10)}</small></div>`;
 }
 
 function card(c) {
   const m = c.market === 'HU' ? c.hu : c.us;
   const badges = [];
-  if (c.recommended) badges.push('<span class="badge good">Ajánlott</span>');
+  if (m && m.precise) badges.push('<span class="badge good">Pontos ár (±10%)</span>');
+  if (c.identity && c.identity.form_no) badges.push(`<span class="badge">${esc(c.identity.form_no)}${c.identity.pattern_code ? ' ' + esc(c.identity.pattern_code) : ''}</span>`);
+  if (c.recommended) badges.push(`<span class="badge good">Ajánlott${modelStatus === 'validált' ? '' : ' – kísérleti modell'}</span>`);
   else if (c.candidate) badges.push('<span class="badge warn">Jelölt – bizonytalan</span>');
   else if (c.abstain && c.abstain.length) badges.push('<span class="badge">Nincs ajánlás</span>');
   if (c.market === 'HU' && c.other_market_flags.profitable) badges.push('<span class="badge good">USA-ba nyereséges</span>');
@@ -187,6 +197,7 @@ async function refresh(append = false) {
   try {
     const r = await api('/api/deals?' + q.toString());
     if (r.error) { $('cards').innerHTML = `<div class="empty">${esc(r.error)}</div>`; $('summary').textContent = ''; return; }
+    modelStatus = r.model_status || '';
     const html = r.items.map(card).join('');
     $('cards').innerHTML = append ? $('cards').innerHTML + html : (html || '<div class="empty">Nincs a szűrőknek megfelelő hirdetés. Lazíts a feltételeken, vagy kapcsold ki a „Csak ajánlott vagy jelölt” szűrőt – a rendszer bizonytalan becslésnél szándékosan tartózkodik az ajánlástól.</div>');
     offset += r.items.length;
@@ -214,7 +225,9 @@ function marketBlock(name, m) {
     <td class="num">${c.currency === 'USD' ? usd(c.price) : ft(c.price)}</td><td>${esc(c.price_type)}</td><td>${esc(c.observed_at)}</td><td class="num">${c.similarity}</td></tr>`).join('');
   return `<h3>${name}</h3>
     <p><b>${ft(m.value_huf.q50)}</b> (80%-os intervallum: ${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)})${nat}<br>
-    Megbízhatóság: ${pct(m.confidence)} · modell: ${esc(m.model)} · célváltozó: ${m.basis === 'asking' ? 'kínálati ár (kísérleti)' : 'realizált ár'}
+    ±10%-on belüli valószínűség: ${m.p_within_10 == null ? '–' : pct(m.p_within_10)}${m.precise ? ' · <b>pontos ár (validált)</b>' : ''}
+    · azonos termék eladásai: ${m.sku && m.sku.n_exact != null ? m.sku.n_exact : 0}, azonos formaszám: ${m.sku && m.sku.n_form != null ? m.sku.n_form : 0}<br>
+    Megbízhatóság (±25%): ${pct(m.confidence)} · modell: ${esc(m.model)} · célváltozó: ${m.basis === 'asking' ? 'kínálati ár (kísérleti)' : 'realizált ár'}
     ${m.revenue_factor !== 1 ? ` · várható eladás = érték × ${m.revenue_factor}` : ''}</p>
     <p>${esc(m.reason)}</p>
     ${m.abstain_reasons.length ? `<p class="neg">Tartózkodás: ${esc(m.abstain_reasons.join('; '))}</p>` : ''}
@@ -238,6 +251,8 @@ async function openDetail(id) {
     <p><b>${ft(l.price_huf)}</b> · ${TYPE[l.sale_type] || l.sale_type}${l.sale_type === 'aukcio' ? ` · ${l.bid_count ?? '?'} licit · vége: ${esc(l.end_time || '?')} · <b>a licit nem végleges ár</b>` : ''}
     · státusz: ${esc(l.status)} (${esc(l.status_reason || '')})<br>
     <a class="btn" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">Hirdetés megnyitása</a></p>
+    <h3>Pontos termékazonosítás</h3>
+    <p>${a && a.identity ? `Cikkszám-kulcs: <b>${esc(a.identity.sku_key)}</b> · formaszám ${esc(a.identity.form_no)} · minta ${esc(a.identity.pattern_code || '–')} · alap: ${esc(a.identity.basis || '')}` : 'Nincs azonosítva (formaszám/minta ismeretlen) – pontos piaci ár ehhez nem adható.'}</p>
     <h3>Azonosított jellemzők</h3>
     <p>Gyártó: ${esc(f.brand || '–')} · típus: ${esc(f.object_type || '–')} · dekor: ${esc(f.decor || '–')} · méret: ${f.size_cm ? f.size_cm + ' cm' : '–'} · darab: ${f.pieces || '–'} · állapot: ${esc(f.condition || '–')} · jelzések: ${esc(f.mark_flags || '–')}</p>
     ${a ? `<p>Hiányzó információ: ${esc(a.missing_info.join('; ') || 'nincs')}</p>` : ''}
@@ -278,6 +293,7 @@ $('detail').addEventListener('click', (e) => { if (e.target === $('detail')) $('
 $('btn-filters').addEventListener('click', () => $('filters').classList.toggle('open'));
 $('btn-crawl').addEventListener('click', () => startJob('crawl', { source: 'vatera' }));
 $('btn-score').addEventListener('click', () => startJob('score', {}));
+$('btn-harvest').addEventListener('click', () => startJob('harvest_ebay', { images: true }));
 $('btn-train').addEventListener('click', () => { if (confirm('Új modellverzió tanítása a jelenlegi adatokon? (néhány perc)')) startJob('train', {}); });
 $('btn-reset-assumptions').addEventListener('click', () => { overrides = {}; loadAssumptions(); refresh(); });
 $('file-import').addEventListener('change', async (e) => {

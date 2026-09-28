@@ -123,7 +123,14 @@ def status():
             warnings.append(f"{src}: a legutóbbi adatgyűjtés megszakadt; a következő indítás folytatja.")
     job_rows = [dict(r) for r in conn.execute("SELECT id, kind, status, progress, message, created_at, started_at, "
                                               "finished_at FROM jobs ORDER BY id DESC LIMIT 8")]
-    return {"model": model, "model_error": _state["model_error"], "crawl": runs,
+    from .volume import data_volume
+    vol = data_volume(conn)
+    hz_img = next(g for g in vol["goals"] if g["key"] == "hz_records_with_images")
+    if hz_img["have"] < hz_img["target"]:
+        warnings.append(f"Kevés képes tanítóadat: {hz_img['have']} / {hz_img['target']} Herendi/Zsolnay kép+ár pár. "
+                        f"A képalapú becsléshez sok tízezer képes adat kell (eBay-gyűjtés, Vatera-bejárás).")
+    return {"model": model, "model_error": _state["model_error"], "crawl": runs, "volume": vol["goals"],
+            "pending_image_downloads": vol["pending_image_downloads"],
             "last_successful_crawl": dict(last_ok) if last_ok else None,
             "last_import": db.get_meta(conn, "last_import"), "last_scoring": db.get_meta(conn, "last_scoring"),
             "newest_observation": newest, "counts": counts, "warnings": warnings, "jobs": job_rows,
@@ -196,6 +203,7 @@ def _card(item: dict, market: str) -> dict:
         "other_market_flags": {"below_value": other.get("below_value"), "profitable": other.get("profitable")},
         "reason": m.get("reason"), "risks": m.get("risks", [])[:4], "abstain": m.get("abstain_reasons", []),
         "score": m.get("score", 0), "model_version": item["model_version"],
+        "identity": res.get("identity"),
     }
 
 
@@ -209,6 +217,8 @@ def _market_summary(m: dict | None) -> dict | None:
             "conservative_profit_huf": (m.get("conservative") or {}).get("profit_huf"),
             "conservative_roi_pct": (m.get("conservative") or {}).get("roi_pct"),
             "max_bid_huf": m.get("max_bid_huf"), "below_value": m.get("below_value"),
+            "p_within_10": m.get("p_within_10"), "precise": m.get("precise", False),
+            "n_same_item_sales": (m.get("sku") or {}).get("n_exact"),
             "profitable": m.get("profitable"), "recommended": m.get("recommended")}
 
 
@@ -272,7 +282,8 @@ def deals(request: Request, market: str = Query("HU", pattern="^(HU|US)$"), bran
                "below_value": sum(bool(c["below_value"]) for c in cards),
                "profitable": sum(bool(c["profitable"]) for c in cards)}
     return {"total": len(cards), "summary": summary, "items": cards[offset:offset + limit],
-            "model_version": _state["estimator"].version}
+            "model_version": _state["estimator"].version,
+            "model_status": _state["estimator"].manifest["status"]}
 
 
 @app.get("/api/listings/{listing_id}")

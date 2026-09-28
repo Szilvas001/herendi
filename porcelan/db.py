@@ -213,6 +213,53 @@ CREATE TABLE IF NOT EXISTS recommendation_log (
 );
 CREATE INDEX IF NOT EXISTS ix_reclog ON recommendation_log(listing_id, market);
 
+-- pHash sáv-index: 8 × 8 bites sáv. Két kép Hamming-távolsága <= 7 esetén
+-- legalább egy sávjuk azonos (skatulya-elv), így a közel-duplikátum keresés
+-- nem igényel páronkénti összehasonlítást.
+CREATE TABLE IF NOT EXISTS image_bands (
+    band INTEGER NOT NULL,
+    value INTEGER NOT NULL,
+    image_id INTEGER NOT NULL,
+    PRIMARY KEY(band, value, image_id)
+);
+
+-- Tömeges gyűjtés (pl. eBay API) folytatható állapota: lekérdezés × ársáv szeletek.
+CREATE TABLE IF NOT EXISTS harvest_slices (
+    id INTEGER PRIMARY KEY,
+    source TEXT NOT NULL,
+    corpus TEXT NOT NULL,
+    query TEXT NOT NULL,
+    category TEXT,
+    price_lo REAL NOT NULL,
+    price_hi REAL NOT NULL,
+    status TEXT DEFAULT 'pending',   -- pending / splitting / done / failed
+    reported_total INTEGER,
+    fetched INTEGER DEFAULT 0,
+    next_offset INTEGER DEFAULT 0,
+    updated_at TEXT,
+    message TEXT,
+    UNIQUE(source, query, category, price_lo, price_hi)
+);
+
+-- Termékkatalógus (gyártói webshop, katalógus-CSV): cikkszám, név, méret, hivatalos ár, kép.
+CREATE TABLE IF NOT EXISTS catalog_items (
+    id INTEGER PRIMARY KEY,
+    brand TEXT NOT NULL,
+    form_no TEXT NOT NULL,
+    pattern_code TEXT,
+    sku_key TEXT NOT NULL UNIQUE,
+    name TEXT,
+    object_type TEXT,
+    size_cm REAL,
+    retail_price REAL,             -- hivatalos (új) ár; nem másodpiaci érték
+    currency TEXT,
+    retail_market TEXT,            -- HU / US / EU
+    source TEXT,
+    url TEXT,
+    image_url TEXT,
+    observed_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -235,7 +282,38 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=30000")
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _columns(conn, table: str) -> set[str]:
+    return {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+
+
+def _migrate(conn) -> None:
+    """Visszafelé kompatibilis sémabővítések meglévő adatbázison."""
+    pr = _columns(conn, "price_records")
+    if "corpus" not in pr:
+        # herend_zsolnay: a termék célpopulációja; general: általános porcelán/kerámia (előtanítás)
+        conn.execute("ALTER TABLE price_records ADD COLUMN corpus TEXT DEFAULT 'herend_zsolnay'")
+    if "image_url" not in pr:
+        conn.execute("ALTER TABLE price_records ADD COLUMN image_url TEXT")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_price_corpus ON price_records(corpus, market)")
+    # pontos termékazonosítás (cikkszám-kulcs: gyártó|formaszám|mintakód)
+    for table in ("price_records", "listings"):
+        cols = _columns(conn, table)
+        for col, typ in (("sku_key", "TEXT"), ("form_no", "TEXT"), ("pattern_code", "TEXT"),
+                         ("id_confidence", "REAL"), ("id_basis", "TEXT")):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+        conn.execute(f"CREATE INDEX IF NOT EXISTS ix_{table}_sku ON {table}(sku_key)")
+    if "catalog_id" not in _columns(conn, "images"):
+        conn.execute("ALTER TABLE images ADD COLUMN catalog_id INTEGER")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_images_cat ON images(catalog_id, url) WHERE catalog_id IS NOT NULL")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_images_pr ON images(price_record_id, url) "
+                 "WHERE price_record_id IS NOT NULL")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_images_status ON images(status)")
+    conn.commit()
 
 
 def get_conn() -> sqlite3.Connection:
@@ -327,12 +405,14 @@ def upsert_price_record(conn, rec: dict) -> int | None:
     cols = ["source", "source_ref", "market", "price_type", "amount", "currency", "price_huf",
             "buyer_premium_rate", "fees_note", "observed_at", "title", "description", "brand",
             "object_type", "decor", "size_cm", "pieces", "condition", "url", "listing_id",
-            "dedup_key", "group_key", "provenance"]
+            "dedup_key", "group_key", "provenance", "corpus", "image_url"]
+    rec = {**rec, "corpus": rec.get("corpus") or "herend_zsolnay"}
     vals = [rec.get(c) for c in cols]
     if isinstance(rec.get("provenance"), (dict, list)):
         vals[cols.index("provenance")] = json.dumps(rec["provenance"], ensure_ascii=False)
     updates = ", ".join(f"{c}=excluded.{c}" for c in cols[4:])
     cur = conn.execute(
         f"INSERT INTO price_records({','.join(cols)}) VALUES({','.join('?' * len(cols))}) "
-        f"ON CONFLICT(source, source_ref, price_type, market) DO UPDATE SET {updates}", vals)
-    return cur.lastrowid
+        f"ON CONFLICT(source, source_ref, price_type, market) DO UPDATE SET {updates} RETURNING id", vals)
+    row = cur.fetchone()
+    return row[0] if row else None

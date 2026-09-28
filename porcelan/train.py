@@ -60,6 +60,42 @@ def design(blocks, knn, use_clip: bool):
     return np.concatenate([X, knn], axis=1).astype(np.float32), image_slice
 
 
+class Prepared:
+    """Egyszer kiszámított adat és jellemzők (tanításhoz és tanulási görbéhez)."""
+
+
+def prepare(conn, seed: int, use_clip: bool, progress, train_mask_override=None) -> Prepared:
+    P = Prepared()
+    ds = dataset.build(conn)
+    df = ds.df
+    hz = (df.corpus == "herend_zsolnay").values
+    if hz.sum() < 50:
+        raise RuntimeError(f"Túl kevés Herendi/Zsolnay tanítóadat ({hz.sum()} sor). Importálj vagy gyűjts adatot előbb.")
+    labels, split_info = dataset.split(df, seed)
+    P.ds, P.df, P.labels, P.split_info = ds, df, labels, split_info
+    P.tr, P.va, P.te = (labels == "train").values, (labels == "val").values, (labels == "test").values
+    P.pt = (labels == "pretrain").values
+    P.y = df.y_log.values.astype(np.float32)
+    P.market_idx = np.array([MARKETS.index(m) for m in df.market])
+    progress(0.08, f"Jellemzők: {len(df)} sor ({int(P.pt.sum())} előtanító), TF-IDF, strukturált, CLIP")
+    P.pipe = FeaturePipeline(use_clip=use_clip).fit(df[P.tr | P.pt], conn)
+    P.blocks = P.pipe.transform(df, conn)
+    P.use_clip = use_clip
+    P.y_mean = {m: float(P.y[P.tr & (df.market == m).values].mean())
+                for m in MARKETS if (P.tr & (df.market == m).values).any()}
+    return P
+
+
+def build_design(P: Prepared, train_rows: np.ndarray):
+    """kNN-jellemzők a megadott tanítósorokból építve (a görbéhez részhalmazra is), + mátrixok."""
+    retr = Retrieval(_sub(P.blocks, train_rows), P.df[train_rows])
+    knn = knn_block(retr, P.blocks, P.df, P.y[train_rows], P.y_mean)
+    X, image_slice = design(P.blocks, knn, P.use_clip)
+    Xg = np.concatenate([P.blocks["struct"], P.blocks["tfidf"], knn], axis=1)
+    Xn = np.concatenate([P.blocks["struct"], P.blocks["tfidf"], knn], axis=1).astype(np.float32)
+    return knn, X, Xg, Xn, image_slice
+
+
 def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, progress=None,
           models_dir: Path | None = None) -> dict:
     t0 = time.time()
@@ -67,27 +103,11 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
     conn = conn or db.get_conn()
     np.random.seed(seed)
     progress(0.02, "Tanítóadat összeállítása")
-    ds = dataset.build(conn)
-    df = ds.df
-    if len(df) < 50:
-        raise RuntimeError(f"Túl kevés tanítóadat ({len(df)} sor). Importálj vagy gyűjts adatot előbb.")
-    labels, split_info = dataset.split(df, seed)
-    tr, va, te = (labels == "train").values, (labels == "val").values, (labels == "test").values
-    y = df.y_log.values.astype(np.float32)
-    market_idx = np.array([MARKETS.index(m) for m in df.market])
+    P = prepare(conn, seed, use_clip, progress)
+    df, y, tr, va, te, pt, market_idx = P.df, P.y, P.tr, P.va, P.te, P.pt, P.market_idx
+    knn, X, Xg, Xn, image_slice = build_design(P, tr | pt)
 
-    progress(0.08, "Jellemzők (TF-IDF, strukturált, CLIP) számítása")
-    pipe = FeaturePipeline(use_clip=use_clip).fit(df[tr], conn)
-    blocks = pipe.transform(df, conn)
-    y_mean = {m: float(y[tr & (df.market == m).values].mean()) for m in MARKETS if (tr & (df.market == m).values).any()}
-    retr = Retrieval(_sub(blocks, tr), df[tr])
-    knn = knn_block(retr, blocks, df, y[tr], y_mean)
-    X, image_slice = design(blocks, knn, use_clip)
-    Xg = np.concatenate([blocks["struct"], blocks["tfidf"], knn], axis=1)
-
-    results: dict = {"val": {}, "test": {}, "test_by_brand": {}, "calibration": {}}
-    preds_val, preds_test = {}, {}
-
+    results: dict = {"val": {}, "test": {}, "test_by_brand": {}, "test_with_images": {}, "calibration": {}}
     progress(0.2, "Alapmodell (csoportmedián)")
     base = GroupMedianBaseline().fit(df[tr])
     models = {"baseline_group_median": ("baseline", base)}
@@ -100,16 +120,34 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
             gbms[m] = GBMModel().fit(Xg[mm], y[mm], seed)
     models["gbm_quantile"] = ("gbm", gbms)
 
-    progress(0.35, "Multimodális neurális modell tanítása")
+    progress(0.35, "Multimodális neurális modell (csak Herendi/Zsolnay adaton)")
     deep = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
         X[tr], y[tr], market_idx[tr], X[va], y[va], market_idx[va], seed=seed, log=log.info)
     models["deep_multimodal"] = ("deep", deep)
+    pretrained = None
+    if pt.sum() >= 500:
+        progress(0.45, f"Előtanítás az általános porcelán/kerámia korpuszon ({int(pt.sum())} sor)")
+        both = pt | tr
+        pre = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
+            X[both], y[both], market_idx[both], X[va], y[va], market_idx[va], seed=seed, log=log.info)
+        progress(0.55, "Finomhangolás Herendi/Zsolnay adaton")
+        pretrained = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
+            X[tr], y[tr], market_idx[tr], X[va], y[va], market_idx[va], seed=seed, log=log.info,
+            init=pre, lr=3e-4)
+        models["deep_pretrained_ft"] = ("deep", pretrained)
     if use_clip:
         progress(0.6, "Ablation: neurális modell CLIP nélkül")
-        Xn = np.concatenate([blocks["struct"], blocks["tfidf"], knn], axis=1).astype(np.float32)
         deep_nc = DeepModel(n_seeds=n_seeds).fit(Xn[tr], y[tr], market_idx[tr], Xn[va], y[va], market_idx[va],
                                                  seed=seed, log=log.info)
         models["deep_no_clip"] = ("deep_nc", deep_nc)
+        n_img = int(P.df[tr].has_image.sum())
+        if n_img >= 100:
+            progress(0.65, f"Ablation: ugyanaz a modell kép nélkül ({n_img} képes tanítósor)")
+            ref = pretrained or deep
+            deep_ni = DeepModel(n_seeds=n_seeds).fit(
+                X[tr], y[tr], market_idx[tr], X[va], y[va], market_idx[va], seed=seed, log=log.info,
+                init=None if ref is deep else pre, lr=1e-3 if ref is deep else 3e-4, zero_cols=image_slice)
+            models["deep_no_image"] = ("deep", deep_ni)
 
     def predict(kind, obj, mask, market):
         sub = mask & (df.market == market).values
@@ -126,15 +164,17 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
         return sub, obj.predict(X[sub], market)
 
     progress(0.8, "Kalibráció és értékelés")
+    has_img = P.df.has_image.values
+    preds_test: dict = {}
     for name, (kind, obj) in models.items():
         for market in MARKETS:
             vsub, pv = predict(kind, obj, va, market)
-            tsub, pt = predict(kind, obj, te, market)
+            tsub, pt_ = predict(kind, obj, te, market)
             if vsub.sum() == 0:
                 continue
             ok = ~np.isnan(pv[:, 1])
             off = conformal_offset(pv[ok], y[vsub][ok])
-            pv_c, pt_c = apply_offset(pv, off), apply_offset(pt, off)
+            pv_c, pt_c = apply_offset(pv, off), apply_offset(pt_, off)
             okc = ~np.isnan(pv_c[:, 1])
             ctab = confidence_table(pv_c[okc], y[vsub][okc])
             results["calibration"][f"{name}/{market}"] = {"conformal_offset": off, "confidence": ctab}
@@ -151,8 +191,10 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
                 bm = (df[tsub].brand == brand).values
                 if bm.any():
                     results["test_by_brand"][f"{name}/{market}/{brand}"] = metrics(pt_c[bm], y[tsub][bm])
-            preds_val[(name, market)] = pv_c
-            preds_test[(name, market)] = pt_c
+            preds_test[(name, market)] = (df[tsub]["id"].values, pt_c)
+            im = has_img[tsub]
+            if im.sum() >= 5:
+                results["test_with_images"][f"{name}/{market}"] = metrics(pt_c[im], y[tsub][im])
 
     # Modellválasztás piaconként a VALIDÁCIÓS pinball alapján (a teszt érintetlen).
     chosen = {}
@@ -163,23 +205,44 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
         if cands:
             chosen[market] = min(cands)[1]
 
-    status, reasons = validation_gate(ds, results, chosen)
+    # Pontos termék → pontos piaci ár: cikkszám-szintű értékelés (a kép+szöveg modell mintán kívüli
+    # tesztbecslése az előzetes becslés), piaci zajszint és a szükséges eladásszám.
+    progress(0.85, "Cikkszám-szintű (pontos termék) értékelés")
+    from . import sku_model
+    from .sku_model import Z80
+    prior = {}
+    for market, name in chosen.items():
+        ids, pr = preds_test.get((name, market), ([], np.zeros((0, 3))))
+        for rid, row in zip(ids, pr):
+            if not np.isnan(row[1]):
+                prior[int(rid)] = (float(row[1]), max(1e-3, float((row[2] - row[0]) / (2 * Z80))))
+    sku_eval = sku_model.evaluate(conn, prior)
+    sku_eval["noise_floor"] = sku_model.noise_floor(conn)
+    sku_eval["sales_needed"] = {m: sku_model.sales_needed(v["sigma"] or 0.35)
+                                for m, v in sku_eval["params"]["sigma_by_market"].items()}
+    results["sku_level"] = sku_eval
+
+    ds = P.ds
+    status, reasons = validation_gate(ds, results, chosen, P)
     version = f"v{datetime.now(timezone.utc):%Y%m%d-%H%M}-{dataset.fingerprint(df)[:8]}"
     out = Path(models_dir or settings.path("models_dir")) / version
     out.mkdir(parents=True, exist_ok=True)
 
     progress(0.9, "Mentés")
+    hz = (df.corpus == "herend_zsolnay").values
     with (out / "pipeline.pkl").open("wb") as fh:
-        pickle.dump(pipe, fh)
+        pickle.dump(P.pipe, fh)
     (out / "baseline.json").write_text(json.dumps(base.state(), ensure_ascii=False))
     with (out / "gbm.pkl").open("wb") as fh:
         pickle.dump(gbms, fh)
     deep.save(out / "deep.pt")
-    if "deep_no_clip" in models:
-        models["deep_no_clip"][1].save(out / "deep_no_clip.pt")
-    np.savez_compressed(out / "index.npz", **{k: v.astype(np.float16) for k, v in blocks.items()}, knn=knn,
-                        y=y, split=np.asarray(labels.tolist(), dtype="U5"))
-    dataset.export(df, out / "training_data.csv.gz", labels)
+    for name in ("deep_no_clip", "deep_pretrained_ft", "deep_no_image"):
+        if name in models:
+            models[name][1].save(out / f"{name}.pt")
+    # a becsléshez csak a Herendi/Zsolnay sorok indexe kell (kNN és összehasonlító tételek)
+    np.savez_compressed(out / "index.npz", **{k: v[hz].astype(np.float16) for k, v in P.blocks.items()},
+                        knn=knn[hz], y=y[hz], split=np.asarray(P.labels[hz].tolist(), dtype="U8"))
+    dataset.export(df[hz], out / "training_data.csv.gz", P.labels[hz])
 
     manifest = {
         "version": version,
@@ -192,10 +255,13 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
                  "sha256": settings.get("paths.clip_weights_sha256"), "frozen": True},
         "data_fingerprint": dataset.fingerprint(df),
         "dataset": ds.report,
+        "train_rows": {"hz_train": int(tr.sum()), "pretrain": int(pt.sum()),
+                       "hz_train_with_images": int(P.df[tr].has_image.sum()),
+                       "by_market": {m: int((tr & (df.market == m).values).sum()) for m in MARKETS}},
         "target_basis": ds.basis,
         "target_currency": dataset.CURRENCY,
-        "split": split_info,
-        "y_mean": y_mean,
+        "split": P.split_info,
+        "y_mean": P.y_mean,
         "chosen_model": chosen,
         "image_slice": image_slice,
         "struct_features": structured_names(),
@@ -210,9 +276,156 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
     return manifest
 
 
-def validation_gate(ds, results: dict, chosen: dict) -> tuple[str, list[str]]:
+def _group_subsample(df: pd.DataFrame, mask: np.ndarray, frac: float, seed: int) -> np.ndarray:
+    groups = sorted(set(df.group[mask]))
+    rng = np.random.default_rng(seed)
+    rng.shuffle(groups)
+    keep = set(groups[:max(1, int(round(len(groups) * frac)))])
+    return mask & df.group.isin(keep).values
+
+
+def fit_power_law(ns, errs) -> dict | None:
+    """err(n) ≈ a·n^(-b) + c illesztés (c rácson, a,b log-lineáris regresszióval)."""
+    ns, errs = np.asarray(ns, float), np.asarray(errs, float)
+    if len(ns) < 3 or np.any(errs <= 0):
+        return None
+    best = None
+    for c in np.linspace(0, errs.min() * 0.95, 40):
+        yy = np.log(errs - c)
+        A = np.vstack([np.ones_like(ns), np.log(ns)]).T
+        coef, *_ = np.linalg.lstsq(A, yy, rcond=None)
+        sse = float(((A @ coef - yy) ** 2).sum())
+        if coef[1] < 0 and (best is None or sse < best[0]):
+            best = (sse, float(np.exp(coef[0])), float(-coef[1]), float(c))
+    if not best:
+        return None
+    _, a, b, c = best
+    return {"a": a, "b": b, "c": c}
+
+
+def rows_needed(fit: dict | None, target: float) -> float | None:
+    if not fit or target <= fit["c"]:
+        return None
+    return float(((target - fit["c"]) / fit["a"]) ** (-1 / fit["b"]))
+
+
+def learning_curve(conn=None, seed: int = 42, fractions=(0.1, 0.25, 0.5, 1.0), use_clip: bool = True,
+                   n_seeds: int = 2, progress=None, out_dir: Path | None = None) -> dict:
+    """Hogyan javul a hiba a tanítóadat mennyiségével? (azonos teszthalmazon)
+
+    Minden arányra a Herendi/Zsolnay tanítócsoportok véletlen részhalmazán tanul
+    (a kNN-index is csak abból épül), és ugyanazon a teszthalmazon mér. Ha van
+    általános korpusz, az előtanított változatot is méri. A hatványtörvény-illesztés
+    alapján becsüli, hány tanítósor kellene a cél-MdAPE eléréséhez – ez extrapoláció,
+    nem ígéret."""
+    progress = progress or (lambda f, m: log.info(m))
+    conn = conn or db.get_conn()
+    P = prepare(conn, seed, use_clip, progress)
+    df, y = P.df, P.y
+    rows = []
+    for fi, frac in enumerate(fractions):
+        sub = _group_subsample(df, P.tr, frac, seed)
+        variants = [("hz_only", sub)]
+        if P.pt.sum() >= 500:
+            variants.append(("pretrained", sub | P.pt))
+        for vname, train_rows in variants:
+            progress(fi / len(fractions), f"Tanulási görbe: {frac:.0%} ({int(sub.sum())} sor), {vname}")
+            knn, X, Xg, Xn, image_slice = build_design(P, train_rows)
+            if vname == "pretrained":
+                pre = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
+                    X[train_rows], y[train_rows], P.market_idx[train_rows], X[P.va], y[P.va], P.market_idx[P.va],
+                    seed=seed, log=log.debug)
+                m = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
+                    X[sub], y[sub], P.market_idx[sub], X[P.va], y[P.va], P.market_idx[P.va], seed=seed,
+                    log=log.debug, init=pre, lr=3e-4)
+            else:
+                m = DeepModel(n_seeds=n_seeds, image_slice=image_slice).fit(
+                    X[sub], y[sub], P.market_idx[sub], X[P.va], y[P.va], P.market_idx[P.va], seed=seed, log=log.debug)
+            for market in MARKETS:
+                t = P.te & (df.market == market).values
+                v = P.va & (df.market == market).values
+                if not t.any() or not (sub & (df.market == market).values).any():
+                    continue
+                pv = m.predict(X[v], market)
+                off = conformal_offset(pv, y[v])
+                res = metrics(apply_offset(m.predict(X[t], market), off), y[t])
+                rows.append({"fraction": frac, "variant": vname, "market": market,
+                             "train_rows": int((sub & (df.market == market).values).sum()),
+                             "pretrain_rows": int(P.pt.sum()) if vname == "pretrained" else 0,
+                             "test_n": res["n"], "mdape": res["mdape"], "mae": res["mae"],
+                             "interval80_coverage": res["interval80_coverage"]})
+    target = settings.get("validation.max_mdape")
+    fits = {}
+    for market in MARKETS:
+        for vname in ("hz_only", "pretrained"):
+            pts = [(r["train_rows"], r["mdape"]) for r in rows if r["market"] == market and r["variant"] == vname]
+            if len(pts) >= 3:
+                fit = fit_power_law([p[0] for p in pts], [p[1] for p in pts])
+                test_n = min(r["test_n"] for r in rows if r["market"] == market and r["variant"] == vname)
+                max_rows = max(p[0] for p in pts)
+                reliable = test_n >= 50 and max_rows >= 300
+                fits[f"{market}/{vname}"] = {"fit": fit, "rows_for_target_mdape": rows_needed(fit, target),
+                                             "target_mdape": target, "reliable": reliable, "test_n": test_n,
+                                             "max_train_rows": max_rows}
+    result = {"created_at": db.now_iso(), "split": P.split_info, "rows": rows, "fits": fits,
+              "note": "Extrapoláció kevés pontból: nagyságrendi becslés, nem ígéret."}
+    out_dir = Path(out_dir or (settings.path("models_dir") / "learning_curve"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "learning_curve.json").write_text(json.dumps(result, ensure_ascii=False, indent=1, default=float))
+    (out_dir / "LEARNING_CURVE.md").write_text(learning_curve_markdown(result), encoding="utf-8")
+    progress(1.0, "Tanulási görbe kész")
+    return result
+
+
+def learning_curve_markdown(r: dict) -> str:
+    lines = ["# Tanulási görbe – mennyi adat kell?", "",
+             f"Készült: {r['created_at']}. Teszthalmaz: {r['split']['test']}.", "",
+             "| Változat | Piac | Tanítósor | Tesztminta | MdAPE | MAE | 80%-os lefedettség |",
+             "|---|---|---:|---:|---:|---:|---:|"]
+    for x in r["rows"]:
+        vn = "csak Herendi/Zsolnay" if x["variant"] == "hz_only" else f"előtanítva (+{x['pretrain_rows']} általános)"
+        lines.append(f"| {vn} | {x['market']} | {x['train_rows']} | {x['test_n']} | {100 * x['mdape']:.1f}% | "
+                     f"{x['mae']:,.0f} | {100 * x['interval80_coverage']:.0f}% |".replace(",", " "))
+    lines += ["", "## Extrapoláció (MdAPE ≈ a·n^(−b) + c)", ""]
+    for k, v in r["fits"].items():
+        f = v["fit"]
+        if not f:
+            lines.append(f"- {k}: nem illeszthető (a hiba nem csökken monoton).")
+            continue
+        need = v["rows_for_target_mdape"]
+        if not v.get("reliable", True):
+            lines.append(f"- {k}: MEGBÍZHATATLAN extrapoláció (tesztminta {v.get('test_n')}, legfeljebb "
+                         f"{v.get('max_train_rows')} tanítósor) – nincs értelmes becslés.")
+            continue
+        lines.append(f"- {k}: a={f['a']:.3g}, b={f['b']:.3f}, aszimptota c={100 * f['c']:.1f}% → "
+                     + (f"~{need:,.0f} tanítósor kellene {100 * v['target_mdape']:.0f}% MdAPE-hez".replace(",", " ")
+                        if need else f"a {100 * v['target_mdape']:.0f}%-os cél ezzel az adattípussal nem érhető el "
+                                     f"(az aszimptota felette van) – jobb minőségű adat (kép, realizált ár) kell"))
+    lines += ["", r["note"]]
+    return "\n".join(lines) + "\n"
+
+
+def validation_gate(ds, results: dict, chosen: dict, P=None) -> tuple[str, list[str]]:
     cfg = settings.get("validation")
     reasons = []
+    sku = results.get("sku_level") or {}
+    for market in dataset.MARKETS:
+        v = (sku.get("by_market") or {}).get(market) or {}
+        if v.get("n", 0) < 30:
+            reasons.append(f"{market}: pontos (cikkszám-szintű) értékelés: {v.get('n', 0)} azonosított, "
+                           f"összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető")
+        elif (v.get("precise_within_10pct") or 0) < cfg.get("min_precise_within_10pct", 0.9):
+            reasons.append(f"{market}: a „pontos ár” becslések ±10%-on belüli aránya "
+                           f"{(v.get('precise_within_10pct') or 0):.0%} < {cfg.get('min_precise_within_10pct', 0.9):.0%}")
+    if P is not None:
+        n_img = int(P.df[P.tr].has_image.sum())
+        if n_img < cfg.get("min_train_rows_with_images", 0):
+            reasons.append(f"képes Herendi/Zsolnay tanítósor: {n_img} < {cfg['min_train_rows_with_images']} "
+                           f"(képalapú becsléshez sok tízezer képes adat kell)")
+        for market in dataset.MARKETS:
+            n = int((P.tr & (P.df.market == market).values).sum())
+            if n < cfg.get("min_train_rows_per_market", 0):
+                reasons.append(f"{market}: {n} tanítósor < {cfg['min_train_rows_per_market']}")
     for market in dataset.MARKETS:
         basis = ds.basis.get(market)
         name = chosen.get(market)
@@ -264,6 +477,11 @@ def evaluation_markdown(man: dict) -> str:
               f"- Nyers ár-rekordok: {ds.get('raw_records')}; típus szerint: " +
               ", ".join(f"{k}: {v}" for k, v in ds.get("by_type", {}).items()),
               f"- Tanításra használt sorok (duplikátumszűrés után): {ds.get('rows')}, csoportok: {ds.get('groups')}",
+              f"- Korpusz × piac: " + ", ".join(f"{k}: {v}" for k, v in ds.get("by_corpus_market", {}).items()),
+              f"- Herendi/Zsolnay tanítósor: {man.get('train_rows', {}).get('hz_train')} "
+              f"(ebből képes: {man.get('train_rows', {}).get('hz_train_with_images')}); "
+              f"általános előtanító sor: {man.get('train_rows', {}).get('pretrain')} "
+              f"(képes: {ds.get('general_with_images', 0)})",
               f"- Piac × márka: " + ", ".join(f"{k}: {v}" for k, v in ds.get("by_market_brand", {}).items()),
               f"- Célváltozó alapja: " + ", ".join(f"{k}: {'realizált ár' if v == 'realized' else 'KÍNÁLATI ár'}"
                                                   for k, v in man["target_basis"].items()),
@@ -293,6 +511,51 @@ def evaluation_markdown(man: dict) -> str:
         name, market, brand = key.split("/")
         lines.append(f"| {name} | {market} | {brand} | {m.get('n', 0)} | {_fmt(m.get('mdape'), pct=True)} | "
                      f"{_fmt(m.get('mae'), money=True)} | {_fmt(m.get('interval80_coverage'), pct=True)} |")
+    if r.get("test_with_images"):
+        lines += ["", "## Csak a képes tesztsorokon (a kép hatása)", "",
+                  "| Modell | Piac | n | MdAPE | MAE |", "|---|---|---:|---:|---:|"]
+        for key, m in r["test_with_images"].items():
+            name, market = key.split("/")
+            lines.append(f"| {name} | {market} | {m.get('n', 0)} | {_fmt(m.get('mdape'), pct=True)} | "
+                         f"{_fmt(m.get('mae'), money=True)} |")
+        lines.append("")
+        lines.append("A `deep_no_image` ugyanaz a modell a képjellemzők nélkül: a különbség a kép hozzájárulása.")
+    sku = r.get("sku_level") or {}
+    if sku:
+        lines += ["", "## Pontos termék → pontos piaci ár (cikkszám-szint, cél: ±10%)", "",
+                  f"- Formaszámmal azonosított rekord: {sku.get('records_identified')}, kiértékelhető "
+                  f"(van azonos termék/formaszám másik eladása): {sku.get('evaluated')}; "
+                  f"{'időrendi' if sku.get('temporal') else 'csoportonként kihagyásos'} értékelés.", ""]
+        if sku.get("by_market"):
+            lines += ["| Piac | n | MdAPE | ±10%-on belül | 90. percentilis hiba | azonos cikkszámmal | „pontos ár” arány | ebből ±10%-on belül |",
+                      "|---|---:|---:|---:|---:|---:|---:|---:|"]
+            for m, v in sku["by_market"].items():
+                lines.append(f"| {m} | {v['n']} | {_fmt(v['mdape'], pct=True)} | {_fmt(v['within_10pct'], pct=True)} | "
+                             f"{_fmt(v['p90_ape'], pct=True)} | {v['exact_sku_rows']} | {_fmt(v['precise_share'], pct=True)} | "
+                             f"{_fmt(v['precise_within_10pct'], pct=True)} |")
+        curve = sku.get("market_price_curve") or {}
+        if any(curve.values()):
+            lines += ["", "A TERMÉK PIACI ÁRÁNAK hibája az azonos termék ismert eladásainak számától függően "
+                          "(becslés n eladásból, referencia a többi eladás mediánja):", "",
+                      "| Piac | n eladás | minták | MdAPE | ±10%-on belül |", "|---|---:|---:|---:|---:|"]
+            for m, c in curve.items():
+                for n, v in c.items():
+                    lines.append(f"| {m} | {n} | {v['samples']} | {_fmt(v['mdape'], pct=True)} | "
+                                 f"{_fmt(v['within_10pct'], pct=True)} |")
+        else:
+            lines += ["", "A termék piaci árának hibagörbéje még nem mérhető: nincs olyan cikkszám, "
+                          "amelynek legalább 6 eladása lenne az adatban."]
+        lines += ["", "Piaci zajszint (azonos termék eladásai egymáshoz képest):"]
+        for m, v in (sku.get("noise_floor") or {}).items():
+            lines.append(f"- {m}: {v['skus_with_3plus']} cikkszámnak van ≥3 eladása"
+                         + (f"; egy eladás eltérése a többi mediánjától: MdAPE {_fmt(v['loo_mdape'], pct=True)}"
+                            if v.get("loo_mdape") is not None else " – a zajszint még nem mérhető"))
+        lines += ["", "Szükséges eladásszám ugyanabból a termékből (a mért vagy alapértelmezett szórásból):"]
+        for m, v in (sku.get("sales_needed") or {}).items():
+            src = "mért" if (sku["params"]["sigma_by_market"].get(m) or {}).get("sigma") else "alapértelmezett"
+            lines.append(f"- {m}: σ={v['sigma']:.2f} ({src}) → ≥{v['n_for_mdape']} eladás a 10%-os mediánhibához, "
+                         f"≥{v['n_for_share']} eladás ahhoz, hogy az esetek 90%-a ±10%-on belül legyen. "
+                         f"Egyetlen eladás árát ennél pontosabban nem lehet eltalálni: ~{100 * v['single_sale_mdape_floor']:.0f}% MdAPE.")
     lines += ["", "## Ajánlások találati pontossága", "",
               "Nem mérhető: nincs olyan ellenőrző adat (később realizált eladás / továbbértékesítés), amely "
               "megmutatná, hogy egy ajánlott vétel valóban nyereséges lett. A `python -m porcelan evaluate-recommendations` "

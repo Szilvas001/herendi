@@ -1,0 +1,965 @@
+{
+ "version": "v20260928-1810-522878a8",
+ "created_at": "2026-09-28T18:10:34+00:00",
+ "status": "kísérleti",
+ "status_reasons": [
+  "HU: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető",
+  "US: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető",
+  "képes Herendi/Zsolnay tanítósor: 0 < 10000 (képalapú becsléshez sok tízezer képes adat kell)",
+  "HU: 1167 tanítósor < 10000",
+  "US: 84 tanítósor < 10000",
+  "HU: a célváltozó kínálati ár, nem realizált eladási ár",
+  "HU: MdAPE 43% > 10%",
+  "US: a célváltozó kínálati ár, nem realizált eladási ár",
+  "US/Herendi: 19 tesztminta < 50",
+  "US/Zsolnay: 0 tesztminta < 50",
+  "US: MdAPE 75% > 10%",
+  "US: 80%-os intervallum tényleges lefedettsége 63%",
+  "US: a választott modell nem jobb az alapmodellnél a teszten"
+ ],
+ "git_commit": "8d3d45752eb9b6ce8998de449ac73a6641045cb5",
+ "seed": 42,
+ "n_seeds": 5,
+ "use_clip": true,
+ "clip": {
+  "model": "ViT-B-32-quickgelu",
+  "weights": "weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt",
+  "sha256": "46683a32721d5c68911153698992361285d20ca690bb4f317c11e45c03d798fa",
+  "frozen": true
+ },
+ "data_fingerprint": "522878a8f0adfc104d29dc015d8d621bbb711f5ffe4082e9d6a8c7837e10585c",
+ "dataset": {
+  "raw_records": 2438,
+  "by_type": {
+   "herend_zsolnay/HU/asking_active": 2113,
+   "herend_zsolnay/HU/auction_start_price": 206,
+   "herend_zsolnay/US/asking_active": 119
+  },
+  "dropped": {
+   "no_price_or_currency": 0,
+   "out_of_range": 8,
+   "relisting_duplicates": 430,
+   "fake_or_non_item": 1
+  },
+  "notes": [
+   "HU: 0 realizált Herendi/Zsolnay ár < 200 → kínálati áron tanul (kísérleti)",
+   "US: 0 realizált Herendi/Zsolnay ár < 200 → kínálati áron tanul (kísérleti)"
+  ],
+  "rows": 1793,
+  "groups": 1627,
+  "by_corpus_market": {
+   "herend_zsolnay/HU": 1677,
+   "herend_zsolnay/US": 116
+  },
+  "by_market": {
+   "HU": 1677,
+   "US": 116
+  },
+  "by_market_brand": {
+   "HU/Herendi": 981,
+   "HU/Zsolnay": 696,
+   "US/Herendi": 97,
+   "US/Zsolnay": 19
+  },
+  "observation_days": [
+   "2026-09-16",
+   "2026-09-19"
+  ],
+  "with_images": 0,
+  "general_rows": 0,
+  "general_with_images": 0
+ },
+ "train_rows": {
+  "hz_train": 1251,
+  "pretrain": 0,
+  "hz_train_with_images": 0,
+  "by_market": {
+   "HU": 1167,
+   "US": 84
+  }
+ },
+ "target_basis": {
+  "HU": "asking",
+  "US": "asking"
+ },
+ "target_currency": {
+  "HU": "HUF",
+  "US": "USD"
+ },
+ "split": {
+  "seed": 42,
+  "test": "csoportszintű véletlen (a megfigyelések csak 3 napot fednek le; időbeli teszt nem lehetséges)",
+  "counts": {
+   "train": 1251,
+   "val": 277,
+   "test": 265
+  }
+ },
+ "y_mean": {
+  "HU": 10.212441444396973,
+  "US": 5.437539100646973
+ },
+ "chosen_model": {
+  "HU": "deep_multimodal",
+  "US": "deep_multimodal"
+ },
+ "image_slice": [
+  1187,
+  1700
+ ],
+ "struct_features": [
+  "brand=Herendi",
+  "brand=Zsolnay",
+  "type=tureen",
+  "type=dinner_set",
+  "type=ashtray",
+  "type=tea_set",
+  "type=cup",
+  "type=teapot",
+  "type=vase",
+  "type=figurine",
+  "type=bonbonniere",
+  "type=flower",
+  "type=basket",
+  "type=bell",
+  "type=small_holder",
+  "type=plate",
+  "type=bowl",
+  "type=candle",
+  "type=tile",
+  "type=jewelry",
+  "type=egg",
+  "type=clock",
+  "type=lamp",
+  "type=other",
+  "decor=Apponyi",
+  "decor=Rothschild",
+  "decor=Queen Victoria",
+  "decor=Waldstein",
+  "decor=Chinese Bouquet",
+  "decor=Fishnet",
+  "decor=Siang Jaune",
+  "decor=Gödöllő",
+  "decor=Esterházy",
+  "decor=Nanking",
+  "decor=Tulipe",
+  "decor=Printemps",
+  "decor=Indian Basket",
+  "decor=Bouquet de Saxe",
+  "decor=Eosin",
+  "decor=Pyrogranite",
+  "decor=Art Nouveau",
+  "decor=Art Deco",
+  "decor=Butterfly",
+  "decor=Pompadour",
+  "decor=Petit Point",
+  "cond=hibatlan",
+  "cond=ismeretlen",
+  "cond=serult",
+  "cond=javitott",
+  "mark=hand_painted",
+  "mark=gilded",
+  "mark=marked",
+  "mark=numbered",
+  "mark=signed",
+  "mark=antique",
+  "mark=boxed",
+  "dmg=damaged",
+  "dmg=repaired",
+  "dmg=missing",
+  "dmg=second_quality",
+  "suspect",
+  "log_size",
+  "has_size",
+  "log_pieces",
+  "has_pieces",
+  "has_description",
+  "years_since_2020_centered"
+ ],
+ "metrics": {
+  "val": {
+   "baseline_group_median/HU": {
+    "n": 264,
+    "coverage_pct": 100.0,
+    "mae": 54538.78851417543,
+    "median_ae": 16629.16349411303,
+    "mdape": 0.6159754682237492,
+    "mape": 0.9863872743967459,
+    "within_25pct": 0.2196969696969697,
+    "interval80_coverage": 0.803030303030303,
+    "interval_median_rel_width": 4.050805114001078,
+    "mdape_ci95": [
+     0.5755088410153156,
+     0.6881952431435744
+    ],
+    "mae_ci95": [
+     39118.329475507075,
+     73442.23728664865
+    ],
+    "pinball": 0.2827884152363436
+   },
+   "baseline_group_median/US": {
+    "n": 13,
+    "coverage_pct": 100.0,
+    "mae": 432.73367983018886,
+    "median_ae": 169.99999237060558,
+    "mdape": 0.7266592075407255,
+    "mape": 0.8508845315539084,
+    "within_25pct": 0.15384615384615385,
+    "interval80_coverage": 0.9230769230769231,
+    "interval_median_rel_width": 5.420836742742425,
+    "mdape_ci95": [
+     0.4824118329667396,
+     1.3391302278707558
+    ],
+    "mae_ci95": [
+     163.86869567147494,
+     862.1917452758717
+    ],
+    "pinball": 0.34081800727939116
+   },
+   "gbm_quantile/HU": {
+    "n": 264,
+    "coverage_pct": 100.0,
+    "mae": 44606.73250763305,
+    "median_ae": 12423.366810132235,
+    "mdape": 0.4287922073051379,
+    "mape": 0.6900901709405819,
+    "within_25pct": 0.2878787878787879,
+    "interval80_coverage": 0.803030303030303,
+    "interval_median_rel_width": 2.649453843042912,
+    "mdape_ci95": [
+     0.3978741703937586,
+     0.4966113874022373
+    ],
+    "mae_ci95": [
+     30884.567255136535,
+     61409.903739458445
+    ],
+    "pinball": 0.21358140492570146
+   },
+   "gbm_quantile/US": {
+    "n": 13,
+    "coverage_pct": 100.0,
+    "mae": 427.10553989981076,
+    "median_ae": 138.34052004065285,
+    "mdape": 0.7901011304855855,
+    "mape": 1.0289443848832451,
+    "within_25pct": 0.07692307692307693,
+    "interval80_coverage": 0.9230769230769231,
+    "interval_median_rel_width": 8.98293919974822,
+    "mdape_ci95": [
+     0.43591097744477136,
+     1.1067240927761448
+    ],
+    "mae_ci95": [
+     167.5550102525283,
+     852.669205438449
+    ],
+    "pinball": 0.3367307924424526
+   },
+   "deep_multimodal/HU": {
+    "n": 264,
+    "coverage_pct": 100.0,
+    "mae": 41995.69140625,
+    "median_ae": 10844.4482421875,
+    "mdape": 0.43624818325042725,
+    "mape": 0.6792428493499756,
+    "within_25pct": 0.2878787878787879,
+    "interval80_coverage": 0.803030303030303,
+    "interval_median_rel_width": 1.9294401407241821,
+    "mdape_ci95": [
+     0.4089197516441345,
+     0.4848543703556061
+    ],
+    "mae_ci95": [
+     28906.68359375,
+     58382.390625
+    ],
+    "pinball": 0.18882876634597778
+   },
+   "deep_multimodal/US": {
+    "n": 13,
+    "coverage_pct": 100.0,
+    "mae": 426.1177978515625,
+    "median_ae": 211.60809326171875,
+    "mdape": 0.7053602933883667,
+    "mape": 0.7800143957138062,
+    "within_25pct": 0.07692307692307693,
+    "interval80_coverage": 0.9230769230769231,
+    "interval_median_rel_width": 3.3832123279571533,
+    "mdape_ci95": [
+     0.49924173951148987,
+     0.9409576654434204
+    ],
+    "mae_ci95": [
+     171.474853515625,
+     841.9779663085938
+    ],
+    "pinball": 0.2900015711784363
+   },
+   "deep_no_clip/HU": {
+    "n": 264,
+    "coverage_pct": 100.0,
+    "mae": 42775.10546875,
+    "median_ae": 11726.6171875,
+    "mdape": 0.417402446269989,
+    "mape": 0.6510898470878601,
+    "within_25pct": 0.30303030303030304,
+    "interval80_coverage": 0.803030303030303,
+    "interval_median_rel_width": 1.9918901920318604,
+    "mdape_ci95": [
+     0.36546364426612854,
+     0.4552776515483856
+    ],
+    "mae_ci95": [
+     29425.830078125,
+     58903.59375
+    ],
+    "pinball": 0.1950596123933792
+   },
+   "deep_no_clip/US": {
+    "n": 13,
+    "coverage_pct": 100.0,
+    "mae": 424.7631530761719,
+    "median_ae": 221.4820556640625,
+    "mdape": 0.6572103500366211,
+    "mape": 0.7546419501304626,
+    "within_25pct": 0.07692307692307693,
+    "interval80_coverage": 0.9230769230769231,
+    "interval_median_rel_width": 3.990161657333374,
+    "mdape_ci95": [
+     0.4545696973800659,
+     0.7410662770271301
+    ],
+    "mae_ci95": [
+     164.10523986816406,
+     842.0741577148438
+    ],
+    "pinball": 0.30097201466560364
+   }
+  },
+  "test": {
+   "baseline_group_median/HU": {
+    "n": 246,
+    "coverage_pct": 100.0,
+    "mae": 51088.33482676036,
+    "median_ae": 18199.998291015603,
+    "mdape": 0.6711875675490544,
+    "mape": 1.261483611095965,
+    "within_25pct": 0.17479674796747968,
+    "interval80_coverage": 0.7886178861788617,
+    "interval_median_rel_width": 4.050805114001078,
+    "mdape_ci95": [
+     0.6075607120209611,
+     0.7500010608963411
+    ],
+    "mae_ci95": [
+     37196.213975616934,
+     69846.77762774938
+    ],
+    "pinball": 0.29068300361511445,
+    "mean_confidence": 0.1838665290677675,
+    "realized_hit_rate": 0.17479674796747968
+   },
+   "baseline_group_median/US": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 469.8472523704421,
+    "median_ae": 175.9032635400914,
+    "mdape": 0.7065455066503006,
+    "mape": 2.2073731842884636,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.8421052631578947,
+    "interval_median_rel_width": 3.639089164949144,
+    "mdape_ci95": [
+     0.5840547919284499,
+     1.4789920734422337
+    ],
+    "mae_ci95": [
+     215.54399776871284,
+     774.8709227188646
+    ],
+    "pinball": 0.3363821044653836,
+    "mean_confidence": 0.20000000000000004,
+    "realized_hit_rate": 0.15789473684210525
+   },
+   "gbm_quantile/HU": {
+    "n": 246,
+    "coverage_pct": 100.0,
+    "mae": 41041.654352063735,
+    "median_ae": 12184.461503635523,
+    "mdape": 0.4683182931094628,
+    "mape": 0.9055864055470471,
+    "within_25pct": 0.3089430894308943,
+    "interval80_coverage": 0.7682926829268293,
+    "interval_median_rel_width": 2.613810032512071,
+    "mdape_ci95": [
+     0.3874092597711587,
+     0.5224095156463818
+    ],
+    "mae_ci95": [
+     27683.838722511446,
+     59238.89094353156
+    ],
+    "pinball": 0.2211054150751374,
+    "mean_confidence": 0.2816834050693448,
+    "realized_hit_rate": 0.3089430894308943
+   },
+   "gbm_quantile/US": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 453.6243404913726,
+    "median_ae": 180.60093524635522,
+    "mdape": 0.8078868356810394,
+    "mape": 2.1119077439853164,
+    "within_25pct": 0.21052631578947367,
+    "interval80_coverage": 0.8421052631578947,
+    "interval_median_rel_width": 6.052816959983519,
+    "mdape_ci95": [
+     0.5221222926048886,
+     1.1576980763859854
+    ],
+    "mae_ci95": [
+     188.478499304613,
+     770.4060528308797
+    ],
+    "pinball": 0.3171187418402519,
+    "mean_confidence": 0.13333333333333333,
+    "realized_hit_rate": 0.21052631578947367
+   },
+   "deep_multimodal/HU": {
+    "n": 246,
+    "coverage_pct": 100.0,
+    "mae": 40426.36328125,
+    "median_ae": 11781.9765625,
+    "mdape": 0.4342854619026184,
+    "mape": 0.8301756381988525,
+    "within_25pct": 0.2926829268292683,
+    "interval80_coverage": 0.7601626016260162,
+    "interval_median_rel_width": 1.8931913375854492,
+    "mdape_ci95": [
+     0.3817896246910095,
+     0.47440358996391296
+    ],
+    "mae_ci95": [
+     27445.337890625,
+     57721.1640625
+    ],
+    "pinball": 0.20041431486606598,
+    "mean_confidence": 0.30129124820659975,
+    "realized_hit_rate": 0.2926829268292683
+   },
+   "deep_multimodal/US": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 453.6127624511719,
+    "median_ae": 125.76063537597656,
+    "mdape": 0.7536986470222473,
+    "mape": 2.1051459312438965,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.631578947368421,
+    "interval_median_rel_width": 3.2227883338928223,
+    "mdape_ci95": [
+     0.466506689786911,
+     1.960115909576416
+    ],
+    "mae_ci95": [
+     187.5424346923828,
+     767.0992431640625
+    ],
+    "pinball": 0.34115365147590637,
+    "mean_confidence": 0.13333333333333333,
+    "realized_hit_rate": 0.15789473684210525
+   },
+   "deep_no_clip/HU": {
+    "n": 246,
+    "coverage_pct": 100.0,
+    "mae": 40927.203125,
+    "median_ae": 13486.6103515625,
+    "mdape": 0.42237910628318787,
+    "mape": 0.8635016679763794,
+    "within_25pct": 0.2682926829268293,
+    "interval80_coverage": 0.7235772357723578,
+    "interval_median_rel_width": 1.9841268062591553,
+    "mdape_ci95": [
+     0.3769853115081787,
+     0.4849511682987213
+    ],
+    "mae_ci95": [
+     28112.1484375,
+     58653.70703125
+    ],
+    "pinball": 0.20998413860797882,
+    "mean_confidence": 0.2833572453371593,
+    "realized_hit_rate": 0.2682926829268293
+   },
+   "deep_no_clip/US": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 450.2563781738281,
+    "median_ae": 134.16860961914062,
+    "mdape": 0.6504707932472229,
+    "mape": 1.992087960243225,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.631578947368421,
+    "interval_median_rel_width": 3.953617572784424,
+    "mdape_ci95": [
+     0.390266478061676,
+     2.169177532196045
+    ],
+    "mae_ci95": [
+     178.4080352783203,
+     771.3663940429688
+    ],
+    "pinball": 0.3355904817581177,
+    "mean_confidence": 0.13333333333333333,
+    "realized_hit_rate": 0.15789473684210525
+   }
+  },
+  "test_by_brand": {
+   "baseline_group_median/HU/Herendi": {
+    "n": 141,
+    "coverage_pct": 100.0,
+    "mae": 50432.14161163295,
+    "median_ae": 24999.99902343747,
+    "mdape": 0.6666667438271427,
+    "mape": 1.5063689693525566,
+    "within_25pct": 0.19858156028368795,
+    "interval80_coverage": 0.7801418439716312,
+    "interval_median_rel_width": 4.050805114001078,
+    "mdape_ci95": [
+     0.590909163545958,
+     0.7500873334597054
+    ],
+    "mae_ci95": [
+     37056.37940908826,
+     66343.29144553054
+    ],
+    "pinball": 0.2795424042436416
+   },
+   "baseline_group_median/HU/Zsolnay": {
+    "n": 105,
+    "coverage_pct": 100.0,
+    "mae": 51969.508572788574,
+    "median_ae": 12009.999023437502,
+    "mdape": 0.6753931841234001,
+    "mape": 0.9326375585799708,
+    "within_25pct": 0.14285714285714285,
+    "interval80_coverage": 0.8,
+    "interval_median_rel_width": 4.946821544225284,
+    "mdape_ci95": [
+     0.5789473684210527,
+     0.7999999218749695
+    ],
+    "mae_ci95": [
+     26361.131933329103,
+     88666.4600629226
+    ],
+    "pinball": 0.3056432370568067
+   },
+   "baseline_group_median/US/Herendi": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 469.8472523704421,
+    "median_ae": 175.9032635400914,
+    "mdape": 0.7065455066503006,
+    "mape": 2.2073731842884636,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.8421052631578947,
+    "interval_median_rel_width": 3.639089164949144,
+    "mdape_ci95": [
+     0.5840547919284499,
+     1.4789920734422337
+    ],
+    "mae_ci95": [
+     215.54399776871284,
+     774.8709227188646
+    ],
+    "pinball": 0.3363821044653836
+   },
+   "gbm_quantile/HU/Herendi": {
+    "n": 141,
+    "coverage_pct": 100.0,
+    "mae": 39305.835395013884,
+    "median_ae": 16111.694127535804,
+    "mdape": 0.481549552840375,
+    "mape": 1.1173773956816833,
+    "within_25pct": 0.3049645390070922,
+    "interval80_coverage": 0.7659574468085106,
+    "interval_median_rel_width": 2.346576865431634,
+    "mdape_ci95": [
+     0.3813367220729108,
+     0.5429907387990748
+    ],
+    "mae_ci95": [
+     27688.820005089547,
+     53529.88716688449
+    ],
+    "pinball": 0.22032168562303933
+   },
+   "gbm_quantile/HU/Zsolnay": {
+    "n": 105,
+    "coverage_pct": 100.0,
+    "mae": 43372.61123724499,
+    "median_ae": 8678.206709062284,
+    "mdape": 0.45446935426534796,
+    "mape": 0.621181361651964,
+    "within_25pct": 0.3142857142857143,
+    "interval80_coverage": 0.7714285714285715,
+    "interval_median_rel_width": 3.2827964026662677,
+    "mdape_ci95": [
+     0.35468917389711724,
+     0.5768325416170761
+    ],
+    "mae_ci95": [
+     18559.593837570534,
+     79676.39697666364
+    ],
+    "pinball": 0.22215785176795488
+   },
+   "gbm_quantile/US/Herendi": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 453.6243404913726,
+    "median_ae": 180.60093524635522,
+    "mdape": 0.8078868356810394,
+    "mape": 2.1119077439853164,
+    "within_25pct": 0.21052631578947367,
+    "interval80_coverage": 0.8421052631578947,
+    "interval_median_rel_width": 6.052816959983519,
+    "mdape_ci95": [
+     0.5221222926048886,
+     1.1576980763859854
+    ],
+    "mae_ci95": [
+     188.478499304613,
+     770.4060528308797
+    ],
+    "pinball": 0.3171187418402519
+   },
+   "deep_multimodal/HU/Herendi": {
+    "n": 141,
+    "coverage_pct": 100.0,
+    "mae": 37474.0390625,
+    "median_ae": 17152.458984375,
+    "mdape": 0.43086519837379456,
+    "mape": 0.9304783344268799,
+    "within_25pct": 0.2907801418439716,
+    "interval80_coverage": 0.75177304964539,
+    "interval_median_rel_width": 1.6626099348068237,
+    "mdape_ci95": [
+     0.37454524636268616,
+     0.49295365810394287
+    ],
+    "mae_ci95": [
+     27032.9609375,
+     50562.3671875
+    ],
+    "pinball": 0.19224043190479279
+   },
+   "deep_multimodal/HU/Zsolnay": {
+    "n": 105,
+    "coverage_pct": 100.0,
+    "mae": 44390.91015625,
+    "median_ae": 7756.2109375,
+    "mdape": 0.43503764271736145,
+    "mape": 0.695483386516571,
+    "within_25pct": 0.29523809523809524,
+    "interval80_coverage": 0.7714285714285715,
+    "interval_median_rel_width": 2.440922498703003,
+    "mdape_ci95": [
+     0.3218402564525604,
+     0.5035939812660217
+    ],
+    "mae_ci95": [
+     20152.96484375,
+     79298.6484375
+    ],
+    "pinball": 0.21139071881771088
+   },
+   "deep_multimodal/US/Herendi": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 453.6127624511719,
+    "median_ae": 125.76063537597656,
+    "mdape": 0.7536986470222473,
+    "mape": 2.1051459312438965,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.631578947368421,
+    "interval_median_rel_width": 3.2227883338928223,
+    "mdape_ci95": [
+     0.466506689786911,
+     1.960115909576416
+    ],
+    "mae_ci95": [
+     187.5424346923828,
+     767.0992431640625
+    ],
+    "pinball": 0.34115365147590637
+   },
+   "deep_no_clip/HU/Herendi": {
+    "n": 141,
+    "coverage_pct": 100.0,
+    "mae": 39096.625,
+    "median_ae": 19236.658203125,
+    "mdape": 0.4408918619155884,
+    "mape": 1.0070087909698486,
+    "within_25pct": 0.24113475177304963,
+    "interval80_coverage": 0.6595744680851063,
+    "interval_median_rel_width": 1.7132878303527832,
+    "mdape_ci95": [
+     0.37825068831443787,
+     0.5478197932243347
+    ],
+    "mae_ci95": [
+     28122.91796875,
+     52709.84375
+    ],
+    "pinball": 0.20717346668243408
+   },
+   "deep_no_clip/HU/Zsolnay": {
+    "n": 105,
+    "coverage_pct": 100.0,
+    "mae": 43385.41796875,
+    "median_ae": 7454.34765625,
+    "mdape": 0.3987584412097931,
+    "mape": 0.6707920432090759,
+    "within_25pct": 0.3047619047619048,
+    "interval80_coverage": 0.8095238095238095,
+    "interval_median_rel_width": 2.6940059661865234,
+    "mdape_ci95": [
+     0.3471313416957855,
+     0.49449798464775085
+    ],
+    "mae_ci95": [
+     19479.37890625,
+     78490.234375
+    ],
+    "pinball": 0.2137584537267685
+   },
+   "deep_no_clip/US/Herendi": {
+    "n": 19,
+    "coverage_pct": 100.0,
+    "mae": 450.2563781738281,
+    "median_ae": 134.16860961914062,
+    "mdape": 0.6504707932472229,
+    "mape": 1.992087960243225,
+    "within_25pct": 0.15789473684210525,
+    "interval80_coverage": 0.631578947368421,
+    "interval_median_rel_width": 3.953617572784424,
+    "mdape_ci95": [
+     0.390266478061676,
+     2.169177532196045
+    ],
+    "mae_ci95": [
+     178.4080352783203,
+     771.3663940429688
+    ],
+    "pinball": 0.3355904817581177
+   }
+  },
+  "test_with_images": {},
+  "calibration": {
+   "baseline_group_median/HU": {
+    "conformal_offset": 0.0625200893281086,
+    "confidence": {
+     "edges": [
+      2.3937237199745827,
+      2.5373156454910113,
+      3.343916003524418
+     ],
+     "rates": [
+      0.3137254901960784,
+      0.15789473684210525,
+      0.15789473684210525,
+      0.15789473684210525
+     ],
+     "n": 264
+    }
+   },
+   "baseline_group_median/US": {
+    "conformal_offset": 0.7641044831843766,
+    "confidence": {
+     "edges": [],
+     "rates": [
+      0.2
+     ],
+     "n": 13
+    }
+   },
+   "gbm_quantile/HU": {
+    "conformal_offset": 0.15889536430359996,
+    "confidence": {
+     "edges": [
+      1.8667271779842363,
+      2.1809757242675047,
+      2.4533587663482184
+     ],
+     "rates": [
+      0.3235294117647059,
+      0.3235294117647059,
+      0.22058823529411764,
+      0.22058823529411764
+     ],
+     "n": 264
+    }
+   },
+   "gbm_quantile/US": {
+    "conformal_offset": 1.3216436583279654,
+    "confidence": {
+     "edges": [],
+     "rates": [
+      0.13333333333333333
+     ],
+     "n": 13
+    }
+   },
+   "deep_multimodal/HU": {
+    "conformal_offset": 0.033954620361328125,
+    "confidence": {
+     "edges": [
+      1.406949758529663,
+      1.63663911819458,
+      2.25504994392395
+     ],
+     "rates": [
+      0.38235294117647056,
+      0.29411764705882354,
+      0.29411764705882354,
+      0.20588235294117646
+     ],
+     "n": 264
+    }
+   },
+   "deep_multimodal/US": {
+    "conformal_offset": 0.5092959403991699,
+    "confidence": {
+     "edges": [],
+     "rates": [
+      0.13333333333333333
+     ],
+     "n": 13
+    }
+   },
+   "deep_no_clip/HU": {
+    "conformal_offset": -0.02613067626953125,
+    "confidence": {
+     "edges": [
+      1.4346582889556885,
+      1.670832633972168,
+      2.2627832889556885
+     ],
+     "rates": [
+      0.47058823529411764,
+      0.20588235294117646,
+      0.20588235294117646,
+      0.20588235294117646
+     ],
+     "n": 264
+    }
+   },
+   "deep_no_clip/US": {
+    "conformal_offset": 0.6341042518615723,
+    "confidence": {
+     "edges": [],
+     "rates": [
+      0.13333333333333333
+     ],
+     "n": 13
+    }
+   }
+  },
+  "sku_level": {
+   "records_identified": 55,
+   "evaluated": 0,
+   "temporal": false,
+   "params": {
+    "n_records": 55,
+    "sigma_by_market": {
+     "HU": {
+      "sigma": null,
+      "n": 0,
+      "note": "kevés ismételt eladás; alapérték 0.35"
+     },
+     "US": {
+      "sigma": null,
+      "n": 0,
+      "note": "kevés ismételt eladás; alapérték 0.35"
+     }
+    },
+    "sigma_pattern": {
+     "HU": null,
+     "US": null
+    },
+    "condition_effect": {
+     "HU": {
+      "hibatlan": {
+       "log_effect": null,
+       "n": 0
+      },
+      "ismeretlen": {
+       "log_effect": null,
+       "n": 0
+      }
+     },
+     "US": {
+      "hibatlan": {
+       "log_effect": null,
+       "n": 0
+      },
+      "ismeretlen": {
+       "log_effect": null,
+       "n": 0
+      }
+     }
+    }
+   },
+   "target_basis": {
+    "HU": "asking",
+    "US": "asking"
+   },
+   "by_market": {},
+   "market_price_curve": {
+    "HU": {},
+    "US": {}
+   },
+   "noise_floor": {
+    "HU": {
+     "skus_with_3plus": 0,
+     "n": 0,
+     "loo_mdape": null,
+     "within_10pct": null
+    },
+    "US": {
+     "skus_with_3plus": 0,
+     "n": 0,
+     "loo_mdape": null,
+     "within_10pct": null
+    }
+   },
+   "sales_needed": {
+    "HU": {
+     "sigma": 0.35,
+     "n_for_mdape": 7,
+     "n_for_share": 34,
+     "single_sale_mdape_floor": 0.2662692768013466
+    },
+    "US": {
+     "sigma": 0.35,
+     "n_for_mdape": 7,
+     "n_for_share": 34,
+     "single_sale_mdape_floor": 0.2662692768013466
+    }
+   }
+  }
+ },
+ "deep_best_epochs": [
+  24,
+  19,
+  17,
+  21,
+  19
+ ],
+ "train_seconds": 33.1
+}

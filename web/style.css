@@ -120,3 +120,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
   .dgrid { grid-template-columns: 1fr; }
   .gallery img { height: 160px; }
 }
+
+.volume { margin: 8px 20px 0; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 12px; }
+.volume summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+.vrow { display: grid; grid-template-columns: minmax(180px, 2fr) 3fr auto; gap: 10px; align-items: center; font-size: 12.5px; margin-top: 6px; }
+.vbar { height: 8px; background: var(--chip); border-radius: 4px; overflow: hidden; }
+.vbar div { height: 100%; background: var(--accent); }
+@media (max-width: 860px) { .volume { margin: 8px 16px 0; } .vrow { grid-template-columns: 1fr; gap: 3px; } }

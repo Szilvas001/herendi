@@ -33,44 +33,98 @@ def _nz(x):
 
 
 class Retrieval:
-    """Koszinusz-hasonlóság több blokk átlagaként; kép csak ha mindkét oldalon van."""
+    """Hasonló ár-rekordok visszakeresése piac × márka partíciókban.
+
+    A vektor a normalizált blokkok (CLIP kanonikus leírás, CLIP cím, TF-IDF és –
+    ha van – CLIP kép) összefűzése, egészében normalizálva; a belső szorzat így
+    a blokk-koszinuszok súlyozott átlaga. Nagy partíciónál FAISS IVF-index
+    (közelítő), kisebbnél pontos keresés – százezres indexszel is gyors."""
 
     BLOCKS = ("clip_canon", "clip_title", "tfidf")
+    EXACT_BELOW = 60_000
 
     def __init__(self, blocks: dict, meta: pd.DataFrame):
-        self.vecs = {k: _nz(blocks[k]) for k in self.BLOCKS if k in blocks}
-        self.img = _nz(blocks["clip_image"]) if "clip_image" in blocks else None
-        self.mask = blocks["image_mask"][:, 0] if "image_mask" in blocks else None
         self.meta = meta.reset_index(drop=True)
+        self.vec = self.combine(blocks)
+        brands = [b if isinstance(b, str) else "" for b in self.meta.brand]
+        self.parts: dict = {}
+        for key in set(zip(self.meta.market, brands)):
+            idx = np.array([i for i, kk in enumerate(zip(self.meta.market, brands)) if kk == key])
+            self.parts[key] = (idx, self._index(self.vec[idx]))
+        self.groups = self.meta.group.astype(str).values if "group" in self.meta else None
 
-    def similarity(self, blocks: dict) -> np.ndarray:
-        sims = [(_nz(blocks[k]) @ self.vecs[k].T) for k in self.vecs]
-        s = np.sum(sims, axis=0)
-        cnt = float(len(sims))
-        if self.img is not None and "clip_image" in blocks:
-            both = blocks["image_mask"][:, 0][:, None] * self.mask[None, :]
-            s = s + both * (_nz(blocks["clip_image"]) @ self.img.T)
-            return s / (cnt + both)
-        return s / cnt
+    @classmethod
+    def combine(cls, blocks: dict) -> np.ndarray:
+        parts = [_nz(blocks[k].astype(np.float32)) for k in cls.BLOCKS if k in blocks]
+        if "clip_image" in blocks and "image_mask" in blocks:
+            parts.append(_nz(blocks["clip_image"].astype(np.float32)) * blocks["image_mask"])
+        return np.ascontiguousarray(_nz(np.concatenate(parts, axis=1)).astype(np.float32))
+
+    def _index(self, x: np.ndarray):
+        try:
+            import faiss
+        except ImportError:
+            return ("numpy", x)
+        d = x.shape[1]
+        if len(x) < self.EXACT_BELOW:
+            ix = faiss.IndexFlatIP(d)
+        else:
+            nlist = int(4 * math.sqrt(len(x)))
+            ix = faiss.IndexIVFFlat(faiss.IndexFlatIP(d), d, nlist, faiss.METRIC_INNER_PRODUCT)
+            ix.train(x[np.random.default_rng(0).choice(len(x), min(len(x), 50 * nlist), replace=False)])
+            ix.nprobe = 16
+        ix.add(x)
+        return ("faiss", ix)
+
+    @staticmethod
+    def _search(index, q: np.ndarray, k: int):
+        kind, ix = index
+        if kind == "faiss":
+            return ix.search(q, k)
+        sims, ids = [], []
+        for i in range(0, len(q), 256):
+            s_ = q[i:i + 256] @ ix.T
+            kk = min(k, s_.shape[1])
+            top = np.argpartition(-s_, kk - 1, axis=1)[:, :kk]
+            ts = np.take_along_axis(s_, top, 1)
+            order = np.argsort(-ts, axis=1)
+            ids.append(np.take_along_axis(top, order, 1))
+            sims.append(np.take_along_axis(ts, order, 1))
+        return np.concatenate(sims), np.concatenate(ids)
 
     def neighbors(self, blocks: dict, q_meta: pd.DataFrame, k: int = 10, exclude_same_group: bool = True,
                   same_market: str | None = None) -> list[list[tuple[int, float]]]:
-        sim = self.similarity(blocks)
-        out = []
-        m_brand = self.meta.brand.values
-        m_market = self.meta.market.values
-        m_group = self.meta.group.values if "group" in self.meta else None
-        for i in range(sim.shape[0]):
-            row = sim[i].copy()
-            q = q_meta.iloc[i]
-            row[m_brand != q.get("brand")] = -np.inf
-            if same_market:
-                row[m_market != same_market] = -np.inf
-            if exclude_same_group and m_group is not None and q.get("group") is not None:
-                row[m_group == q.get("group")] = -np.inf
-            idx = np.argpartition(-row, min(k, len(row) - 1))[:k]
-            idx = idx[np.argsort(-row[idx])]
-            out.append([(int(j), float(row[j])) for j in idx if np.isfinite(row[j])])
+        qv = self.combine(blocks)
+        q_meta = q_meta.reset_index(drop=True)
+        out: list = [[] for _ in range(len(q_meta))]
+        brands = [b if isinstance(b, str) else "" for b in q_meta.brand]
+        markets = [same_market or m for m in q_meta.market]
+        qgroups = [None if g is None or (isinstance(g, float) and g != g) else str(g)
+                   for g in (q_meta.group if "group" in q_meta else [None] * len(q_meta))]
+        by_part: dict = {}
+        for i, key in enumerate(zip(markets, brands)):
+            by_part.setdefault(key, []).append(i)
+        for key, rows in by_part.items():
+            if key not in self.parts:
+                continue
+            idx, index = self.parts[key]
+            kk = min(len(idx), k + (20 if exclude_same_group else 0))
+            if kk == 0:
+                continue
+            sims, ids = self._search(index, qv[rows], kk)
+            for r, srow, irow in zip(rows, sims, ids):
+                res = []
+                for sim, j in zip(srow, irow):
+                    if j < 0:
+                        continue
+                    gj = int(idx[j])
+                    if exclude_same_group and self.groups is not None and qgroups[r] is not None \
+                            and self.groups[gj] == qgroups[r]:
+                        continue
+                    res.append((gj, float(sim)))
+                    if len(res) >= k:
+                        break
+                out[r] = res
         return out
 
     def knn_features(self, blocks, q_meta, y_log: np.ndarray, market: str, k: int = 10,
@@ -78,15 +132,16 @@ class Retrieval:
         """[súlyozott log-ár (standardizálandó), max hasonlóság, átlag top5 hasonlóság, log szomszédszám]."""
         nbrs = self.neighbors(blocks, q_meta, k, exclude_same_group, same_market=market)
         feats = []
-        fallback = float(np.median(y_log[self.meta.market.values == market])) if (self.meta.market == market).any() else 0.0
+        mm = self.meta.market.values == market
+        fallback = float(np.median(y_log[mm])) if mm.any() else 0.0
         for lst in nbrs:
             if not lst:
                 feats.append([fallback, 0.0, 0.0, 0.0])
                 continue
-            s = np.array([x[1] for x in lst])
-            w = np.exp((s - s.max()) * 20)
+            s_ = np.array([x[1] for x in lst])
+            w = np.exp((s_ - s_.max()) * 20)
             ys = np.array([y_log[j] for j, _ in lst])
-            feats.append([float((w * ys).sum() / w.sum()), float(s.max()), float(s[:5].mean()),
+            feats.append([float((w * ys).sum() / w.sum()), float(s_.max()), float(s_[:5].mean()),
                           math.log1p(len(lst))])
         return np.asarray(feats, np.float32)
 
@@ -191,52 +246,78 @@ class DeepModel:
         self.epochs = epochs
         self.states = []
 
-    def fit(self, X, y, market_idx, Xv, yv, mv, seed: int = 0, log=print):
+    def fit(self, X, y, market_idx, Xv, yv, mv, seed: int = 0, log=print, init: "DeepModel | None" = None,
+            lr: float = 1e-3, zero_cols: tuple[int, int] | None = None):
+        """Tanítás korai megállással a validációs pinball-veszteségen.
+
+        `init`: előtanított modell (finomhangolás: a súlyok onnan indulnak, a célváltozó
+        középértéke is onnan jön). `zero_cols`: ablation – ezek az oszlopok végig nullák.
+        Nagy adatnál (> 20 000 sor) nagyobb batch és rövidebb türelem; GPU, ha elérhető."""
         torch = _torch()
         torch.use_deterministic_algorithms(True, warn_only=True)
+        dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.d_in = X.shape[1]
-        self.y_mean = np.array([y[market_idx == i].mean() if (market_idx == i).any() else 0.0
-                                for i in range(len(MARKETS))], np.float32)
-        q = torch.tensor(QUANTILES)
+        self.zero_cols = zero_cols
+        if init is not None:
+            self.y_mean = init.y_mean.copy()
+        else:
+            self.y_mean = np.array([y[market_idx == i].mean() if (market_idx == i).any() else 0.0
+                                    for i in range(len(MARKETS))], np.float32)
+        big = len(X) > 20_000
+        batch = 1024 if big else 128
+        epochs = min(self.epochs, 60) if big else self.epochs
+        patience_max = 6 if big else 40
+        q = torch.tensor(QUANTILES, device=dev)
 
         def loss_fn(pred, yt, mi):
-            sel = pred[torch.arange(len(mi)), mi]           # (N, 3)
+            sel = pred[torch.arange(len(mi), device=dev), mi]           # (N, 3)
             diff = yt[:, None] - sel
             return torch.maximum(q * diff, (q - 1) * diff).mean()
 
-        Xt, yt, mt = (torch.tensor(X), torch.tensor(y - self.y_mean[market_idx], dtype=torch.float32),
-                      torch.tensor(market_idx))
-        Xvt, yvt, mvt = (torch.tensor(Xv), torch.tensor(yv - self.y_mean[mv], dtype=torch.float32),
-                         torch.tensor(mv))
+        def prep(A):
+            A = A.copy() if zero_cols else A
+            if zero_cols:
+                A[:, zero_cols[0]:zero_cols[1]] = 0.0
+            return torch.tensor(A)
+
+        Xt, yt, mt = prep(X), torch.tensor(y - self.y_mean[market_idx], dtype=torch.float32), torch.tensor(market_idx)
+        Xvt = prep(Xv).to(dev)
+        yvt = torch.tensor(yv - self.y_mean[mv], dtype=torch.float32, device=dev)
+        mvt = torch.tensor(mv, device=dev)
         self.states, self.best_epochs = [], []
         for s in range(self.n_seeds):
             torch.manual_seed(seed * 100 + s)
             gen = torch.Generator().manual_seed(seed * 100 + s)
             net = build_net(self.d_in)
-            opt = torch.optim.AdamW(net.parameters(), lr=1e-3, weight_decay=1e-2)
+            if init is not None:
+                net.load_state_dict(init.states[s % len(init.states)])
+            net.to(dev)
+            opt = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=1e-2)
             best, best_state, best_ep, patience = float("inf"), None, 0, 0
-            for ep in range(self.epochs):
+            for ep in range(epochs):
                 net.train()
                 perm = torch.randperm(len(Xt), generator=gen)
-                for i in range(0, len(perm), 128):
-                    b = perm[i:i + 128]
+                for i in range(0, len(perm), batch):
+                    b = perm[i:i + batch]
                     xb = Xt[b].clone()
-                    if self.image_slice:
+                    if self.image_slice and not zero_cols:
                         drop = torch.rand(len(b), generator=gen) < 0.3
                         a, e = self.image_slice
                         xb[drop, a:e] = 0.0
                     opt.zero_grad()
-                    loss = loss_fn(net(xb), yt[b], mt[b])
+                    loss = loss_fn(net(xb.to(dev)), yt[b].to(dev), mt[b].to(dev))
                     loss.backward()
                     opt.step()
                 net.eval()
                 with torch.no_grad():
-                    vl = float(loss_fn(net(Xvt), yvt, mvt))
+                    vl = float(np.mean([float(loss_fn(net(Xvt[i:i + 8192]), yvt[i:i + 8192], mvt[i:i + 8192]))
+                                        for i in range(0, len(Xvt), 8192)])) if len(Xvt) else 0.0
                 if vl < best - 1e-4:
-                    best, best_state, best_ep, patience = vl, {k: v.clone() for k, v in net.state_dict().items()}, ep, 0
+                    best, best_state, best_ep, patience = vl, {k: v.detach().cpu().clone()
+                                                               for k, v in net.state_dict().items()}, ep, 0
                 else:
                     patience += 1
-                    if patience >= 40:
+                    if patience >= patience_max:
                         break
             self.states.append(best_state)
             self.best_epochs.append(best_ep)
@@ -246,13 +327,17 @@ class DeepModel:
     def predict(self, X: np.ndarray, market: str) -> np.ndarray:
         torch = _torch()
         mi = MARKETS.index(market)
+        if getattr(self, "zero_cols", None):
+            X = X.copy()
+            X[:, self.zero_cols[0]:self.zero_cols[1]] = 0.0
         preds = []
         with torch.no_grad():
             for st in self.states:
                 net = build_net(self.d_in)
                 net.load_state_dict(st)
                 net.eval()
-                preds.append(net(torch.tensor(X))[:, mi, :].numpy())
+                preds.append(np.concatenate([net(torch.tensor(X[i:i + 16384]))[:, mi, :].numpy()
+                                             for i in range(0, len(X), 16384)]) if len(X) else np.zeros((0, 3)))
         p = np.mean(preds, axis=0) + self.y_mean[mi]
         p.sort(axis=1)
         return p
@@ -260,7 +345,8 @@ class DeepModel:
     def save(self, path):
         torch = _torch()
         torch.save({"states": self.states, "d_in": self.d_in, "y_mean": self.y_mean,
-                    "image_slice": self.image_slice, "best_epochs": self.best_epochs}, path)
+                    "image_slice": self.image_slice, "best_epochs": self.best_epochs,
+                    "zero_cols": getattr(self, "zero_cols", None)}, path)
 
     @classmethod
     def load(cls, path):
@@ -269,6 +355,7 @@ class DeepModel:
         m = cls(n_seeds=len(blob["states"]), image_slice=blob["image_slice"])
         m.states, m.d_in, m.y_mean = blob["states"], blob["d_in"], blob["y_mean"]
         m.best_epochs = blob.get("best_epochs")
+        m.zero_cols = blob.get("zero_cols")
         return m
 
 

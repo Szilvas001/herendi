@@ -42,6 +42,11 @@ def missing_info(listing: dict, feats: dict, image_used: bool) -> list[str]:
         miss.append("készlet darabszáma ismeretlen")
     if feats.get("object_type") == "other":
         miss.append("tárgytípus nem azonosított")
+    ident = feats.get("_identity") or {}
+    if not ident.get("form_no"):
+        miss.append("pontos termék (formaszám) nem azonosított – a pontos piaci árhoz ez kell")
+    elif not ident.get("pattern_code"):
+        miss.append("mintakód nem azonosított")
     return miss
 
 
@@ -75,10 +80,12 @@ def assess(listing: dict, estimate: dict, a: dict | None = None) -> dict:
     """Egy hirdetés teljes értékelése a dashboard számára."""
     a = a or costs.assumptions()
     rk = settings.get("ranking")
-    feats = estimate.get("features", {})
+    feats = dict(estimate.get("features", {}))
+    feats["_identity"] = estimate.get("identity")
     econ = costs.evaluate(listing, estimate, a)
     min_conf = rk["min_confidence_to_recommend"]
-    result = {"markets": {}, "missing_info": missing_info(listing, feats, estimate.get("image_used", False))}
+    result = {"markets": {}, "missing_info": missing_info(listing, feats, estimate.get("image_used", False)),
+              "identity": estimate.get("identity")}
     for market, e in econ.items():
         est_m = estimate["markets"][market]
         abstain = []
@@ -90,6 +97,8 @@ def assess(listing: dict, estimate: dict, a: dict | None = None) -> dict:
             abstain.append("nincs elég hasonló összehasonlító tétel")
         if est_m.get("model") == "baseline_group_median":
             abstain.append("ehhez a piachoz csak csoportmedián becslés van (kevés piaci adat), tárgyszintű érték nincs")
+        elif est_m.get("beats_baseline") is False:
+            abstain.append("ezen a piacon a modell a teszten nem jobb az egyszerű alapmodellnél (kevés adat)")
         if feats.get("condition") in ("serult", "javitott"):
             abstain.append("sérült/javított tárgy: kevés ilyen tanítópélda, az érték nem becsülhető megbízhatóan")
         if listing.get("status") != "active":
@@ -119,6 +128,10 @@ def assess(listing: dict, estimate: dict, a: dict | None = None) -> dict:
         else:
             abstain_note = None
         reason = explain(listing, feats, e, market, below, profitable, abstain)
+        sku = est_m.get("sku") or {}
+        e["p_within_10"] = est_m.get("p_within_10")
+        e["precise"] = bool(est_m.get("precise"))
+        e["sku"] = sku
         result["markets"][market] = {**e, "below_value": below, "profitable": profitable,
                                      "recommended": recommended, "candidate": candidate,
                                      "abstain_reasons": abstain,

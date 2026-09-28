@@ -17,7 +17,7 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from . import db, settings
-from .net import BlockedError, DisallowedError, Fetcher
+from .net import BlockedError, DisallowedError, Fetcher, NetworkError
 
 log = logging.getLogger(__name__)
 PHASH_DUP_BITS = 6
@@ -66,27 +66,55 @@ def store_image_bytes(data: bytes) -> dict:
     return {"sha256": sha, "phash": ph, "path": str(rel), "width": w, "height": h}
 
 
+def bands(ph: str) -> list[tuple[int, int]]:
+    """8 db 8 bites sáv. Hamming <= 7 esetén legalább egy sáv egyezik."""
+    v = int(ph, 16)
+    return [(b, (v >> (8 * b)) & 0xFF) for b in range(8)]
+
+
+def index_bands(conn, image_id: int, ph: str) -> None:
+    conn.executemany("INSERT OR IGNORE INTO image_bands(band, value, image_id) VALUES(?,?,?)",
+                     [(b, val, image_id) for b, val in bands(ph)])
+
+
 def find_duplicate(conn, image_id: int, sha: str, ph: str) -> int | None:
     row = conn.execute("SELECT id FROM images WHERE sha256=? AND id<>? AND status='ok' ORDER BY id LIMIT 1",
                        (sha, image_id)).fetchone()
     if row:
         return row["id"]
-    # pHash: prefix-szűrés nélkül is gyors néhány tízezer képig
-    for r in conn.execute("SELECT id, phash FROM images WHERE status='ok' AND id<>? AND phash IS NOT NULL",
-                          (image_id,)):
-        if hamming(r["phash"], ph) <= PHASH_DUP_BITS:
-            return r["id"]
-    return None
+    # jelöltek a sáv-indexből (nem páronkénti keresés), majd pontos Hamming-ellenőrzés
+    cands = set()
+    for b, val in bands(ph):
+        for r in conn.execute("SELECT image_id FROM image_bands WHERE band=? AND value=? AND image_id<>? LIMIT 200",
+                              (b, val, image_id)):
+            cands.add(r[0])
+    best = None
+    for cid in sorted(cands):
+        r = conn.execute("SELECT phash, status FROM images WHERE id=?", (cid,)).fetchone()
+        if r and r["status"] == "ok" and r["phash"] and hamming(r["phash"], ph) <= PHASH_DUP_BITS:
+            best = cid
+            break
+    return best
 
 
 def download_pending(conn=None, fetcher: Fetcher | None = None, limit: int | None = None,
-                     progress=None) -> dict:
+                     progress=None, corpus: str | None = None) -> dict:
+    """Függő képek letöltése hirdetésekhez és ár-rekordokhoz (pl. eBay-korpusz)."""
     conn = conn or db.get_conn()
     fetcher = fetcher or Fetcher(min_delay=settings.get("http.min_delay_sec") / 2)
-    q = ("SELECT i.id, i.url, i.listing_id FROM images i JOIN listings l ON l.id=i.listing_id "
-         "WHERE i.status='pending' AND l.relevance IN ('accepted','visual_candidate') ORDER BY l.last_seen DESC, i.position")
-    rows = conn.execute(q + (f" LIMIT {int(limit)}" if limit else "")).fetchall()
-    stats = {"ok": 0, "duplicate": 0, "failed": 0, "blocked": 0}
+    q = ("SELECT i.id, i.url FROM images i LEFT JOIN listings l ON l.id=i.listing_id "
+         "LEFT JOIN price_records p ON p.id=i.price_record_id "
+         "WHERE i.status='pending' AND (l.relevance IN ('accepted','visual_candidate') OR p.id IS NOT NULL "
+         "OR i.catalog_id IS NOT NULL)")
+    args: list = []
+    if corpus:
+        q += " AND p.corpus=?"
+        args.append(corpus)
+    q += " ORDER BY i.id"
+    if limit:
+        q += f" LIMIT {int(limit)}"
+    rows = conn.execute(q, args).fetchall()
+    stats = {"ok": 0, "duplicate": 0, "failed": 0, "blocked": 0, "network": 0}
     for n, r in enumerate(rows, 1):
         try:
             resp = fetcher.get(r["url"], ttl=30 * 86400, binary=True)
@@ -97,6 +125,12 @@ def download_pending(conn=None, fetcher: Fetcher | None = None, limit: int | Non
             stats["blocked"] += 1
             log.error("Képforrás korlátozott, leállás: %s", exc)
             break
+        except NetworkError as exc:
+            stats["network"] += 1
+            if stats["network"] >= 3:
+                log.error("Képforrás nem érhető el, leállás: %s", exc)
+                break
+            continue
         except (DisallowedError, RuntimeError, UnidentifiedImageError, OSError) as exc:
             conn.execute("UPDATE images SET status='failed' WHERE id=?", (r["id"],))
             stats["failed"] += 1
@@ -106,8 +140,10 @@ def download_pending(conn=None, fetcher: Fetcher | None = None, limit: int | Non
         conn.execute("UPDATE images SET sha256=?, phash=?, path=?, width=?, height=?, status=?, dup_of=? WHERE id=?",
                      (info["sha256"], info["phash"], info["path"], info["width"], info["height"],
                       "duplicate" if dup else "ok", dup, r["id"]))
+        if not dup:
+            index_bands(conn, r["id"], info["phash"])
         stats["duplicate" if dup else "ok"] += 1
-        if n % 25 == 0:
+        if n % 50 == 0:
             conn.commit()
             if progress:
                 progress(n / len(rows), f"{n}/{len(rows)} kép")

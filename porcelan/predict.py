@@ -58,6 +58,8 @@ class Estimator:
             self.gbms = pickle.load(fh)
         self.deep = DeepModel.load(self.dir / "deep.pt")
         self.deep_nc = DeepModel.load(self.dir / "deep_no_clip.pt") if (self.dir / "deep_no_clip.pt").exists() else None
+        self.extra_deep = {n: DeepModel.load(self.dir / f"{n}.pt") for n in ("deep_pretrained_ft", "deep_no_image")
+                           if (self.dir / f"{n}.pt").exists()}
         idx = np.load(self.dir / "index.npz")
         self.records = pd.read_csv(self.dir / "training_data.csv.gz")
         self.records["group"] = self.records["group"].astype(str)
@@ -73,6 +75,15 @@ class Estimator:
         self.calib = self.manifest["metrics"]["calibration"]
         self.chosen = self.manifest["chosen_model"]
         self._by_ref = {str(r): g for r, g in zip(self.records.source_ref.astype(str), self.records.group)}
+
+    def _beats_baseline(self, market: str) -> bool:
+        """A választott modell a TESZTEN jobb-e a csoportmedián-alapmodellnél (MdAPE)."""
+        test = self.manifest["metrics"]["test"]
+        name = self.chosen.get(market)
+        m, b = test.get(f"{name}/{market}", {}), test.get(f"baseline_group_median/{market}", {})
+        if name == "baseline_group_median" or m.get("mdape") is None or b.get("mdape") is None:
+            return False
+        return m["mdape"] < b["mdape"]
 
     # ------------------------------------------------------------------
     def _frame(self, listings: list[dict]) -> pd.DataFrame:
@@ -112,7 +123,7 @@ class Estimator:
                 pred = self.deep_nc.predict(Xn, market)
             else:
                 X, _ = design(blocks, knn, self.use_clip)
-                pred = self.deep.predict(X, market)
+                pred = self.extra_deep.get(name, self.deep).predict(X, market)
             cal = self.calib.get(f"{name}/{market}", {})
             pred = apply_offset(pred, cal.get("conformal_offset", 0.0))
             conf = confidence_of(pred, cal["confidence"]) if cal.get("confidence") else np.zeros(len(pred))
@@ -130,6 +141,7 @@ class Estimator:
                                   "source": r.source, "url": r.url if isinstance(r.url, str) else None,
                                   "similarity": round(sim, 3)})
                 out[i]["markets"][market] = {
+                    "beats_baseline": self._beats_baseline(market),
                     "q10": float(q[0]), "q50": float(q[1]), "q90": float(q[2]), "currency": currency,
                     "confidence": float(conf[i]), "model": name,
                     "basis": self.manifest["target_basis"].get(market),
@@ -142,7 +154,62 @@ class Estimator:
                                                    "damage_flags", "mark_flags", "suspect_flags",
                                                    "canonical_en"]].items()}
             out[i]["image_used"] = bool(blocks.get("image_mask", np.zeros((len(df), 1)))[i, 0]) if self.use_clip else False
+        self._apply_sku(listings, out, conn)
         return out
+
+
+    # ------------------------------------------------------------------
+    def _sku_pricer(self, conn):
+        if getattr(self, "_sku", None) is None:
+            from . import sku_model
+            try:
+                self._sku = sku_model.SkuPricer(sku_model.load_frame(conn))
+            except Exception as exc:  # pragma: no cover - adatbázis nélküli környezet
+                log.warning("Cikkszám-modell nem tölthető: %s", exc)
+                self._sku = False
+        return self._sku or None
+
+    def _apply_sku(self, listings: list[dict], out: list[dict], conn) -> None:
+        """Pontosan azonosított terméknél: azonos cikkszám / formaszám eladásai + a kép+szöveg modell
+        (előzetes becslés) bizonytalansággal súlyozott kombinációja; P(|hiba| ≤ 10%)."""
+        from . import db as _db
+        from .identify import identify_text
+        from .sku_model import Z80, prob_within
+        pricer = self._sku_pricer(conn or _db.get_conn())
+        sku_eval = _db.get_meta(conn or _db.get_conn(), "sku_eval") or {}
+        for i, l in enumerate(listings):
+            key = l.get("sku_key")
+            basis = l.get("id_basis")
+            if not key:
+                ident = identify_text(l.get("title") or "", l.get("description") or "")
+                key, basis = ident.sku_key, '["szöveg"]'
+            if not key:
+                continue
+            brand, form, pat = key.split("|")
+            out[i]["identity"] = {"sku_key": key, "brand": brand, "form_no": form,
+                                  "pattern_code": None if pat == "-" else pat,
+                                  "confidence": l.get("id_confidence"), "basis": basis}
+            if not pricer:
+                continue
+            for market, m in out[i]["markets"].items():
+                mu0 = float(np.log(m["q50"]))
+                sd0 = max(1e-3, float((np.log(m["q90"]) - np.log(m["q10"])) / (2 * Z80)))
+                cond = (out[i].get("features") or {}).get("condition") or l.get("condition")
+                est = pricer.estimate(market, key, cond, mu0, sd0, exclude_refs={l.get("source_id")})
+                if est.get("mu") is None or (est["n_exact"] == 0 and est["n_form"] == 0):
+                    m["sku"] = {"n_exact": 0, "n_form": 0, "p_within_10": prob_within(sd0),
+                                "note": "nincs azonos termék eladás az adatban"}
+                    m["p_within_10"] = prob_within(sd0)
+                    continue
+                v = (sku_eval.get("by_market") or {}).get(market) or {}
+                validated = (v.get("n", 0) >= 30 and (v.get("precise_within_10pct") or 0) >= 0.9)
+                m["model_q"] = {k: m[k] for k in ("q10", "q50", "q90")}
+                m["q10"], m["q50"], m["q90"] = (float(np.exp(est["q10"])), float(np.exp(est["mu"])),
+                                                float(np.exp(est["q90"])))
+                m["p_within_10"] = est["p_within_10"]
+                m["sku"] = {k: est[k] for k in ("n_exact", "n_form", "p_within_10", "evidence", "sigma_market")}
+                m["precise"] = bool(est["p_within_10"] >= 0.9 and validated)
+                m["precise_validated"] = validated
 
 
 _cache: dict = {}
