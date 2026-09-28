@@ -116,7 +116,10 @@ class GeneralCorpusCrawlTest(unittest.TestCase):
         crawl = FIX / "crawl"
         with IsolatedEnv() as tmp:
             s = tmp / "s.toml"
-            s.write_text('[vatera]\nqueries_general_corpus = ["herendi"]\n[http]\nmin_delay_sec = 0\n')
+            s.write_text('[vatera]\nuse_search = true\nsitemap_url = ""\n'
+                         'seed_categories = []\ngeneral_categories = []\n'
+                         'queries_general_corpus = ["herendi"]\n'
+                         '[http]\nmin_delay_sec = 0\n')
             os.environ["HZ_SETTINGS"] = str(s)
             from porcelan import db, settings
             settings.reload()

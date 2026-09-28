@@ -65,7 +65,7 @@ def main(argv=None) -> int:
     lc.add_argument("--seeds", type=int, default=2)
     sub.add_parser("data-volume", help="tanítóadat-mennyiség a célokhoz képest")
     sub.add_parser("identify", help="pontos termékazonosítás (formaszám+mintakód) szövegből és képből")
-    sub.add_parser("sku-eval", help="cikkszám-szintű piaci ár pontossága (±10% cél), zajszint, szükséges eladásszám")
+    sub.add_parser("sku-eval", help="cikkszám-szintű piaci ár pontossága (±10%% cél), zajszint, szükséges eladásszám")
     cc = sub.add_parser("crawl-catalog", help="hivatalos herend.com katalógus (sitemap; folytatható)")
     cc.add_argument("--limit", type=int)
     icat = sub.add_parser("import-catalog", help="termékkatalógus CSV (cikkszám, név, méret, hivatalos ár, kép)")

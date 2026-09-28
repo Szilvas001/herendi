@@ -24,6 +24,8 @@ from . import settings
 
 log = logging.getLogger(__name__)
 
+GZIP_MAGIC = bytes([0x1F, 0x8B])   # .gz fájltörzs felismerése
+
 BLOCK_MARKERS = ("cf-chl", "challenge-platform", "turnstile", "g-recaptcha", "hcaptcha",
                  "captcha", "unusual traffic", "access denied", "are you a robot")
 
@@ -128,6 +130,16 @@ class Fetcher:
         return urlparse(url).netloc in self._blocked_hosts
 
     @staticmethod
+    def _maybe_gunzip(data: bytes) -> bytes:
+        """.gz kiterjesztesu torzs (pl. sitemap_1_17.xml.gz) kibontasa szovegkent olvasashoz."""
+        if data[:2] == GZIP_MAGIC:
+            try:
+                return gzip.decompress(data)
+            except OSError:
+                return data
+        return data
+
+    @staticmethod
     def block_marker(text: str) -> str | None:
         low = (text or "")[:200_000].lower()
         return next((m for m in BLOCK_MARKERS if m in low), None)
@@ -143,8 +155,9 @@ class Fetcher:
         cached = self._cache_get(url, ttl)
         if cached is not None:
             self.stats["cache_hit"] += 1
-            return Response(url, 200, "" if binary else cached.decode("utf-8", "ignore"), True,
-                            cached if binary else None)
+            return Response(url, 200,
+                            "" if binary else self._maybe_gunzip(cached).decode("utf-8", "ignore"),
+                            True, cached if binary else None)
         if not self.allowed(url):
             self.stats["disallowed"] += 1
             raise DisallowedError(f"robots.txt tiltja: {url}")
@@ -182,8 +195,11 @@ class Fetcher:
                 time.sleep(min(30, 2 ** attempt))
                 continue
             data = resp.content
+            text_body = ""
             if not binary:
-                marker = self.block_marker(resp.text)
+                text_body = (self._maybe_gunzip(data).decode("utf-8", "ignore")
+                             if data[:2] == GZIP_MAGIC else resp.text)
+                marker = self.block_marker(text_body)
                 if marker:
                     self.stats["blocked"] += 1
                     self._blocked_hosts.add(host)
@@ -192,7 +208,7 @@ class Fetcher:
             self.stats["bytes"] += len(data)
             if ttl > 0 and resp.status_code == 200:
                 self._cache_put(url, data)
-            return Response(resp.url, resp.status_code, "" if binary else resp.text, False,
+            return Response(resp.url, resp.status_code, "" if binary else text_body, False,
                             data if binary else None)
         self.stats["failed"] += 1
         log.warning("Sikertelen letöltés %s: %s", url, last_exc)

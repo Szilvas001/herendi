@@ -66,8 +66,47 @@ queries_general_corpus = [
   "rosenthal", "villeroy", "royal copenhagen", "goebel", "hummel", "lladro", "majolika", "fajansz",
   "gorka", "kerámia figura", "iparművész kerámia", "antik kerámia",
 ]
+# A /listings/ keresőkontrollert a Vatera robots.txt-je tiltja (User-agent: *, Disallow: /listings/,
+# 2026-09-i állapot), a kategória- (index-cNNN.html) és termékoldalak viszont bejárhatók.
+# Ezért a felderítés a sitemapen és a kategóriaoldalakon megy. Csak akkor állítsd true-ra,
+# ha a robots.txt újra engedi a keresőoldalakat.
+use_search = false
+# A Vatera saját, nyilvános sitemap-indexe (a robots.txt hirdeti meg).
+sitemap_url = "https://www.vatera.hu/sitemap/sitemap.xml"
+# A tétel-URL slugja tartalmazza a hirdetés címét: már itt kiszűrjük a márkás tételeket,
+# így nem kell minden Vatera-hirdetés termékoldalát letölteni.
+sitemap_slug_patterns = [
+  "herend", "herendi", "herendy", "o-herendi",
+  "zsolnay", "zsolnai", "zsolney", "zolnay", "eozin", "eosin", "pirogranit",
+]
 # Induló kategória-URL-ek (a crawler a találati oldalakon talált kategórialinkekből továbbiakat is felvesz).
-seed_categories = []
+seed_categories = [
+  "https://www.vatera.hu/antik-regiseg/porcelanok/index-c212.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/index-c2050.html",
+  "https://www.vatera.hu/antik-regiseg/konyhafelszereles-talalas/antik-etkeszletek-tanyerok/index-c13004.html",
+]
+# Általános porcelán/kerámia korpusz (--corpus general): kártyaszintű kép + ár.
+general_categories = [
+  "https://www.vatera.hu/antik-regiseg/porcelanok/index-c212.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/index-c2050.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/figuralis-porcelanok/index-c2119.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/vazak-kaspok/index-c12997.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/etkeszletek-tanyerok/index-c2122.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/teas-kaves-keszletek/index-c12995.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/disztanyerok-falitanyerok/index-c12994.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/disztargyak/index-c2115.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/cseszek-bogrek-korsok/index-c5128.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/bonbonier-cukortartok/index-c2091.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/kancsok-kannak-kiontok/index-c2123.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/talalok-kinalok/index-c12993.html",
+  "https://www.vatera.hu/antik-regiseg/porcelanok/egyeb-porcelan-termekek/index-c2085.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/disztargyak-figurak/index-c5091.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/vazak-kaspok/index-c5089.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/tanyerok-disztanyerok/index-c5086.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/keramia-es-agyag-keszletek/index-c5095.html",
+  "https://www.vatera.hu/antik-regiseg/keramia-agyag/egyeb-keramia-es-agyag-termekek/index-c2068.html",
+  "https://www.vatera.hu/butor-lakberendezes/konyha-konyhafelszerelesek/etkeszletek-talalas/etkeszletek-tanyerok/index-c8766.html",
+]
 category_keywords = ["porcelan", "keramia", "herend", "zsolnay", "antik", "regiseg"]
 
 [jofogas]

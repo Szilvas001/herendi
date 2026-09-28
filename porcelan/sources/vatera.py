@@ -22,6 +22,11 @@ PRODUCT_RE = re.compile(r"-(\d{6,})\.html$")
 _TOTAL_RE = re.compile(r"(\d{1,3}(?:[ . ]\d{3})*|\d+)\s*(?:db\s+)?(?:találat|termék|hirdetés)", re.I)
 _AUCTION_TYPES = {"bid": "aukcio", "fix_price": "fix", "auction": "aukcio"}
 _IMG_HOST_RE = re.compile(r"https?://[^\"'\s)]*(?:vatera|vimg|img)[^\"'\s)]*\.(?:jpe?g|png|webp)", re.I)
+# "1. oldal / 295 osszesen" a kategoriaoldal lapozojaban
+_PAGES_RE = re.compile(r"(\d+)\.\s*oldal\s*/\s*([\d .]+)\s*összesen", re.I)
+# morzsamenu: "Porcelánok (14707 db)"
+_CRUMB_TOTAL_RE = re.compile(r"\(\s*(\d[\d .]*)\s*db\s*\)")
+_SITEMAP_LOC_RE = re.compile(r"<loc>\s*([^<\s]+)\s*</loc>", re.I)
 
 
 class VateraSource(Source):
@@ -41,22 +46,45 @@ class VateraSource(Source):
             params["p"] = page
         return f"{self.base}{self.search_path}?{urlencode(params)}"
 
+    def use_search(self) -> bool:
+        """A /listings/ keresőkontrollert a Vatera robots.txt-je tiltja (2026-09).
+
+        Ezért alapértelmezésben nem használjuk: a felderítés a sitemapen és a
+        kategóriaoldalakon megy, amelyeket a robots.txt kifejezetten enged.
+        """
+        return bool(self.cfg.get("use_search", False))
+
+    def sitemap_tasks(self) -> list[Task]:
+        url = self.cfg.get("sitemap_url")
+        return [Task("sitemap", url, "sitemap:index", 1, 5)] if url else []
+
+    def category_tasks(self, key: str, priority: int, scope: str) -> list[Task]:
+        return [Task("category", url, f"{scope}:{url}", 1, priority)
+                for url in self.cfg.get(key, [])]
+
     def seed_tasks(self, full_catalog: bool = False) -> list[Task]:
-        tasks = []
-        for q in self.cfg["queries_herend"] + self.cfg["queries_zsolnay"]:
-            tasks.append(Task("search", self.search_url(q), f"query:{q}", 1, 10))
-        for q in self.cfg.get("queries_generic", []):
-            tasks.append(Task("search", self.search_url(q), f"query:{q}", 1, 40))
-        for url in self.cfg.get("seed_categories", []):
-            tasks.append(Task("category", url, f"category:{url}", 1, 20))
+        tasks: list[Task] = []
+        tasks += self.sitemap_tasks()
+        tasks += self.category_tasks("seed_categories", 20, "category")
+        if self.use_search():
+            for q in self.cfg["queries_herend"] + self.cfg["queries_zsolnay"]:
+                tasks.append(Task("search", self.search_url(q), f"query:{q}", 1, 10))
+            for q in self.cfg.get("queries_generic", []):
+                tasks.append(Task("search", self.search_url(q), f"query:{q}", 1, 40))
         if full_catalog:
             tasks.append(Task("category", self.base + "/", "category:root", 1, 90))
         return tasks
 
     def general_tasks(self) -> list[Task]:
-        """Általános porcelán/kerámia korpusz (előtanításhoz), márkanév nélkül is."""
-        return [Task("search", self.search_url(q), f"general:{q}", 1, 60)
-                for q in self.cfg.get("queries_general_corpus", [])]
+        """Általános porcelán/kerámia korpusz (előtanításhoz), márkanév nélkül is.
+
+        Kártyaszintű kép + ár a porcelán/kerámia kategóriaoldalakról.
+        """
+        tasks = self.category_tasks("general_categories", 60, "general")
+        if self.use_search():
+            tasks += [Task("search", self.search_url(q), f"general:{q}", 1, 60)
+                      for q in self.cfg.get("queries_general_corpus", [])]
+        return tasks
 
     def page_task(self, task: Task, page: int) -> Task:
         parsed = urlparse(task.url)
@@ -65,8 +93,40 @@ class VateraSource(Source):
         url = urlunparse(parsed._replace(query=urlencode({k: v[0] for k, v in qs.items()})))
         return Task(task.kind, url, task.query, page, task.priority + min(page, 30) // 10)
 
+    # -- sitemap --------------------------------------------------------------
+    def _slug_filter(self) -> re.Pattern | None:
+        pats = self.cfg.get("sitemap_slug_patterns", [])
+        return re.compile("|".join(pats), re.I) if pats else None
+
+    def parse_sitemap(self, url: str, xml: str) -> IndexPage:
+        """Sitemap: index -> további sitemapok, tétel-sitemap -> kártyák.
+
+        A tétel URL-je tartalmazza a hirdetés címét (slug), ezért a márkaszűrés
+        termékoldal letöltése nélkül elvégezhető.
+        """
+        locs = _SITEMAP_LOC_RE.findall(xml or "")
+        subs, cards = [], {}
+        pat = self._slug_filter()
+        for loc in locs:
+            path = urlparse(loc).path
+            m = PRODUCT_RE.search(path)
+            if not m:
+                if "sitemap" in path.lower() and loc != url:
+                    subs.append(loc)
+                continue
+            slug = path.rsplit("/", 1)[-1]
+            slug = slug[: slug.rfind("-" + m.group(1))]
+            title = slug.replace("-", " ").strip()
+            if pat and not pat.search(title):
+                continue
+            cards.setdefault(m.group(1), Card(source_id=m.group(1), url=loc.split("?")[0],
+                                              title=title, extra={"via": "sitemap"}))
+        return IndexPage(list(cards.values()), None, False, sorted(set(subs)))
+
     # -- találati oldal -------------------------------------------------------
     def parse_index(self, url: str, html: str) -> IndexPage:
+        if (html or "").lstrip()[:400].lower().find("<urlset") >= 0 or            (html or "").lstrip()[:400].lower().find("<sitemapindex") >= 0:
+            return self.parse_sitemap(url, html)
         soup = BeautifulSoup(html or "", "html.parser")
         cards: dict[str, Card] = {}
         for el in soup.select("[data-product-id]"):
@@ -109,9 +169,30 @@ class VateraSource(Source):
         m = _TOTAL_RE.search(text)
         if m:
             total = int(re.sub(r"\D", "", m.group(1)))
+
+        # Kategóriaoldal: "1. oldal / 295 összesen" -> ebből jön a lapozás vége is.
+        pages_now = pages_total = None
+        mp = _PAGES_RE.search(text)
+        if mp:
+            pages_now = int(mp.group(1))
+            pages_total = int(re.sub(r"\D", "", mp.group(2)) or 0) or None
+        if total is None:
+            mc = _CRUMB_TOTAL_RE.search(text)
+            if mc:
+                total = int(re.sub(r"\D", "", mc.group(1)))
+
         has_next = None
-        if soup.select_one("a[rel=next], link[rel=next], .pagination .next a, a.next"):
+        if pages_now is not None and pages_total is not None:
+            has_next = pages_now < pages_total
+        elif soup.select_one("a[rel=next], link[rel=next], .pagination .next a, a.next"):
             has_next = True
+        elif soup.select_one(".page-number"):
+            # Vatera lapozó: a legnagyobb oldalszám az aktuálisnál nagyobb-e
+            nums = [int(e.get_text(strip=True)) for e in soup.select(".page-number")
+                    if e.get_text(strip=True).isdigit()]
+            cur = soup.select_one(".listing-pager-actual-page")
+            cur_n = int(cur.get_text(strip=True)) if cur and cur.get_text(strip=True).isdigit() else 1
+            has_next = bool(nums) and max(nums) > cur_n
         elif soup.select_one(".pagination, nav[aria-label*=agin]"):
             has_next = False
 
@@ -128,6 +209,8 @@ class VateraSource(Source):
         return IndexPage(list(cards.values()), total, has_next, sorted(set(cats)))
 
     def is_relevant_category(self, url: str, label: str = "") -> bool:
+        if "sitemap" in urlparse(url).path.lower():
+            return True          # a sitemap-index alatti al-sitemapok mindig bejárandók
         keywords = [norm(k) for k in self.cfg.get("category_keywords", [])]
         text = norm(label + " " + urlparse(url).path.replace("-", " ").replace("/", " "))
         return any(k in text for k in keywords)

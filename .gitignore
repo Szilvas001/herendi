@@ -22,3 +22,6 @@ config/settings.toml
 !tests/fixtures/**/*.json
 !tests/fixtures/**/*.csv
 !config/*.csv
+
+# Futási napló és adat-pillanatképek
+gyujtes.log

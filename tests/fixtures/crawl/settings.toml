@@ -1,4 +1,9 @@
 [vatera]
+# A lapozas/lefedettseg mechanikajat a keresooldalakon teszteljuk (offline fixture).
+use_search = true
+sitemap_url = ""
+seed_categories = []
+general_categories = []
 queries_herend = ["herendi"]
 queries_zsolnay = []
 queries_generic = []
