@@ -12,3 +12,13 @@ out/
 !riport/decision-evidence.json
 !riport/hungarian-top3.json
 !riport/hungarian-scan-audit.json
+
+# Futásidejű adatok és letöltött súlyok
+data/
+weights/
+config/settings.toml
+*.part
+!models/**/*.json
+!tests/fixtures/**/*.json
+!tests/fixtures/**/*.csv
+!config/*.csv

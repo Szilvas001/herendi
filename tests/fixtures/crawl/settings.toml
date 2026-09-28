@@ -1,0 +1,6 @@
+[vatera]
+queries_herend = ["herendi"]
+queries_zsolnay = []
+queries_generic = []
+[http]
+min_delay_sec = 0

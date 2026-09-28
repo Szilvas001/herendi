@@ -1,0 +1,6 @@
+https://www.vatera.hu/listings/index.php?q=herendi	search_p1.html
+https://www.vatera.hu/listings/index.php?q=herendi&p=2	search_p2.html
+https://www.vatera.hu/herendi-apponyi-zöld-váza-24-cm-300000001.html	d1.html
+https://www.vatera.hu/herendi-nyúl-figura-300000002.html	d2.html
+https://www.vatera.hu/herendi-rothschild-levesestál-300000004.html	d4.html
+https://www.vatera.hu/herendi-bonbonier-300000005.html	d5.html
