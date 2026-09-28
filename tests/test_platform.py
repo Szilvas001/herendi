@@ -45,8 +45,15 @@ class CrawlTest(unittest.TestCase):
             self.assertEqual(rows["300000002"]["current_bid_huf"], 9000)
             self.assertEqual(rows["300000002"]["condition"], "serult")          # "csorba"
             self.assertEqual(rows["300000005"]["status"], "sold")               # licittel lezárult aukció
-            pr = conn.execute("SELECT price_type, amount FROM price_records").fetchall()
-            self.assertEqual([(r["price_type"], r["amount"]) for r in pr], [("auction_final_bid", 5000.0)])
+            pr = {(r["source_ref"], r["price_type"]): r for r in
+                  conn.execute("SELECT source_ref, price_type, amount, corpus, description FROM price_records")}
+            self.assertEqual(pr[("300000005", "auction_final_bid")]["amount"], 5000.0)   # záró licit
+            self.assertEqual(pr[("300000001", "asking_active")]["amount"], 18000.0)      # fix ár = kínálati ár
+            self.assertIn("pajzspecs", pr[("300000001", "asking_active")]["description"])  # részletes oldalból
+            self.assertEqual(pr[("300000001", "asking_active")]["corpus"], "herend_zsolnay")
+            # futó aukció licitje és az utánzat nem kerül tanítóadatba
+            self.assertNotIn(("300000002", "asking_active"), pr)
+            self.assertNotIn(("300000003", "asking_active"), pr)
             self.assertGreater(conn.execute("SELECT COUNT(*) FROM images").fetchone()[0], 4)
             # második futás: nincs új hirdetés, a friss részletes oldalakat nem tölti le újra
             res2 = _crawl(conn)

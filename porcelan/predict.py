@@ -58,6 +58,8 @@ class Estimator:
             self.gbms = pickle.load(fh)
         self.deep = DeepModel.load(self.dir / "deep.pt")
         self.deep_nc = DeepModel.load(self.dir / "deep_no_clip.pt") if (self.dir / "deep_no_clip.pt").exists() else None
+        self.extra_deep = {n: DeepModel.load(self.dir / f"{n}.pt") for n in ("deep_pretrained_ft", "deep_no_image")
+                           if (self.dir / f"{n}.pt").exists()}
         idx = np.load(self.dir / "index.npz")
         self.records = pd.read_csv(self.dir / "training_data.csv.gz")
         self.records["group"] = self.records["group"].astype(str)
@@ -73,6 +75,15 @@ class Estimator:
         self.calib = self.manifest["metrics"]["calibration"]
         self.chosen = self.manifest["chosen_model"]
         self._by_ref = {str(r): g for r, g in zip(self.records.source_ref.astype(str), self.records.group)}
+
+    def _beats_baseline(self, market: str) -> bool:
+        """A választott modell a TESZTEN jobb-e a csoportmedián-alapmodellnél (MdAPE)."""
+        test = self.manifest["metrics"]["test"]
+        name = self.chosen.get(market)
+        m, b = test.get(f"{name}/{market}", {}), test.get(f"baseline_group_median/{market}", {})
+        if name == "baseline_group_median" or m.get("mdape") is None or b.get("mdape") is None:
+            return False
+        return m["mdape"] < b["mdape"]
 
     # ------------------------------------------------------------------
     def _frame(self, listings: list[dict]) -> pd.DataFrame:
@@ -112,7 +123,7 @@ class Estimator:
                 pred = self.deep_nc.predict(Xn, market)
             else:
                 X, _ = design(blocks, knn, self.use_clip)
-                pred = self.deep.predict(X, market)
+                pred = self.extra_deep.get(name, self.deep).predict(X, market)
             cal = self.calib.get(f"{name}/{market}", {})
             pred = apply_offset(pred, cal.get("conformal_offset", 0.0))
             conf = confidence_of(pred, cal["confidence"]) if cal.get("confidence") else np.zeros(len(pred))
@@ -130,6 +141,7 @@ class Estimator:
                                   "source": r.source, "url": r.url if isinstance(r.url, str) else None,
                                   "similarity": round(sim, 3)})
                 out[i]["markets"][market] = {
+                    "beats_baseline": self._beats_baseline(market),
                     "q10": float(q[0]), "q50": float(q[1]), "q90": float(q[2]), "currency": currency,
                     "confidence": float(conf[i]), "model": name,
                     "basis": self.manifest["target_basis"].get(market),

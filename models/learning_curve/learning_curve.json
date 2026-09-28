@@ -1,0 +1,129 @@
+{
+ "created_at": "2026-09-28T15:06:43+00:00",
+ "split": {
+  "seed": 42,
+  "test": "csoportszintű véletlen (a megfigyelések csak 3 napot fednek le; időbeli teszt nem lehetséges)",
+  "counts": {
+   "train": 1251,
+   "val": 277,
+   "test": 265
+  }
+ },
+ "rows": [
+  {
+   "fraction": 0.1,
+   "variant": "hz_only",
+   "market": "HU",
+   "train_rows": 128,
+   "pretrain_rows": 0,
+   "test_n": 246,
+   "mdape": 0.599532425403595,
+   "mae": 46181.08984375,
+   "interval80_coverage": 0.7926829268292683
+  },
+  {
+   "fraction": 0.1,
+   "variant": "hz_only",
+   "market": "US",
+   "train_rows": 5,
+   "pretrain_rows": 0,
+   "test_n": 19,
+   "mdape": 0.8643003702163696,
+   "mae": 480.8204040527344,
+   "interval80_coverage": 0.8421052631578947
+  },
+  {
+   "fraction": 0.25,
+   "variant": "hz_only",
+   "market": "HU",
+   "train_rows": 308,
+   "pretrain_rows": 0,
+   "test_n": 246,
+   "mdape": 0.5497913360595703,
+   "mae": 46101.3828125,
+   "interval80_coverage": 0.7073170731707317
+  },
+  {
+   "fraction": 0.25,
+   "variant": "hz_only",
+   "market": "US",
+   "train_rows": 15,
+   "pretrain_rows": 0,
+   "test_n": 19,
+   "mdape": 0.7495474219322205,
+   "mae": 462.8216552734375,
+   "interval80_coverage": 0.8421052631578947
+  },
+  {
+   "fraction": 0.5,
+   "variant": "hz_only",
+   "market": "HU",
+   "train_rows": 603,
+   "pretrain_rows": 0,
+   "test_n": 246,
+   "mdape": 0.48472678661346436,
+   "mae": 43762.08203125,
+   "interval80_coverage": 0.7398373983739838
+  },
+  {
+   "fraction": 0.5,
+   "variant": "hz_only",
+   "market": "US",
+   "train_rows": 35,
+   "pretrain_rows": 0,
+   "test_n": 19,
+   "mdape": 0.758531391620636,
+   "mae": 447.9912109375,
+   "interval80_coverage": 0.7894736842105263
+  },
+  {
+   "fraction": 1.0,
+   "variant": "hz_only",
+   "market": "HU",
+   "train_rows": 1167,
+   "pretrain_rows": 0,
+   "test_n": 246,
+   "mdape": 0.4412200450897217,
+   "mae": 40567.3984375,
+   "interval80_coverage": 0.7642276422764228
+  },
+  {
+   "fraction": 1.0,
+   "variant": "hz_only",
+   "market": "US",
+   "train_rows": 84,
+   "pretrain_rows": 0,
+   "test_n": 19,
+   "mdape": 0.7325584292411804,
+   "mae": 453.1949157714844,
+   "interval80_coverage": 0.6842105263157895
+  }
+ ],
+ "fits": {
+  "HU/hz_only": {
+   "fit": {
+    "a": 1.210448137031777,
+    "b": 0.14206653022469404,
+    "c": 0.0
+   },
+   "rows_for_target_mdape": 6210.682401392375,
+   "target_mdape": 0.35,
+   "reliable": true,
+   "test_n": 246,
+   "max_train_rows": 1167
+  },
+  "US/hz_only": {
+   "fit": {
+    "a": 0.9140754673784938,
+    "b": 0.053832411523808923,
+    "c": 0.0
+   },
+   "rows_for_target_mdape": 55547598.38960477,
+   "target_mdape": 0.35,
+   "reliable": false,
+   "test_n": 19,
+   "max_train_rows": 84
+  }
+ },
+ "note": "Extrapoláció kevés pontból: nagyságrendi becslés, nem ígéret."
+}

@@ -47,8 +47,11 @@ def _features_to_fields(feats: dict) -> dict:
 class Crawler:
     def __init__(self, source: Source | str, conn=None, fetcher: Fetcher | None = None,
                  full_catalog: bool | None = None, max_requests: int | None = None,
-                 time_budget_sec: float | None = None, progress=None):
+                 time_budget_sec: float | None = None, progress=None, corpus: str = "relevant"):
         self.source = get_source(source) if isinstance(source, str) else source
+        if corpus not in ("relevant", "general"):
+            raise ValueError("corpus: relevant | general")
+        self.corpus = corpus
         self.conn = conn or db.get_conn()
         self.fetcher = fetcher or Fetcher()
         self.cfg = settings.get("crawl")
@@ -74,9 +77,11 @@ class Crawler:
                 c.commit()
                 return row["id"], True
         cur = c.execute("INSERT INTO crawl_runs(source, mode, started_at, status) VALUES(?,?,?, 'running')",
-                        (self.source.name, "full" if self.full_catalog else "relevant", _now()))
+                        (self.source.name, "full" if self.full_catalog else self.corpus, _now()))
         run_id = cur.lastrowid
-        for t in self.source.seed_tasks(self.full_catalog):
+        seeds = (self.source.general_tasks() if self.corpus == "general" and hasattr(self.source, "general_tasks")
+                 else self.source.seed_tasks(self.full_catalog))
+        for t in seeds:
             self._enqueue(run_id, t)
         # Lejárt, de még aktívnak tárolt aukciók: végeredmény ellenőrzése.
         for row in c.execute("SELECT url FROM listings WHERE source=? AND status='active' AND sale_type='aukcio' "
@@ -262,12 +267,34 @@ class Crawler:
             self.conn.execute("INSERT OR IGNORE INTO images(listing_id, url, position) VALUES(?,?,0)",
                               (lid, card.image_url))
         row = self.conn.execute("SELECT * FROM listings WHERE id=?", (lid,)).fetchone()
+        self._asking_record(row, feats, card.image_url, now, run_id, via="search_card")
         if self._needs_detail(row, state, card):
             self._enqueue(run_id, Task("detail", self.source.detail_url(card), None, 1, PRI_DETAIL))
         else:
             self.stats["details_skipped_fresh"] += 1
 
+    def _asking_record(self, row, feats: dict, image_url, now: str, run_id: int, via: str) -> None:
+        """Aktív fix áras / alkuképes hirdetés kínálati ára tanító-rekordként (korpusz szerint).
+
+        Aukció aktuális licitje nem kerül ide (nem végleges ár)."""
+        if (row["status"] != "active" or row["relevance"] == "rejected" or not row["price_huf"]
+                or row["sale_type"] not in ("fix", "alku")):
+            return
+        corpus = "herend_zsolnay" if feats.get("brand") else "general"
+        db.upsert_price_record(self.conn, {
+            "source": self.source.name, "source_ref": row["source_id"], "market": self.source.market,
+            "price_type": "asking_active", "amount": row["price_huf"], "currency": "HUF",
+            "price_huf": row["price_huf"], "observed_at": now, "title": row["title"],
+            "description": row["description"], "brand": feats.get("brand"), "object_type": feats.get("object_type"),
+            "decor": feats.get("decor"), "size_cm": feats.get("size_cm"), "pieces": feats.get("pieces"),
+            "condition": feats.get("condition"), "url": row["url"], "listing_id": row["id"],
+            "dedup_key": text.dedup_key(row["title"] or "", None, row["seller"]), "corpus": corpus,
+            "image_url": image_url, "provenance": {"crawl_run": run_id, "via": via,
+                                                   "note": "aktív hirdetés kínálati ára – nem eladási ár"}})
+
     def _needs_detail(self, row, state: str, card: Card) -> bool:
+        if self.corpus == "general" and not row["brand"]:
+            return False   # általános korpusz: kártyaszintű adat elég (kép + ár + cím)
         if row["relevance"] == "rejected":
             return False
         if row["relevance"] != "accepted" and not self.source.is_relevant_card(card):
@@ -316,6 +343,8 @@ class Crawler:
         for pos, img in enumerate(images):
             self.conn.execute("INSERT OR IGNORE INTO images(listing_id, url, position) VALUES(?,?,?)",
                               (lid, img, pos + 1))
+        self._asking_record(self.conn.execute("SELECT * FROM listings WHERE id=?", (lid,)).fetchone(), feats,
+                            images[0] if images else None, now, run_id, via="detail")
         if d["status"] in ("sold", "ended"):
             self.stats[d["status"]] += 1
         if d["status"] == "sold" and d.get("price_huf") and relevance == "accepted":

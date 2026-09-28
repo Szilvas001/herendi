@@ -1,9 +1,4 @@
-# Modellértékelés
-
-Ez a fájl a `models/v20260928-1507-522878a8/EVALUATION.md` másolata; a teljes gépi riport (minden metrika, kalibráció, adatstatisztika) a `models/v20260928-1507-522878a8/manifest.json`-ban van. A tanulási görbe: `models/learning_curve/`.
-
-Megismétlés: `python -m porcelan import-repo && python -m porcelan train --seed 42 --seeds 5` – azonos adat-ujjlenyomat és seed mellett ugyanezeket a számokat adja (CPU, determinisztikus torch-beállítás).
-
+# Modellértékelés – v20260928-1507-522878a8
 
 **Státusz: KÍSÉRLETI**
 
@@ -79,25 +74,3 @@ Nem mérhető: nincs olyan ellenőrző adat (később realizált eladás / tová
 - A metrikák a tesztsorok számához képest bizonytalanok; kis n mellett (különösen US) csak irányt mutatnak.
 - Képi jellemzők csak akkor hatnak, ha a tanítóadatban van letöltött kép; ennek száma fent szerepel.
 - Az eredetiséget és az állapotot a modell nem igazolja.
-
-## Tanulási görbe – mennyi adat kell?
-
-Készült: 2026-09-28T15:06:43+00:00. Teszthalmaz: csoportszintű véletlen (a megfigyelések csak 3 napot fednek le; időbeli teszt nem lehetséges).
-
-| Változat | Piac | Tanítósor | Tesztminta | MdAPE | MAE | 80%-os lefedettség |
-|---|---|---:|---:|---:|---:|---:|
-| csak Herendi/Zsolnay | HU | 128 | 246 | 60.0% | 46 181 | 79% |
-| csak Herendi/Zsolnay | US | 5 | 19 | 86.4% | 481 | 84% |
-| csak Herendi/Zsolnay | HU | 308 | 246 | 55.0% | 46 101 | 71% |
-| csak Herendi/Zsolnay | US | 15 | 19 | 75.0% | 463 | 84% |
-| csak Herendi/Zsolnay | HU | 603 | 246 | 48.5% | 43 762 | 74% |
-| csak Herendi/Zsolnay | US | 35 | 19 | 75.9% | 448 | 79% |
-| csak Herendi/Zsolnay | HU | 1167 | 246 | 44.1% | 40 567 | 76% |
-| csak Herendi/Zsolnay | US | 84 | 19 | 73.3% | 453 | 68% |
-
-## Extrapoláció (MdAPE ≈ a·n^(−b) + c)
-
-- HU/hz_only: a=1.21, b=0.142, aszimptota c=0.0% → ~6 211 tanítósor kellene 35% MdAPE-hez
-- US/hz_only: MEGBÍZHATATLAN extrapoláció (tesztminta 19, legfeljebb 84 tanítósor) – nincs értelmes becslés.
-
-Extrapoláció kevés pontból: nagyságrendi becslés, nem ígéret.

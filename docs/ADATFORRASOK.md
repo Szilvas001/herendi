@@ -34,7 +34,7 @@ Szabályok a kódban (`porcelan/dataset.py`, `porcelan/crawler.py`):
 
 **Realizált eladási ár: 0. Leütési ár: 0. Letöltött kép: 0.**
 
-A duplikátumszűrés után 1794 tanítósor maradt (HU: 1677, US: 117), 1623 csoportban.
+A duplikátumszűrés után 1793 tanítósor maradt (HU: 1677, US: 116), 1627 csoportban; ebből 1251 a tanítóhalmaz.
 
 ## 3. Miért nem gyűlt friss adat ebben a munkamenetben
 
@@ -60,9 +60,21 @@ Az élő bejárás ezért `failed` állapotban, folytatható módon áll meg (�
 
 Az ár-CSV formátuma: `config/prices.example.csv`. Kitalált vagy becsült árat nem szabad importálni; az importer az ismeretlen ártípust elutasítja.
 
-## 5. Mi kell a „validált” státuszhoz
+## 5. Mennyi adat kell – és honnan lesz ennyi
 
-A `[validation]` beállítások szerint piaconként: realizált ár a célváltozó, gyártónként legalább 50 realizált tesztminta, MdAPE ≤ 35%, a 80%-os intervallum tényleges lefedettsége 70–90% között, és a választott modell jobb a csoportmedián-baseline-nál. Időbeli teszthez legalább 30 napnyi megfigyelés kell. Reális út odáig:
+A képalapú árbecsléshez sok tízezer, előtanításhoz százezres nagyságrendű kép+ár pár kell. A 2026-09-i ~1800 soros, kép nélküli adat erre nem elég; a tanulási görbe szerint a hiba ugyan csökken az adattal (HU MdAPE 60% → 44%, 128 → 1167 sor), de messze van a céltól.
+
+| Szint | Mennyiség (cél) | Forrás | Gyűjtési mód a kódban |
+|---|---:|---|---|
+| Általános porcelán/kerámia (előtanítás) | 200 000 kép+ár | eBay Browse API (43 általános lekérdezés: porcelain figurine/vase…, Meissen, Royal Copenhagen, Lladró, Rosenthal, Hollóházi…), Vatera általános kategóriák | `harvest-ebay`, `crawl --corpus general` |
+| Herendi/Zsolnay (finomhangolás) | 20 000 kép+ár | eBay US (22 Herend/Zsolnay lekérdezés), Vatera folyamatos bejárása, Jófogás | `harvest-ebay`, `crawl` |
+| Realizált ár (kalibráció/validáció) | 3 000 / piac | Vatera lezárult aukciók (automatikus), LiveAuctioneers, Axioart, saját eladások | `crawl`, `import-prices` |
+
+Gyakorlati becslés: az eBay Browse API alap kvótája napi 5000 hívás × 200 tétel, így az általános korpusz néhány nap alatt, a Herendi/Zsolnay rész a kínálattól függően hetek alatt gyűlik össze. A Vatera-oldali tízezres mennyiséghez hónapokig futó, rendszeres bejárás kell, mert egyszerre kb. 2300 aktív Herendi/Zsolnay hirdetés van. A tényleges számokat a `python -m porcelan data-volume` és a dashboard „Tanítóadat” panelje mutatja.
+
+## 6. Mi kell a „validált” státuszhoz
+
+A `[validation]` beállítások szerint piaconként: legalább 10 000 tanítósor és 10 000 képes tanítósor, realizált ár a célváltozó, gyártónként legalább 50 realizált tesztminta, MdAPE ≤ 35%, a 80%-os intervallum tényleges lefedettsége 70–90% között, és a választott modell jobb a csoportmedián-baseline-nál. Időbeli teszthez legalább 30 napnyi megfigyelés kell. Reális út odáig:
 
 1. Élő Vatera-bejárás naponta (vagy óránként a relevánsakra). Ekkor 4–8 hét alatt több száz Herendi/Zsolnay `auction_final_bid` gyűlik.
 2. Axioart- és LiveAuctioneers-eredmények kézi vagy engedélyezett exportja CSV-be (Herendi, Zsolnay; 2–3 év).

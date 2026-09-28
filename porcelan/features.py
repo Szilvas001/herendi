@@ -78,6 +78,8 @@ class FeaturePipeline:
         x = self.tfidf.fit_transform(_doc(df))
         k = max(2, min(self.svd_dim, x.shape[1] - 1, x.shape[0] - 1))
         self.svd = TruncatedSVD(n_components=k, random_state=0).fit(x)
+        # a képbeágyazás verziója a pipeline-hoz kötött: becsléskor ugyanaz kell
+        self.image_tag = vision.image_tag() if self.use_clip else None
         s = structured(df)
         self.struct_mean = s.mean(axis=0)
         std = s.std(axis=0)
@@ -94,14 +96,7 @@ class FeaturePipeline:
             blocks["clip_canon"] = vision.encode_texts(list(df.canonical_en.fillna("a porcelain object")), conn)
             # angol címek (US) közvetlenül; magyar címeknél a kanonikus leírás a híd
             blocks["clip_title"] = vision.encode_texts([str(t)[:200] for t in df.title], conn)
-            ids = [int(x) for x in df.get("listing_id", pd.Series([None] * n)) if x is not None and x == x]
-            img = vision.listing_image_vectors(conn, ids) if conn is not None and ids else {}
-            mat = np.zeros((n, vision.DIM), np.float32)
-            mask = np.zeros((n, 1), np.float32)
-            for i, lid in enumerate(df.get("listing_id", pd.Series([None] * n))):
-                if lid is not None and lid == lid and int(lid) in img:
-                    mat[i] = img[int(lid)]
-                    mask[i] = 1.0
+            mat, mask = vision.row_image_matrix(conn, df, getattr(self, "image_tag", None) or vision.EMB_TAG)
             blocks["clip_image"] = mat
             blocks["image_mask"] = mask
         return blocks

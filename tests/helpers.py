@@ -61,3 +61,24 @@ def synthetic_price_records(conn, n_hu=160, n_us=60, seed=0):
                 "pieces": f["pieces"], "condition": f["condition"], "dedup_key": f"{market}-{i}",
                 "provenance": {"note": "szintetikus tesztadat"}})
     conn.commit()
+
+
+def synthetic_general_records(conn, n=700, seed=5):
+    """SZINTETIKUS általános porcelán korpusz – csak a kétlépcsős tanítás mechanikájához."""
+    import random
+    from porcelan import db, text
+    rnd = random.Random(seed)
+    kinds = [("vase", 40), ("figurine", 60), ("plate", 15), ("teapot", 35), ("bowl", 20)]
+    for i in range(n):
+        kind, base = rnd.choice(kinds)
+        size = rnd.randint(8, 40)
+        title = f"Vintage porcelain {kind} hand painted {size} cm lot{i}"
+        f = text.extract(title)
+        price = base * (1 + size / 25) * rnd.uniform(0.7, 1.3)
+        db.upsert_price_record(conn, {
+            "source": "synthetic_general", "source_ref": f"g{i}", "market": "US", "price_type": "asking_active",
+            "amount": round(price, 2), "currency": "USD", "observed_at": "2026-09-16T12:00:00+00:00",
+            "title": title, "brand": None, "object_type": f["object_type"], "size_cm": f["size_cm"],
+            "condition": f["condition"], "dedup_key": f"g{i}", "corpus": "general",
+            "provenance": {"note": "szintetikus tesztadat"}})
+    conn.commit()

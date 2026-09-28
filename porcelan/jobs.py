@@ -19,7 +19,8 @@ from pathlib import Path
 from . import db, settings
 
 log = logging.getLogger(__name__)
-KINDS = ("crawl", "import_csv", "import_repo", "images", "train", "score", "pipeline")
+KINDS = ("crawl", "import_csv", "import_repo", "images", "train", "score", "pipeline", "harvest_ebay",
+         "finetune_vision", "learning_curve")
 
 
 def create(kind: str, params: dict | None = None, conn=None) -> int:
@@ -114,7 +115,7 @@ def execute(kind: str, params: dict, progress, conn) -> dict:
         from .crawler import Crawler
         c = Crawler(params.get("source", "vatera"), conn, full_catalog=params.get("full_catalog"),
                     max_requests=params.get("max_requests"), time_budget_sec=params.get("time_budget_sec"),
-                    progress=progress)
+                    progress=progress, corpus=params.get("corpus", "relevant"))
         res = c.run(resume=params.get("resume", True))
         if res["status"] == "completed" or params.get("then_score", True):
             _post_crawl(progress, conn)
@@ -134,6 +135,22 @@ def execute(kind: str, params: dict, progress, conn) -> dict:
         return res
     if kind == "images":
         return _images(progress, conn)
+    if kind == "harvest_ebay":
+        from .harvest import EbayHarvester
+        res = EbayHarvester(conn, progress=progress).run(max_items=params.get("max_items"))
+        if params.get("images", True):
+            res["images"] = _images(progress, conn)
+        return {k: res[k] for k in ("status", "message", "stats", "summary", "images") if k in res}
+    if kind == "finetune_vision":
+        from .vision_finetune import finetune
+        man = finetune(conn, epochs=params.get("epochs", 3), unfreeze=params.get("unfreeze", 2),
+                       batch=params.get("batch", 64), progress=progress)
+        return {"version": man["version"], "train_images": man["train_images"],
+                "image_only_metrics": man["image_only_metrics"]}
+    if kind == "learning_curve":
+        from .train import learning_curve
+        res = learning_curve(conn, progress=progress)
+        return {"fits": res["fits"]}
     if kind == "train":
         from .train import train
         man = train(conn, seed=params.get("seed", 42), n_seeds=params.get("n_seeds", 5), progress=progress)
@@ -157,7 +174,9 @@ def _images(progress, conn) -> dict:
     from . import images, vision
     out = {"download": images.download_pending(conn, progress=progress)}
     if vision.available():
-        out["embedded"] = vision.embed_pending_images(conn, progress)
+        out["embedded"] = vision.embed_pending_images(conn, progress, tag=vision.EMB_TAG)
+        if vision.image_tag() != vision.EMB_TAG:
+            out["embedded_finetuned"] = vision.embed_pending_images(conn, progress)
         out["prefilter"] = vision.visual_prefilter(conn)
     else:
         out["embedded"] = "CLIP nem elérhető (python -m porcelan setup-models)"

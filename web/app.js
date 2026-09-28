@@ -22,7 +22,7 @@ const ASSUMPTION_FIELDS = [
   ['us.intl_shipping_huf_large', 'USA posta, nagy (Ft)'],
   ['us.import_duty_rate', 'USA vám/tarifa'],
 ];
-let defaults = {}, overrides = {}, offset = 0, lastJob = null, loading = false;
+let defaults = {}, overrides = {}, offset = 0, lastJob = null, loading = false, modelStatus = '';
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem('hz.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
@@ -69,6 +69,14 @@ async function loadStatus() {
   pd.textContent = `Aktív hirdetés: ${active} · legfrissebb adat ${relTime(s.newest_observation)}`;
   pd.className = 'pill ' + (age === null || age > 48 ? 'warn' : 'ok');
   $('warnings').innerHTML = (s.warnings || []).map((w) => `<div>${esc(w)}</div>`).join('');
+  const fmtN = (n) => new Intl.NumberFormat('hu-HU').format(n);
+  const vol = s.volume || [];
+  $('volume').innerHTML = vol.map((g) => `<div class="vrow"><span>${esc(g.label)}</span>
+    <div class="vbar" role="progressbar" aria-valuenow="${g.pct}" aria-valuemin="0" aria-valuemax="100"><div style="width:${Math.min(100, g.pct || 0)}%"></div></div>
+    <span>${fmtN(g.have)} / ${fmtN(g.target)} (${g.pct}%)</span></div>`).join('')
+    + (s.pending_image_downloads ? `<div class="vrow"><span>Letöltésre váró kép</span><span></span><span>${fmtN(s.pending_image_downloads)}</span></div>` : '');
+  const hz = vol.find((g) => g.key === 'hz_records_with_images');
+  if (hz) $('volume-summary').textContent = `Tanítóadat a célokhoz képest – Herendi/Zsolnay képes: ${fmtN(hz.have)} / ${fmtN(hz.target)}`;
   const running = (s.jobs || []).find((j) => j.status === 'running' || j.status === 'queued');
   showJob(running || (lastJob && s.jobs.find((j) => j.id === lastJob)));
 }
@@ -76,7 +84,7 @@ async function loadStatus() {
 function showJob(j) {
   const bar = $('jobbar');
   if (!j) { bar.hidden = true; return; }
-  const labels = { crawl: 'Adatgyűjtés', import_csv: 'CSV import', import_repo: 'Import', images: 'Képfeldolgozás', train: 'Tanítás', score: 'Pontozás', pipeline: 'Teljes feldolgozás' };
+  const labels = { harvest_ebay: 'eBay-gyűjtés', finetune_vision: 'Képenkóder finomhangolás', learning_curve: 'Tanulási görbe', crawl: 'Adatgyűjtés', import_csv: 'CSV import', import_repo: 'Import', images: 'Képfeldolgozás', train: 'Tanítás', score: 'Pontozás', pipeline: 'Teljes feldolgozás' };
   bar.hidden = false;
   const active = j.status === 'running' || j.status === 'queued';
   let msg = j.message || '';
@@ -152,7 +160,7 @@ function estBox(label, m, selected, native) {
 function card(c) {
   const m = c.market === 'HU' ? c.hu : c.us;
   const badges = [];
-  if (c.recommended) badges.push('<span class="badge good">Ajánlott</span>');
+  if (c.recommended) badges.push(`<span class="badge good">Ajánlott${modelStatus === 'validált' ? '' : ' – kísérleti modell'}</span>`);
   else if (c.candidate) badges.push('<span class="badge warn">Jelölt – bizonytalan</span>');
   else if (c.abstain && c.abstain.length) badges.push('<span class="badge">Nincs ajánlás</span>');
   if (c.market === 'HU' && c.other_market_flags.profitable) badges.push('<span class="badge good">USA-ba nyereséges</span>');
@@ -187,6 +195,7 @@ async function refresh(append = false) {
   try {
     const r = await api('/api/deals?' + q.toString());
     if (r.error) { $('cards').innerHTML = `<div class="empty">${esc(r.error)}</div>`; $('summary').textContent = ''; return; }
+    modelStatus = r.model_status || '';
     const html = r.items.map(card).join('');
     $('cards').innerHTML = append ? $('cards').innerHTML + html : (html || '<div class="empty">Nincs a szűrőknek megfelelő hirdetés. Lazíts a feltételeken, vagy kapcsold ki a „Csak ajánlott vagy jelölt” szűrőt – a rendszer bizonytalan becslésnél szándékosan tartózkodik az ajánlástól.</div>');
     offset += r.items.length;
@@ -278,6 +287,7 @@ $('detail').addEventListener('click', (e) => { if (e.target === $('detail')) $('
 $('btn-filters').addEventListener('click', () => $('filters').classList.toggle('open'));
 $('btn-crawl').addEventListener('click', () => startJob('crawl', { source: 'vatera' }));
 $('btn-score').addEventListener('click', () => startJob('score', {}));
+$('btn-harvest').addEventListener('click', () => startJob('harvest_ebay', { images: true }));
 $('btn-train').addEventListener('click', () => { if (confirm('Új modellverzió tanítása a jelenlegi adatokon? (néhány perc)')) startJob('train', {}); });
 $('btn-reset-assumptions').addEventListener('click', () => { overrides = {}; loadAssumptions(); refresh(); });
 $('file-import').addEventListener('change', async (e) => {

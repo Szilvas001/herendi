@@ -23,6 +23,7 @@
     <label class="btn secondary" title="Régi run.py CSV (vatera_osszes.csv) importja">
       CSV import<input type="file" id="file-import" accept=".csv" hidden>
     </label>
+    <button id="btn-harvest" class="secondary" title="Tömeges eBay Browse API gyűjtés képekkel (EBAY_CLIENT_ID/SECRET)">eBay-gyűjtés</button>
     <button id="btn-score" class="secondary" title="Becslések frissítése a betöltött modellel">Újrapontozás</button>
     <button id="btn-train" class="secondary" title="Új modellverzió tanítása háttérfolyamatban">Tanítás</button>
   </div>
@@ -34,6 +35,10 @@
   <button id="btn-cancel" class="link">Leállítás</button>
 </div>
 <div id="warnings" class="warnings"></div>
+<details class="volume" id="volume-panel">
+  <summary id="volume-summary">Tanítóadat a célokhoz képest</summary>
+  <div id="volume"></div>
+</details>
 
 <main class="layout">
   <aside class="filters" id="filters">

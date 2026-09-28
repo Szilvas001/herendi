@@ -35,6 +35,11 @@ def main(argv=None) -> int:
     c.add_argument("--time-budget", type=float, help="másodperc")
     c.add_argument("--no-resume", action="store_true", help="új bejárás a félbemaradt folytatása helyett")
     c.add_argument("--offline-dir", type=Path, help="mentett HTML-ek (teszt/demó)")
+    c.add_argument("--corpus", choices=["relevant", "general"], default="relevant",
+                   help="general: általános porcelán/kerámia korpusz az előtanításhoz")
+    hv = sub.add_parser("harvest-ebay", help="tömeges eBay Browse API gyűjtés képekkel (folytatható)")
+    hv.add_argument("--max-items", type=int)
+    hv.add_argument("--images", action="store_true", help="utána a függő képek letöltése is")
 
     sub.add_parser("import-repo", help="a repóban tárolt valós adatok importja")
     ic = sub.add_parser("import-csv", help="régi run.py CSV (vatera_osszes.csv stb.) importja")
@@ -49,6 +54,16 @@ def main(argv=None) -> int:
     t.add_argument("--seed", type=int, default=42)
     t.add_argument("--seeds", type=int, default=5, help="ensemble-tagok száma")
     t.add_argument("--no-clip", action="store_true")
+    ft = sub.add_parser("finetune-vision", help="CLIP képenkóder finomhangolása árbecslésre (GPU ajánlott)")
+    ft.add_argument("--epochs", type=int, default=3)
+    ft.add_argument("--unfreeze", type=int, default=2, help="ennyi utolsó transzformer-blokk tanul")
+    ft.add_argument("--batch", type=int, default=64)
+    ft.add_argument("--lr", type=float, default=1e-5)
+    ft.add_argument("--max-images", type=int)
+    lc = sub.add_parser("learning-curve", help="hiba az adatmennyiség függvényében + szükséges adat becslése")
+    lc.add_argument("--fractions", default="0.1,0.25,0.5,1.0")
+    lc.add_argument("--seeds", type=int, default=2)
+    sub.add_parser("data-volume", help="tanítóadat-mennyiség a célokhoz képest")
     s = sub.add_parser("score", help="becslések frissítése")
     s.add_argument("--force", action="store_true")
     sub.add_parser("pipeline", help="bejárás → képek → becslés (egy lépésben)")
@@ -80,7 +95,7 @@ def main(argv=None) -> int:
         from .net import Fetcher
         f = Fetcher(offline_dir=a.offline_dir) if a.offline_dir else None
         res = Crawler(a.source, conn, fetcher=f, full_catalog=a.full_catalog or None, max_requests=a.max_requests,
-                      time_budget_sec=a.time_budget).run(resume=not a.no_resume)
+                      time_budget_sec=a.time_budget, corpus=a.corpus).run(resume=not a.no_resume)
         cov = res["coverage"]
         _print({"run_id": res["run_id"], "status": res["status"], "message": res["message"], "stats": res["stats"],
                 "coverage": {k: v for k, v in cov.items() if k != "detail"}})
@@ -96,6 +111,12 @@ def main(argv=None) -> int:
         from . import importers
         for path in a.paths:
             _print({str(path): importers.import_price_csv(path, conn)})
+    elif a.cmd == "harvest-ebay":
+        from .harvest import EbayHarvester
+        _print(EbayHarvester(conn).run(max_items=a.max_items))
+        if a.images:
+            from . import images
+            _print({"images": images.download_pending(conn)})
     elif a.cmd == "import-ebay":
         from . import importers
         _print(importers.import_ebay_api(conn))
@@ -103,7 +124,11 @@ def main(argv=None) -> int:
         from . import images, vision
         _print({"download": images.download_pending(conn, limit=a.limit)})
         if vision.available():
-            _print({"embedded": vision.embed_pending_images(conn), "prefilter": vision.visual_prefilter(conn)})
+            out = {"embedded": vision.embed_pending_images(conn, tag=vision.EMB_TAG)}
+            if vision.image_tag() != vision.EMB_TAG:
+                out["embedded_finetuned"] = vision.embed_pending_images(conn)
+            out["prefilter"] = vision.visual_prefilter(conn)
+            _print(out)
     elif a.cmd == "setup-models":
         from . import vision
         print(vision.ensure_weights(download=True))
@@ -114,6 +139,18 @@ def main(argv=None) -> int:
         man = train(conn, seed=a.seed, n_seeds=a.seeds, use_clip=not a.no_clip)
         print((Path(__import__("porcelan.settings", fromlist=["x"]).path("models_dir")) / man["version"]
                / "EVALUATION.md").read_text())
+    elif a.cmd == "finetune-vision":
+        from .vision_finetune import finetune
+        man = finetune(conn, epochs=a.epochs, unfreeze=a.unfreeze, batch=a.batch, lr=a.lr, max_images=a.max_images)
+        _print({k: man[k] for k in ("version", "train_images", "val_images", "image_only_metrics", "history")})
+    elif a.cmd == "learning-curve":
+        from .train import learning_curve
+        res = learning_curve(conn, fractions=tuple(float(x) for x in a.fractions.split(",")), n_seeds=a.seeds)
+        from . import settings as st
+        print((st.path("models_dir") / "learning_curve" / "LEARNING_CURVE.md").read_text())
+    elif a.cmd == "data-volume":
+        from .volume import data_volume
+        _print(data_volume(conn))
     elif a.cmd == "score":
         from .scoring import score
         _print(score(conn, force=a.force))

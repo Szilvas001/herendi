@@ -90,6 +90,8 @@ def assess(listing: dict, estimate: dict, a: dict | None = None) -> dict:
             abstain.append("nincs elég hasonló összehasonlító tétel")
         if est_m.get("model") == "baseline_group_median":
             abstain.append("ehhez a piachoz csak csoportmedián becslés van (kevés piaci adat), tárgyszintű érték nincs")
+        elif est_m.get("beats_baseline") is False:
+            abstain.append("ezen a piacon a modell a teszten nem jobb az egyszerű alapmodellnél (kevés adat)")
         if feats.get("condition") in ("serult", "javitott"):
             abstain.append("sérült/javított tárgy: kevés ilyen tanítópélda, az érték nem becsülhető megbízhatóan")
         if listing.get("status") != "active":

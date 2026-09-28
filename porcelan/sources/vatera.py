@@ -53,6 +53,11 @@ class VateraSource(Source):
             tasks.append(Task("category", self.base + "/", "category:root", 1, 90))
         return tasks
 
+    def general_tasks(self) -> list[Task]:
+        """Általános porcelán/kerámia korpusz (előtanításhoz), márkanév nélkül is."""
+        return [Task("search", self.search_url(q), f"general:{q}", 1, 60)
+                for q in self.cfg.get("queries_general_corpus", [])]
+
     def page_task(self, task: Task, page: int) -> Task:
         parsed = urlparse(task.url)
         qs = parse_qs(parsed.query)
