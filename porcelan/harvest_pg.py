@@ -24,7 +24,7 @@ FRONTIER_DDL = f"""
 CREATE TABLE IF NOT EXISTS {pg.SEMA}.harvest_frontier (
     source     text NOT NULL,
     url        text NOT NULL,
-    kind       text NOT NULL,              -- sitemap | item
+    kind       text NOT NULL,              -- sitemap | item | sitemap_general | item_general
     status     text NOT NULL DEFAULT 'pending',
     attempts   integer NOT NULL DEFAULT 0,
     last_error text,
@@ -34,6 +34,16 @@ CREATE TABLE IF NOT EXISTS {pg.SEMA}.harvest_frontier (
 CREATE INDEX IF NOT EXISTS ix_frontier_nyitott
     ON {pg.SEMA}.harvest_frontier (source, kind, status);
 """
+
+
+def _forras(source: str, corpus: str):
+    """A forráshoz tartozó elemző. Alapból a schema.org-alapú; a `parser`
+    beállítás nevez meg saját elemzőt ott, ahol az oldal nem közöl JSON-LD-t."""
+    nev = (settings.get(f"harvest.{source}.parser") or "").strip()
+    if nev == "darabanth":
+        from .sources.darabanth import DarabanthForras
+        return DarabanthForras(source, corpus=corpus)
+    return SchemaOrgForras(source, corpus=corpus)
 
 
 def _most() -> datetime:
@@ -58,14 +68,18 @@ def _lezar(conn, source: str, url: str, status: str, hiba: str | None = None) ->
 
 
 def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | None = None,
-          fetcher: Fetcher | None = None, pgconn=None) -> dict:
-    """Egy forrás begyűjtése. Visszaadja a futás statisztikáját."""
-    forras = SchemaOrgForras(source)
+          fetcher: Fetcher | None = None, pgconn=None, corpus: str = "relevant") -> dict:
+    """Egy forrás begyűjtése.
+
+    corpus="relevant": csak Herendi/Zsolnay. corpus="general": a teljes
+    porcelán/kerámia kínálat, az árbecslő előtanításához.
+    """
+    forras = _forras(source, corpus)
     fetcher = fetcher or Fetcher()
     sajat = pgconn is None
     conn = pgconn or pg.connect()
     hatarido = time.monotonic() + ido_keret_sec if ido_keret_sec else None
-    stat = {"forras": source, "sitemap": 0, "tetel_talalt": 0, "termekoldal": 0,
+    stat = {"forras": source, "korpusz": corpus, "sitemap": 0, "tetel_talalt": 0, "termekoldal": 0,
             "bekerult": 0, "kihagyva": 0, "hiba": 0, "okok": {}}
     allapot, uzenet = "completed", ""
 
@@ -73,7 +87,8 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
         pg.sema_letrehoz(conn)
         pg.particio_biztosit(conn, source)
         conn.execute(FRONTIER_DDL)
-        _felvesz(conn, source, forras.sitemap_gyoker(), "sitemap")
+        utotag = "" if corpus == "relevant" else "_general"
+        _felvesz(conn, source, forras.sitemap_gyoker(), "sitemap" + utotag)
 
         kerés = 0
 
@@ -85,7 +100,7 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
             return True
 
         # 1. sitemapek: tétel-URL-ek összegyűjtése
-        while (sor := _kovetkezo(conn, source, "sitemap")) is not None:
+        while (sor := _kovetkezo(conn, source, "sitemap" + utotag)) is not None:
             keret_ok()
             url = sor["url"]
             kerés += 1
@@ -102,15 +117,15 @@ def gyujt(source: str, max_kerés: int | None = None, ido_keret_sec: float | Non
                 continue
             alsitemapek, tetelek = forras.sitemap_alatt(url, valasz.text)
             for u in alsitemapek:
-                _felvesz(conn, source, u, "sitemap")
+                _felvesz(conn, source, u, "sitemap" + utotag)
             for u in tetelek:
-                _felvesz(conn, source, u, "item")
+                _felvesz(conn, source, u, "item" + utotag)
             stat["sitemap"] += 1
             stat["tetel_talalt"] += len(tetelek)
             _lezar(conn, source, url, "done")
 
         # 2. termékoldalak
-        while (sor := _kovetkezo(conn, source, "item")) is not None:
+        while (sor := _kovetkezo(conn, source, "item" + utotag)) is not None:
             keret_ok()
             url = sor["url"]
             kerés += 1

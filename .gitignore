@@ -32,3 +32,4 @@ gyujtes.log
 # Helyi PostgreSQL-furt adatai
 pgdata/
 pg_harvest.log
+korpusz.log

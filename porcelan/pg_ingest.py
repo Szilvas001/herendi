@@ -68,6 +68,7 @@ def vatera_atemel(conn_sqlite=None, pgconn=None, min_kep: int = 3) -> dict:
                 "brand": sor["brand"], "object_type": sor["object_type"], "decor": sor["decor"],
                 "size_cm": sor["size_cm"], "pieces": sor["pieces"], "condition": sor["condition"],
                 "relevance": sor["relevance"],
+                "corpus": "herend_zsolnay" if sor["brand"] else "general",
                 "observed_at": sor["last_checked"] or sor["last_seen"],
                 "images": kepek,
                 "raw": {"status": sor["status"], "status_reason": sor["status_reason"],

@@ -232,21 +232,55 @@ password = "herendi_local"
 # engedi a bejárást, és amely nem ad bot-ellenőrzést.
 
 [harvest.galeriasavaria]
+# Magyar használt piactér. Bőséges kínálat, tételenként több fotó, kínálati ár.
 enabled = true
 market = "HU"
 sitemap_url = "https://galeriasavaria.hu/sitemap/sitemap.xml"
 item_url_pattern = "/termekek/reszletek/"
-slug_patterns = [
-  "herend", "zsolnay", "eozin", "eosin", "pirogranit",
+slug_patterns = ["herend", "zsolnay", "eozin", "eosin", "pirogranit"]
+slug_patterns_general = [
+  "porcelan", "porcelán", "keramia", "kerámia", "majolika", "fajansz", "fajansz",
+  "vaza", "váza", "tanyer", "tányér", "csesze", "csésze", "figura", "szobor",
+  "kaspo", "kaspó", "bonbonier", "teaskeszlet", "etkeszlet", "kanna", "kancso",
+  "hollohazi", "hollóházi", "alfoldi", "drasche", "kalocsai", "meisseni", "rosenthal",
 ]
 
-# Az alábbiak ellenőrizve, de egyelőre kikapcsolva:
-#  - axioart: tételenként egyetlen kép, a háromképes feltételt nem teljesíti,
-#    és a leütési árak előfizetéshez kötöttek.
-#  - jofogas: HTTP 429-cel válaszol, a bejárást a forrás korlátozza.
+[harvest.chairish]
+# Amerikai használt/vintage piactér. Ez adja az üzleti koncepció eladási oldalát:
+# nyugati piaci ár, tételenként 5-10 fotóval és részletes leírással.
+enabled = true
+market = "US"
+sitemap_url = "https://www.chairish.com/sitemap.xml"
+item_url_pattern = "/product/"
+slug_patterns = ["herend", "zsolnay", "eozin", "eosin", "pirogranit"]
+slug_patterns_general = [
+  "porcelain", "ceramic", "china", "pottery", "faience", "majolica", "stoneware",
+  "earthenware", "figurine", "vase", "teapot", "tureen", "platter", "dinnerware",
+  "tea-set", "dessert-plate", "dinner-plate", "serving-bowl", "creamer", "sugar-bowl",
+  "meissen", "limoges", "rosenthal", "wedgwood", "royal-copenhagen", "lladro", "hummel",
+]
+
+# --- ellenőrzött, de kikapcsolt források -----------------------------------
+# axioart: 6,8 millió tétel, de tételenként egyetlen bélyegkép, és a leütési
+#   árak előfizetéshez kötöttek. A háromképes feltételt nem tudja teljesíteni.
+# jofogas: HTTP 429-cel korlátoz.
+# replacements: HTTP 403 a robots.txt-re és a sitemapre is.
+# rubylane: bot-ellenőrzést ad.
+# catawiki: a nyilvános sitemapben nincsenek tételoldalak, csak kategóriák.
+# 1stdibs, etsy: a /sitemap.xml 404, és a robots.txt nem hirdet sitemapet.
 [harvest.axioart]
 enabled = false
 market = "HU"
 sitemap_url = "https://axioart.com/index_sitemap.xml"
 item_url_pattern = "/tetel/"
+slug_patterns = ["herend", "zsolnay", "eozin", "eosin", "pirogranit"]
+
+# Darabanth: aukciós leütési ("Eladási") árak, saját elemzővel (microdata, nem
+# JSON-LD). Lásd porcelan/sources/darabanth.py.
+[harvest.darabanth]
+enabled = true
+market = "HU"
+parser = "darabanth"
+sitemap_url = "https://www.darabanth.com/sitemap.xml"
+item_url_pattern = "/hu/[0-9]+-"
 slug_patterns = ["herend", "zsolnay", "eozin", "eosin", "pirogranit"]

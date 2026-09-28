@@ -111,13 +111,19 @@ def _tiszta_szoveg(ertek) -> str:
 class SchemaOrgForras:
     """Egy konfigurációval leírt forrás: sitemap + schema.org Product."""
 
-    def __init__(self, nev: str, cfg: dict | None = None):
+    def __init__(self, nev: str, cfg: dict | None = None, corpus: str = "relevant"):
+        """corpus: "relevant" = csak Herendi/Zsolnay, "general" = teljes
+        porcelán/kerámia korpusz az előtanításhoz."""
         self.nev = nev
         self.cfg = cfg if cfg is not None else (settings.get(f"harvest.{nev}") or {})
         if not self.cfg:
             raise ValueError(f"nincs [harvest.{nev}] beállítás")
+        if corpus not in ("relevant", "general"):
+            raise ValueError("corpus: relevant | general")
+        self.corpus = corpus
         self.market = self.cfg.get("market", "HU")
-        minta = self.cfg.get("slug_patterns") or []
+        kulcs = "slug_patterns" if corpus == "relevant" else "slug_patterns_general"
+        minta = self.cfg.get(kulcs) or self.cfg.get("slug_patterns") or []
         self._slug = re.compile("|".join(minta), re.I) if minta else None
         self._tetel = re.compile(self.cfg["item_url_pattern"]) if self.cfg.get("item_url_pattern") else None
 
@@ -125,10 +131,20 @@ class SchemaOrgForras:
     def sitemap_gyoker(self) -> str:
         return self.cfg["sitemap_url"]
 
+    @staticmethod
+    def _locok(tartalom: str) -> list[str]:
+        """URL-ek egy sitemapból. A sitemaps.org szerint a sitemap lehet XML vagy
+        soronként egy URL-t tartalmazó szöveges fájl; több nagy oldal az utóbbit
+        használja, ezért mindkettőt olvassuk."""
+        if "<loc" in (tartalom or ""):
+            return _LOC_RE.findall(tartalom)
+        return [sor.strip() for sor in (tartalom or "").splitlines()
+                if sor.strip().startswith(("http://", "https://"))]
+
     def sitemap_alatt(self, url: str, xml: str) -> tuple[list[str], list[str]]:
         """(al-sitemapek, tétel-URL-ek) egy sitemap tartalmából."""
         alsitemapek, tetelek = [], []
-        for loc in _LOC_RE.findall(xml or ""):
+        for loc in self._locok(xml):
             if loc == url:
                 continue
             utvonal = urlparse(loc).path
@@ -188,6 +204,7 @@ class SchemaOrgForras:
             "pieces": jellemzok.get("pieces"),
             "condition": jellemzok.get("condition"),
             "relevance": relevancia,
+            "corpus": "herend_zsolnay" if jellemzok.get("brand") else "general",
             "observed_at": None,        # a betöltő tölti ki
             "images": [{"url": u} for u in kepek],
             "raw": {"availability": elerheto, "status": allapot, "relevance": relevancia,

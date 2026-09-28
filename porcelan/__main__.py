@@ -72,6 +72,8 @@ def main(argv=None) -> int:
     hp.add_argument("--source", help="egy forrás neve; üresen az összes bekapcsolt")
     hp.add_argument("--max-requests", type=int, help="kéréskeret forrásonként")
     hp.add_argument("--time-budget", type=float, help="időkeret másodpercben, forrásonként")
+    hp.add_argument("--corpus", choices=["relevant", "general"], default="relevant",
+                    help="relevant: csak Herendi/Zsolnay; general: teljes porcelán/kerámia korpusz")
     hp.add_argument("--from-sqlite", action="store_true",
                     help="a helyi SQLite Vatera-adatának átemelése is")
     sub.add_parser("pg-status", help="a PostgreSQL-korpusz állapota forrásonként")
@@ -139,7 +141,7 @@ def main(argv=None) -> int:
         forrasok = [a.source] if a.source else harvest_pg.osszes_forras()
         for nev in forrasok:
             eredmeny[nev] = harvest_pg.gyujt(nev, max_kerés=a.max_requests,
-                                             ido_keret_sec=a.time_budget)
+                                             ido_keret_sec=a.time_budget, corpus=a.corpus)
         with pg.connect() as pgc:
             eredmeny["osszesites"] = pg.statisztika(pgc)
         _print(eredmeny)

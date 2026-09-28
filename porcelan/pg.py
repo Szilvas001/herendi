@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS {SEMA}.datapoints (
     condition     text,
 
     relevance     text,
+    corpus        text,
     image_count   integer     NOT NULL,
     observed_at   timestamptz NOT NULL,
     ingested_at   timestamptz NOT NULL DEFAULT now(),
@@ -85,6 +86,8 @@ CREATE TABLE IF NOT EXISTS {SEMA}.datapoint_images (
 INDEXEK = f"""
 CREATE INDEX IF NOT EXISTS ix_dp_brand      ON {SEMA}.datapoints (brand);
 CREATE INDEX IF NOT EXISTS ix_dp_relevance  ON {SEMA}.datapoints (relevance);
+CREATE INDEX IF NOT EXISTS ix_dp_corpus     ON {SEMA}.datapoints (corpus);
+CREATE INDEX IF NOT EXISTS ix_dp_market     ON {SEMA}.datapoints (market);
 CREATE INDEX IF NOT EXISTS ix_dp_price_type ON {SEMA}.datapoints (price_type);
 CREATE INDEX IF NOT EXISTS ix_dp_observed   ON {SEMA}.datapoints (observed_at);
 """
@@ -154,7 +157,7 @@ def sema_letrehoz(conn=None) -> None:
 MEZOK = ("source", "source_id", "url", "market", "title", "description", "category",
          "price_huf", "price_type", "price_amount", "currency", "sale_type", "end_time",
          "brand", "object_type", "decor", "size_cm", "pieces", "condition",
-         "relevance", "image_count", "observed_at", "raw")
+         "relevance", "corpus", "image_count", "observed_at", "raw")
 
 
 def ervenyes(adatpont: dict) -> str | None:
@@ -205,5 +208,7 @@ def statisztika(conn) -> list[dict]:
     return conn.execute(
         f"SELECT source, count(*) AS adatpont, sum(image_count) AS kep, "
         f"count(*) FILTER (WHERE price_type IN ('auction_final_bid','realized_sale')) AS realizalt, "
+        f"count(*) FILTER (WHERE corpus='herend_zsolnay') AS markas, "
+        f"max(market) AS piac, "
         f"min(observed_at) AS legkorabbi, max(observed_at) AS legfrissebb "
         f"FROM {SEMA}.datapoints GROUP BY source ORDER BY adatpont DESC").fetchall()
