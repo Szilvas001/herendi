@@ -1,0 +1,125 @@
+# Herendi–Zsolnay vételkereső – konfigurációs minta.
+# Másold config/settings.toml néven, és ott módosíts (a settings.toml nincs verziózva).
+# Minden pénzösszeg HUF, ha a kulcs neve mást nem mond. A díjak, árfolyamok és
+# vámszabályok változnak: az "as_of" mezők jelzik, mikori feltételezésről van szó.
+
+[paths]
+data_dir = "data"                 # SQLite adatbázis, képek, cache
+db_file = "data/hzfinder.sqlite"
+image_dir = "data/images"
+cache_dir = "data/http_cache"
+models_dir = "models"             # verziózott modellsúlyok (models/<verzió>/)
+clip_weights = "weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt"
+clip_weights_url = "https://github.com/mlfoundations/open_clip/releases/download/v0.2-weights/vit_b_32-quickgelu-laion400m_e32-46683a32.pt"
+clip_weights_sha256 = "46683a32721d5c68911153698992361285d20ca690bb4f317c11e45c03d798fa"
+
+[http]
+# Átlátható User-Agent; a hozzáférési korlátozásokat nem kerüljük meg.
+user_agent = "HZFinder/1.0 (Herendi-Zsolnay piackutatas; kapcsolat: a futtato uzemelteto)"
+min_delay_sec = 1.5               # hostonkénti minimális szünet két kérés között
+timeout_sec = 20
+retries = 3
+respect_robots_txt = true
+cache_ttl_search_sec = 3600       # találati oldalak cache-ideje
+cache_ttl_detail_sec = 86400      # termékoldalak cache-ideje
+stop_on_block = true              # 403/429/CAPTCHA esetén az adott host bejárása leáll
+
+[crawl]
+# Részletes termékoldalt csak új, megváltozott vagy ennyi óránál régebben
+# ellenőrzött hirdetéshez töltünk le.
+detail_recheck_hours = 72
+# Ennyi egymást követő, teljes (nem megszakadt) bejárásban nem látott hirdetés
+# kerül "eltűnt" státuszba. Az eltűnés NEM eladás.
+missing_runs_before_disappeared = 2
+max_pages_per_query = 500          # biztonsági felső korlát; a lapozás a valós végéig megy
+download_images = true
+max_images_per_listing = 8
+full_catalog = false               # true: a teljes nyilvános kategóriafa bejárása (alacsony prioritással)
+
+[vatera]
+base_url = "https://www.vatera.hu"
+search_path = "/listings/index.php"
+# Gyártónév-változatok, elírások és kapcsolódó kifejezések.
+queries_herend = [
+  "herendi", "herend", "herendi porcelán", "herendi porcelan", "herendy", "herendi porcellán",
+  "herendi figura", "herendi váza", "herendi készlet", "herendi tányér", "herendi bonbonier",
+  "herendi apponyi", "herendi rothschild", "herendi viktória", "herendi victoria",
+  "herendi waldstein", "herendi fishnet", "herendi halpikkelyes", "herendi pikkelyes",
+  "herendi nyúl", "herendi madár", "herendi levesestál", "herendi teáskészlet",
+  "herendi kávéskészlet", "herendi étkészlet", "herendi bogrács", "herendi hadik", "ó-herendi",
+  "herend porcelain", "herend hungary",
+]
+queries_zsolnay = [
+  "zsolnay", "zsolnai", "zsolney", "zolnay", "zsolnay porcelán", "zsolnay porcelan",
+  "zsolnay kerámia", "zsolnay eozin", "zsolnay eosin", "zsolnay pirogránit", "zsolnay pirogranit",
+  "zsolnay figura", "zsolnay váza", "zsolnay szobor", "zsolnay készlet", "zsolnay pécs",
+  "pécsi zsolnay", "zsolnay pompadour", "zsolnay teknős", "zsolnay madár", "zsolnay medve",
+  "zsolnay tányér", "zsolnay kaspó", "zsolnay szecessziós", "zsolnay porcelain",
+]
+# Márkanév nélküli porcelánkínálat: képi előszűréshez (CLIP) kerül be.
+queries_generic = ["porcelán figura", "kézzel festett porcelán", "porcelán váza", "antik porcelán"]
+# Induló kategória-URL-ek (a crawler a találati oldalakon talált kategórialinkekből továbbiakat is felvesz).
+seed_categories = []
+category_keywords = ["porcelan", "keramia", "herend", "zsolnay", "antik", "regiseg"]
+
+[jofogas]
+enabled = false                    # a Vatera-integráció után kapcsold be
+base_url = "https://www.jofogas.hu"
+search_path = "/magyarorszag"
+queries = ["herendi", "zsolnay", "herendi porcelán", "zsolnay eozin"]
+
+[ebay]
+# Hivatalos eBay Browse API (aktív kínálat, US piac). Kulcsok környezeti változóból:
+# EBAY_CLIENT_ID, EBAY_CLIENT_SECRET. Lezárt eladási adatot csak jogosult
+# Marketplace Insights API vagy importált CSV adhat.
+enabled = false
+marketplace = "EBAY_US"
+queries = ["herend porcelain", "herend figurine", "zsolnay eosin", "zsolnay porcelain"]
+
+[fx]
+as_of = "2026-09-28"
+note = "Kézi tervezési árfolyam; frissítsd az aktuális MNB/banki árfolyamra."
+huf_per_usd = 345.0
+huf_per_eur = 395.0
+
+[costs.common]
+inbound_shipping_huf = 2500       # a Vaterán vett tárgy hozzánk szállítása
+inspection_huf = 0                # saját ellenőrzés/tisztítás pénzben
+profit_tax_rate = 0.15            # pozitív nyereségre számított adó (feltételezés; egyéni helyzettől függ)
+risk_reserve_rate = 0.05          # eladási ár arányos tartalék (törés, visszaküldés)
+asking_to_sale_ratio = 0.85       # CSAK kínálati áron tanított modellnél: kínálati → eladási ár feltételezés (nem mért)
+
+[costs.hu]
+as_of = "2026-09-28"
+platform_fee_rate = 0.08          # piactéri jutalék (ellenőrizd az aktuális díjszabást)
+payment_fee_rate = 0.0
+packaging_huf = 2000
+outbound_shipping_huf = 0         # belföldön jellemzően a vevő fizeti
+listing_fee_huf = 0
+
+[costs.us]
+as_of = "2026-09-28"
+platform_fee_rate = 0.136         # eBay final value fee (feltételezés; kategóriafüggő)
+platform_fixed_fee_usd = 0.40
+payment_fee_rate = 0.0
+fx_conversion_rate = 0.03         # devizaváltási költség
+packaging_huf = 6000
+intl_shipping_huf_small = 22000   # kis tárgy (< 25 cm, egy darab) biztosított légipostával
+intl_shipping_huf_large = 45000   # nagy tárgy vagy készlet
+# USA importvám + kiegészítő tarifa a vevő vagy eladó oldalán (DDP esetén az eladót terheli).
+import_duty_rate = 0.15
+duty_paid_by_seller = true
+
+[ranking]
+min_confidence_to_recommend = 0.35
+auction_uncertainty_penalty = 0.5  # aukció: a jelenlegi licit nem végleges ár
+damage_penalty = 0.5
+min_profit_huf_to_recommend = 5000
+min_discount_pct_flag = 15         # ennyi %-kal a várható eladási érték alatt: "érték alatti" jelzés
+
+[validation]
+# A "validált" státusz feltételei (tesztkészleten, realizált ártípusokon mérve).
+min_realized_test_samples_per_brand = 50
+max_mdape = 0.35
+interval_coverage_tolerance = 0.10
+require_beats_baseline = true

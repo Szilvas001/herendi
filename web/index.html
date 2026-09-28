@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herendi–Zsolnay vételkereső</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231f4e8c'/%3E%3Cpath d='M9 18c2 5 12 5 14 0H9z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>Herendi–Zsolnay vételkereső</h1>
+    <span class="sub">Alulárazott hirdetések · magyar és amerikai továbbértékesítés</span>
+  </div>
+  <div class="status" id="status" aria-live="polite">
+    <span class="pill" id="pill-model">Modell: …</span>
+    <span class="pill" id="pill-crawl">Adatgyűjtés: …</span>
+    <span class="pill" id="pill-data">Adat: …</span>
+  </div>
+  <div class="actions">
+    <button id="btn-crawl" title="Vatera bejárás (folytatható) → képek → becslés">Adatgyűjtés indítása</button>
+    <label class="btn secondary" title="Régi run.py CSV (vatera_osszes.csv) importja">
+      CSV import<input type="file" id="file-import" accept=".csv" hidden>
+    </label>
+    <button id="btn-score" class="secondary" title="Becslések frissítése a betöltött modellel">Újrapontozás</button>
+    <button id="btn-train" class="secondary" title="Új modellverzió tanítása háttérfolyamatban">Tanítás</button>
+  </div>
+</header>
+
+<div id="jobbar" class="jobbar" hidden>
+  <div class="jobtext" id="jobtext"></div>
+  <div class="progress"><div id="jobprogress"></div></div>
+  <button id="btn-cancel" class="link">Leállítás</button>
+</div>
+<div id="warnings" class="warnings"></div>
+
+<main class="layout">
+  <aside class="filters" id="filters">
+    <form id="filter-form">
+      <fieldset>
+        <legend>Gyártó</legend>
+        <div class="seg">
+          <label><input type="radio" name="brand" value="" checked><span>Mind</span></label>
+          <label><input type="radio" name="brand" value="Herendi"><span>Herendi</span></label>
+          <label><input type="radio" name="brand" value="Zsolnay"><span>Zsolnay</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Vételár</legend>
+        <div class="seg">
+          <label><input type="radio" name="price" value="20000"><span>&lt; 20 000 Ft</span></label>
+          <label><input type="radio" name="price" value="50000" checked><span>&lt; 50 000 Ft</span></label>
+          <label><input type="radio" name="price" value="custom"><span>Egyedi</span></label>
+          <label><input type="radio" name="price" value=""><span>Nincs</span></label>
+        </div>
+        <input type="number" id="custom-price" min="0" step="1000" placeholder="max. Ft" hidden>
+      </fieldset>
+      <fieldset>
+        <legend>Célpiac</legend>
+        <div class="seg">
+          <label><input type="radio" name="market" value="HU" checked><span>Magyar</span></label>
+          <label><input type="radio" name="market" value="US"><span>Amerikai</span></label>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Minimum</legend>
+        <label class="row">Árengedmény (%)<input type="number" id="min-discount" step="5" placeholder="pl. 20"></label>
+        <label class="row">Konz. nettó nyereség (Ft)<input type="number" id="min-profit" step="1000" placeholder="pl. 5000"></label>
+        <label class="row">Megbízhatóság <output id="conf-out">0%</output>
+          <input type="range" id="min-confidence" min="0" max="0.8" step="0.05" value="0"></label>
+      </fieldset>
+      <fieldset>
+        <legend>Forrás és hirdetéstípus</legend>
+        <select id="source"><option value="">Minden forrás</option><option value="vatera">Vatera</option><option value="jofogas">Jófogás</option></select>
+        <div class="checks">
+          <label><input type="checkbox" name="type" value="fix" checked> Fix ár</label>
+          <label><input type="checkbox" name="type" value="alku" checked> Alkuképes</label>
+          <label><input type="checkbox" name="type" value="aukcio" checked> Aukció</label>
+        </div>
+        <label class="check"><input type="checkbox" id="only-rec"> Csak ajánlott (konzervatívan is nyereséges)</label>
+        <label class="check"><input type="checkbox" id="only-cand" checked> Csak ajánlott vagy jelölt (érték alatti, alapesetben nyereséges)</label>
+        <label class="check"><input type="checkbox" id="hide-abstain"> Tartózkodó becslések elrejtése</label>
+      </fieldset>
+      <fieldset>
+        <legend>Rendezés</legend>
+        <select id="sort">
+          <option value="score">Kockázattal súlyozott nyereség</option>
+          <option value="profit">Konzervatív nettó nyereség</option>
+          <option value="roi">Megtérülés (konz.)</option>
+          <option value="discount">Árengedmény</option>
+          <option value="confidence">Megbízhatóság</option>
+          <option value="price_asc">Ár szerint növekvő</option>
+          <option value="price_desc">Ár szerint csökkenő</option>
+          <option value="checked">Legutóbb ellenőrzött</option>
+        </select>
+      </fieldset>
+      <details class="assumptions">
+        <summary>Költség-feltételezések</summary>
+        <p class="hint">A <code>config/settings.toml</code> alapértékei; itt ideiglenesen felülírhatók.</p>
+        <div id="assumption-fields"></div>
+        <button type="button" id="btn-reset-assumptions" class="link">Alapértékek visszaállítása</button>
+      </details>
+    </form>
+  </aside>
+
+  <section class="results">
+    <div class="resultbar">
+      <div id="summary">…</div>
+      <button id="btn-filters" class="secondary mobile-only" type="button">Szűrők</button>
+    </div>
+    <div id="cards" class="cards"></div>
+    <div class="more"><button id="btn-more" class="secondary" hidden>Továbbiak</button></div>
+  </section>
+</main>
+
+<dialog id="detail">
+  <div class="dhead"><h2 id="d-title"></h2><button class="link" id="d-close" aria-label="Bezárás">✕</button></div>
+  <div id="d-body"></div>
+</dialog>
+
+<footer class="foot">
+  A becslések nem garantálnak nyereséget, eredetiséget vagy állapotot. Aukciónál a licit nem végleges ár.
+  <a href="/api/model" target="_blank" rel="noopener">Modell-manifest</a> ·
+  <a href="/api/coverage" target="_blank" rel="noopener">Lefedettség</a>
+</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>
