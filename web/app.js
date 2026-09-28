@@ -154,12 +154,14 @@ function estBox(label, m, selected, native) {
   if (!m) return `<div class="${selected ? 'sel' : ''}">${label}<b>–</b><small>nincs becslés</small></div>`;
   const nat = native && m.currency === 'USD' ? ` · ${usd(m.value_native.q50)}` : '';
   return `<div class="${selected ? 'sel' : ''}">${label}<b>${ft(m.value_huf.q50)}</b>
-    <small>${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)}${nat}</small><br><small>megbízhatóság ${pct(m.confidence)}</small></div>`;
+    <small>${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)}${nat}</small><br><small>±10%-on belül: ${m.p_within_10 == null ? '–' : pct(m.p_within_10)}</small></div>`;
 }
 
 function card(c) {
   const m = c.market === 'HU' ? c.hu : c.us;
   const badges = [];
+  if (m && m.precise) badges.push('<span class="badge good">Pontos ár (±10%)</span>');
+  if (c.identity && c.identity.form_no) badges.push(`<span class="badge">${esc(c.identity.form_no)}${c.identity.pattern_code ? ' ' + esc(c.identity.pattern_code) : ''}</span>`);
   if (c.recommended) badges.push(`<span class="badge good">Ajánlott${modelStatus === 'validált' ? '' : ' – kísérleti modell'}</span>`);
   else if (c.candidate) badges.push('<span class="badge warn">Jelölt – bizonytalan</span>');
   else if (c.abstain && c.abstain.length) badges.push('<span class="badge">Nincs ajánlás</span>');
@@ -223,7 +225,9 @@ function marketBlock(name, m) {
     <td class="num">${c.currency === 'USD' ? usd(c.price) : ft(c.price)}</td><td>${esc(c.price_type)}</td><td>${esc(c.observed_at)}</td><td class="num">${c.similarity}</td></tr>`).join('');
   return `<h3>${name}</h3>
     <p><b>${ft(m.value_huf.q50)}</b> (80%-os intervallum: ${ft(m.value_huf.q10)} – ${ft(m.value_huf.q90)})${nat}<br>
-    Megbízhatóság: ${pct(m.confidence)} · modell: ${esc(m.model)} · célváltozó: ${m.basis === 'asking' ? 'kínálati ár (kísérleti)' : 'realizált ár'}
+    ±10%-on belüli valószínűség: ${m.p_within_10 == null ? '–' : pct(m.p_within_10)}${m.precise ? ' · <b>pontos ár (validált)</b>' : ''}
+    · azonos termék eladásai: ${m.sku && m.sku.n_exact != null ? m.sku.n_exact : 0}, azonos formaszám: ${m.sku && m.sku.n_form != null ? m.sku.n_form : 0}<br>
+    Megbízhatóság (±25%): ${pct(m.confidence)} · modell: ${esc(m.model)} · célváltozó: ${m.basis === 'asking' ? 'kínálati ár (kísérleti)' : 'realizált ár'}
     ${m.revenue_factor !== 1 ? ` · várható eladás = érték × ${m.revenue_factor}` : ''}</p>
     <p>${esc(m.reason)}</p>
     ${m.abstain_reasons.length ? `<p class="neg">Tartózkodás: ${esc(m.abstain_reasons.join('; '))}</p>` : ''}
@@ -247,6 +251,8 @@ async function openDetail(id) {
     <p><b>${ft(l.price_huf)}</b> · ${TYPE[l.sale_type] || l.sale_type}${l.sale_type === 'aukcio' ? ` · ${l.bid_count ?? '?'} licit · vége: ${esc(l.end_time || '?')} · <b>a licit nem végleges ár</b>` : ''}
     · státusz: ${esc(l.status)} (${esc(l.status_reason || '')})<br>
     <a class="btn" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener noreferrer">Hirdetés megnyitása</a></p>
+    <h3>Pontos termékazonosítás</h3>
+    <p>${a && a.identity ? `Cikkszám-kulcs: <b>${esc(a.identity.sku_key)}</b> · formaszám ${esc(a.identity.form_no)} · minta ${esc(a.identity.pattern_code || '–')} · alap: ${esc(a.identity.basis || '')}` : 'Nincs azonosítva (formaszám/minta ismeretlen) – pontos piaci ár ehhez nem adható.'}</p>
     <h3>Azonosított jellemzők</h3>
     <p>Gyártó: ${esc(f.brand || '–')} · típus: ${esc(f.object_type || '–')} · dekor: ${esc(f.decor || '–')} · méret: ${f.size_cm ? f.size_cm + ' cm' : '–'} · darab: ${f.pieces || '–'} · állapot: ${esc(f.condition || '–')} · jelzések: ${esc(f.mark_flags || '–')}</p>
     ${a ? `<p>Hiányzó információ: ${esc(a.missing_info.join('; ') || 'nincs')}</p>` : ''}

@@ -241,6 +241,25 @@ CREATE TABLE IF NOT EXISTS harvest_slices (
     UNIQUE(source, query, category, price_lo, price_hi)
 );
 
+-- Termékkatalógus (gyártói webshop, katalógus-CSV): cikkszám, név, méret, hivatalos ár, kép.
+CREATE TABLE IF NOT EXISTS catalog_items (
+    id INTEGER PRIMARY KEY,
+    brand TEXT NOT NULL,
+    form_no TEXT NOT NULL,
+    pattern_code TEXT,
+    sku_key TEXT NOT NULL UNIQUE,
+    name TEXT,
+    object_type TEXT,
+    size_cm REAL,
+    retail_price REAL,             -- hivatalos (új) ár; nem másodpiaci érték
+    currency TEXT,
+    retail_market TEXT,            -- HU / US / EU
+    source TEXT,
+    url TEXT,
+    image_url TEXT,
+    observed_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -280,6 +299,17 @@ def _migrate(conn) -> None:
     if "image_url" not in pr:
         conn.execute("ALTER TABLE price_records ADD COLUMN image_url TEXT")
     conn.execute("CREATE INDEX IF NOT EXISTS ix_price_corpus ON price_records(corpus, market)")
+    # pontos termékazonosítás (cikkszám-kulcs: gyártó|formaszám|mintakód)
+    for table in ("price_records", "listings"):
+        cols = _columns(conn, table)
+        for col, typ in (("sku_key", "TEXT"), ("form_no", "TEXT"), ("pattern_code", "TEXT"),
+                         ("id_confidence", "REAL"), ("id_basis", "TEXT")):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+        conn.execute(f"CREATE INDEX IF NOT EXISTS ix_{table}_sku ON {table}(sku_key)")
+    if "catalog_id" not in _columns(conn, "images"):
+        conn.execute("ALTER TABLE images ADD COLUMN catalog_id INTEGER")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_images_cat ON images(catalog_id, url) WHERE catalog_id IS NOT NULL")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS ux_images_pr ON images(price_record_id, url) "
                  "WHERE price_record_id IS NOT NULL")
     conn.execute("CREATE INDEX IF NOT EXISTS ix_images_status ON images(status)")

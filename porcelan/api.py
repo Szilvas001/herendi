@@ -203,6 +203,7 @@ def _card(item: dict, market: str) -> dict:
         "other_market_flags": {"below_value": other.get("below_value"), "profitable": other.get("profitable")},
         "reason": m.get("reason"), "risks": m.get("risks", [])[:4], "abstain": m.get("abstain_reasons", []),
         "score": m.get("score", 0), "model_version": item["model_version"],
+        "identity": res.get("identity"),
     }
 
 
@@ -216,6 +217,8 @@ def _market_summary(m: dict | None) -> dict | None:
             "conservative_profit_huf": (m.get("conservative") or {}).get("profit_huf"),
             "conservative_roi_pct": (m.get("conservative") or {}).get("roi_pct"),
             "max_bid_huf": m.get("max_bid_huf"), "below_value": m.get("below_value"),
+            "p_within_10": m.get("p_within_10"), "precise": m.get("precise", False),
+            "n_same_item_sales": (m.get("sku") or {}).get("n_exact"),
             "profitable": m.get("profitable"), "recommended": m.get("recommended")}
 
 

@@ -64,6 +64,10 @@ def main(argv=None) -> int:
     lc.add_argument("--fractions", default="0.1,0.25,0.5,1.0")
     lc.add_argument("--seeds", type=int, default=2)
     sub.add_parser("data-volume", help="tanítóadat-mennyiség a célokhoz képest")
+    sub.add_parser("identify", help="pontos termékazonosítás (formaszám+mintakód) szövegből és képből")
+    sub.add_parser("sku-eval", help="cikkszám-szintű piaci ár pontossága (±10% cél), zajszint, szükséges eladásszám")
+    icat = sub.add_parser("import-catalog", help="termékkatalógus CSV (cikkszám, név, méret, hivatalos ár, kép)")
+    icat.add_argument("paths", nargs="+", type=Path)
     s = sub.add_parser("score", help="becslések frissítése")
     s.add_argument("--force", action="store_true")
     sub.add_parser("pipeline", help="bejárás → képek → becslés (egy lépésben)")
@@ -148,6 +152,24 @@ def main(argv=None) -> int:
         res = learning_curve(conn, fractions=tuple(float(x) for x in a.fractions.split(",")), n_seeds=a.seeds)
         from . import settings as st
         print((st.path("models_dir") / "learning_curve" / "LEARNING_CURVE.md").read_text())
+    elif a.cmd == "identify":
+        from . import catalog, vision
+        out = {"text": catalog.identify_all_text(conn)}
+        if vision.available():
+            out["image_eval"] = catalog.evaluate_image_identification(conn)
+            out["image"] = catalog.identify_images(conn)
+        _print(out)
+    elif a.cmd == "sku-eval":
+        from . import sku_model
+        res = sku_model.evaluate(conn)
+        res["noise_floor"] = sku_model.noise_floor(conn)
+        res["sales_needed"] = {m: sku_model.sales_needed(v["sigma"] or 0.35)
+                               for m, v in res["params"]["sigma_by_market"].items()}
+        _print(res)
+    elif a.cmd == "import-catalog":
+        from . import catalog
+        for path in a.paths:
+            _print({str(path): catalog.import_catalog_csv(path, conn)})
     elif a.cmd == "data-volume":
         from .volume import data_volume
         _print(data_volume(conn))

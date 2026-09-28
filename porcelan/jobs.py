@@ -178,12 +178,18 @@ def _images(progress, conn) -> dict:
         if vision.image_tag() != vision.EMB_TAG:
             out["embedded_finetuned"] = vision.embed_pending_images(conn, progress)
         out["prefilter"] = vision.visual_prefilter(conn)
+        from . import catalog
+        out["identify_text"] = catalog.identify_all_text(conn)
+        out["identify_image_eval"] = catalog.evaluate_image_identification(conn)
+        out["identify_image"] = catalog.identify_images(conn)
     else:
         out["embedded"] = "CLIP nem elérhető (python -m porcelan setup-models)"
     return out
 
 
 def _score_if_model(progress, conn):
+    from . import catalog
+    catalog.identify_all_text(conn)          # pontos termékazonosítás a becslés előtt
     from .predict import current_version
     if current_version():
         from .scoring import score

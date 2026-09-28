@@ -17,14 +17,19 @@ from . import costs, db, ranking
 from .predict import get_estimator
 
 log = logging.getLogger(__name__)
-FEATURE_VERSION = "2"
+FEATURE_VERSION = "3"
 
 
 def input_hash(conn, row) -> str:
     shas = [r["sha256"] for r in conn.execute("SELECT sha256 FROM images WHERE listing_id=? AND sha256 IS NOT NULL "
                                               "ORDER BY position", (row["id"],))]
-    payload = json.dumps([FEATURE_VERSION, row["title"], row["description"], row["category"], shas],
-                         ensure_ascii=False)
+    # azonosított terméknél az azonos cikkszámú eladások száma is bemenet (új eladás → újrabecslés)
+    n_sku = 0
+    if row["sku_key"]:
+        n_sku = conn.execute("SELECT COUNT(*) FROM price_records WHERE sku_key=? OR (form_no=? AND sku_key LIKE ?)",
+                             (row["sku_key"], row["form_no"], row["sku_key"].split("|")[0] + "|%")).fetchone()[0]
+    payload = json.dumps([FEATURE_VERSION, row["title"], row["description"], row["category"], shas,
+                          row["sku_key"], n_sku], ensure_ascii=False)
     return hashlib.sha1(payload.encode()).hexdigest()
 
 

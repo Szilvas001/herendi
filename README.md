@@ -27,6 +27,21 @@ python -m porcelan score                   # csak a változott hirdetéseket bec
 
 A dashboardról ugyanez gombokkal indítható („Adatgyűjtés indítása”, „CSV import”, „eBay-gyűjtés”, „Újrapontozás”, „Tanítás”). A feladatok háttérfolyamatként futnak, folyamatjelzővel.
 
+## Pontos piaci ár (cél: ±10%)
+
+A legfontosabb első lépés: képből és leírásból megmondani egy adott termék **valódi piaci árát**, legfeljebb 10% eltéréssel. Csak ezután jön az összevetés a hirdetési árral. Ehhez a rendszer:
+1. **pontosan azonosítja a terméket** (gyártó + formaszám + mintakód, pl. Herend `711-0-00 VBO`) a szövegből és – a katalógusképekhez és azonosított hirdetésképekhez hasonlítva – a képből (`identify`);
+2. a **piaci árat az azonos termék eladásaiból** számolja, a kép+szöveg modell becslésével bizonytalanság szerint kombinálva, és megadja, milyen valószínűséggel van ±10%-on belül (`sku_model.py`);
+3. **„Pontos ár (±10%)”** jelzést csak validált esetben ad; máshol sávot mond, és megnevezi, mi hiányzik.
+
+Számszerűen: ha azonos termék eladásai 20–40%-kal szórnak, akkor termékenként **3–9 realizált eladás** kell a 10%-os mediánhibához, és **11–44 eladás** ahhoz, hogy az esetek 90%-a ±10%-on belül legyen. Egyetlen konkrét eladás árát ennél pontosabban egy modell sem találhatja el. A mostani adatban 0 terméknek van két független eladása, ezért a cél még **nem mérhető és nem érhető el**. Részletek, módszer, adatigény: [docs/PONTOS_PIACI_AR.md](docs/PONTOS_PIACI_AR.md).
+
+```bash
+python -m porcelan import-catalog katalogus.csv   # cikkszám, név, méret, hivatalos ár, kép (config/catalog.example.csv)
+python -m porcelan identify                       # formaszám + mintakód szövegből és képből
+python -m porcelan sku-eval                       # ±10%-on belüli arány, piaci zajszint, szükséges eladásszám
+```
+
 ## Nagy léptékű adat a képalapú becsléshez
 
 Megbízható, képből dolgozó árbecsléshez nem néhány száz, hanem **sok tízezer (előtanításhoz százezres nagyságrendű) kép+ár pár** kell. Csak Herendi/Zsolnay tárgyból, képpel és árral ennyi nem gyűlik össze rövid idő alatt, ezért a rendszer lépcsőzetesen tanul:
@@ -119,13 +134,14 @@ sources/*       importers.py  vision.py (CLIP)   vision.py      model.py        
 | `python -m porcelan top --brand Herendi --max-price 50000 --market HU` | a legjobb találatok a parancssorban |
 | `python -m porcelan status` / `evaluate-recommendations` | állapot; ajánlások utólagos ellenőrzése lezárult aukciókon |
 | `python -m porcelan serve [--host 127.0.0.1 --port 8000]` | dashboard |
-| `python -m pytest -q tests` | tesztek (57 db, hálózat nélkül; a képi tesztek CLIP-súlyokat igényelnek) |
+| `python -m porcelan identify` / `sku-eval` / `import-catalog` | pontos termékazonosítás, cikkszám-szintű ±10%-os értékelés, katalógus |
+| `python -m pytest -q tests` | tesztek (63 db, hálózat nélkül; a képi tesztek CLIP-súlyokat igényelnek) |
 
 Konfiguráció: `config/settings.example.toml` (másold `config/settings.toml` néven). Itt állíthatók a keresőkifejezések, a kategóriák, a lekérési gyakoriság és a cache, az árfolyam, a HU/US költségek és adók, a rangsorolási küszöbök és a validációs feltételek. A költség-feltételezések a dashboardon ideiglenesen felülírhatók.
 
 ## Modell és mért eredmények
 
-Az aktuális verzió: `models/v20260928-1507-522878a8` (teljes riport: [EVALUATION.md](models/v20260928-1507-522878a8/EVALUATION.md), [docs/MODELL_ERTEKELES.md](docs/MODELL_ERTEKELES.md)).
+Az aktuális verzió: `models/v20260928-1810-522878a8` (teljes riport: [EVALUATION.md](models/v20260928-1810-522878a8/EVALUATION.md), [docs/MODELL_ERTEKELES.md](docs/MODELL_ERTEKELES.md)).
 
 A mérés tesztkészleten készült (csoportszintű, a tanítástól és a validációtól elkülönítve), a célváltozó **kínálati ár**, a tanítóadatban **nincs kép**. Az intervallumok a validációs halmazon kalibráltak.
 
@@ -193,6 +209,7 @@ A validált modellhez vezető út (élő bejárás, amely automatikusan gyűjti 
 | Nyereségszámítás | `CostTest` |
 | Dashboard-szűrés és -rendezés | `ModelAndApiTest` (API), `docs/screenshots/` |
 | Képi ág, CLIP-finomhangolás | `tests/test_vision.py` |
+| Formaszám/mintakód-azonosítás valós címformákon, cikkszám-szintű piaci ár, ±10%-os mérés | `tests/test_identify.py` |
 | Tömeges gyűjtés, általános korpusz, LSH-csoportosítás, kétlépcsős tanítás, tanulási görbe | `tests/test_scale.py` |
 
 ## Régi eszközök

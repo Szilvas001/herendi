@@ -1,21 +1,23 @@
 {
- "version": "v20260928-1507-522878a8",
- "created_at": "2026-09-28T15:07:25+00:00",
+ "version": "v20260928-1810-522878a8",
+ "created_at": "2026-09-28T18:10:34+00:00",
  "status": "kísérleti",
  "status_reasons": [
+  "HU: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető",
+  "US: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető",
   "képes Herendi/Zsolnay tanítósor: 0 < 10000 (képalapú becsléshez sok tízezer képes adat kell)",
   "HU: 1167 tanítósor < 10000",
   "US: 84 tanítósor < 10000",
   "HU: a célváltozó kínálati ár, nem realizált eladási ár",
-  "HU: MdAPE 43% > 35%",
+  "HU: MdAPE 43% > 10%",
   "US: a célváltozó kínálati ár, nem realizált eladási ár",
   "US/Herendi: 19 tesztminta < 50",
   "US/Zsolnay: 0 tesztminta < 50",
-  "US: MdAPE 75% > 35%",
+  "US: MdAPE 75% > 10%",
   "US: 80%-os intervallum tényleges lefedettsége 63%",
   "US: a választott modell nem jobb az alapmodellnél a teszten"
  ],
- "git_commit": "5156205138e568f43d46de336c42ebf190fea063",
+ "git_commit": "8d3d45752eb9b6ce8998de449ac73a6641045cb5",
  "seed": 42,
  "n_seeds": 5,
  "use_clip": true,
@@ -867,6 +869,89 @@
      "n": 13
     }
    }
+  },
+  "sku_level": {
+   "records_identified": 55,
+   "evaluated": 0,
+   "temporal": false,
+   "params": {
+    "n_records": 55,
+    "sigma_by_market": {
+     "HU": {
+      "sigma": null,
+      "n": 0,
+      "note": "kevés ismételt eladás; alapérték 0.35"
+     },
+     "US": {
+      "sigma": null,
+      "n": 0,
+      "note": "kevés ismételt eladás; alapérték 0.35"
+     }
+    },
+    "sigma_pattern": {
+     "HU": null,
+     "US": null
+    },
+    "condition_effect": {
+     "HU": {
+      "hibatlan": {
+       "log_effect": null,
+       "n": 0
+      },
+      "ismeretlen": {
+       "log_effect": null,
+       "n": 0
+      }
+     },
+     "US": {
+      "hibatlan": {
+       "log_effect": null,
+       "n": 0
+      },
+      "ismeretlen": {
+       "log_effect": null,
+       "n": 0
+      }
+     }
+    }
+   },
+   "target_basis": {
+    "HU": "asking",
+    "US": "asking"
+   },
+   "by_market": {},
+   "market_price_curve": {
+    "HU": {},
+    "US": {}
+   },
+   "noise_floor": {
+    "HU": {
+     "skus_with_3plus": 0,
+     "n": 0,
+     "loo_mdape": null,
+     "within_10pct": null
+    },
+    "US": {
+     "skus_with_3plus": 0,
+     "n": 0,
+     "loo_mdape": null,
+     "within_10pct": null
+    }
+   },
+   "sales_needed": {
+    "HU": {
+     "sigma": 0.35,
+     "n_for_mdape": 7,
+     "n_for_share": 34,
+     "single_sale_mdape_floor": 0.2662692768013466
+    },
+    "US": {
+     "sigma": 0.35,
+     "n_for_mdape": 7,
+     "n_for_share": 34,
+     "single_sale_mdape_floor": 0.2662692768013466
+    }
+   }
   }
  },
  "deep_best_epochs": [
@@ -876,5 +961,5 @@
   21,
   19
  ],
- "train_seconds": 32.0
+ "train_seconds": 33.1
 }

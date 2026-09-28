@@ -104,7 +104,8 @@ def download_pending(conn=None, fetcher: Fetcher | None = None, limit: int | Non
     fetcher = fetcher or Fetcher(min_delay=settings.get("http.min_delay_sec") / 2)
     q = ("SELECT i.id, i.url FROM images i LEFT JOIN listings l ON l.id=i.listing_id "
          "LEFT JOIN price_records p ON p.id=i.price_record_id "
-         "WHERE i.status='pending' AND (l.relevance IN ('accepted','visual_candidate') OR p.id IS NOT NULL)")
+         "WHERE i.status='pending' AND (l.relevance IN ('accepted','visual_candidate') OR p.id IS NOT NULL "
+         "OR i.catalog_id IS NOT NULL)")
     args: list = []
     if corpus:
         q += " AND p.corpus=?"

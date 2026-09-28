@@ -165,6 +165,7 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
 
     progress(0.8, "Kalibráció és értékelés")
     has_img = P.df.has_image.values
+    preds_test: dict = {}
     for name, (kind, obj) in models.items():
         for market in MARKETS:
             vsub, pv = predict(kind, obj, va, market)
@@ -190,6 +191,7 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
                 bm = (df[tsub].brand == brand).values
                 if bm.any():
                     results["test_by_brand"][f"{name}/{market}/{brand}"] = metrics(pt_c[bm], y[tsub][bm])
+            preds_test[(name, market)] = (df[tsub]["id"].values, pt_c)
             im = has_img[tsub]
             if im.sum() >= 5:
                 results["test_with_images"][f"{name}/{market}"] = metrics(pt_c[im], y[tsub][im])
@@ -202,6 +204,23 @@ def train(conn=None, seed: int = 42, n_seeds: int = 5, use_clip: bool = True, pr
                  and results["val"][f"{n}/{market}"].get("coverage_pct", 0) >= 99]
         if cands:
             chosen[market] = min(cands)[1]
+
+    # Pontos termék → pontos piaci ár: cikkszám-szintű értékelés (a kép+szöveg modell mintán kívüli
+    # tesztbecslése az előzetes becslés), piaci zajszint és a szükséges eladásszám.
+    progress(0.85, "Cikkszám-szintű (pontos termék) értékelés")
+    from . import sku_model
+    from .sku_model import Z80
+    prior = {}
+    for market, name in chosen.items():
+        ids, pr = preds_test.get((name, market), ([], np.zeros((0, 3))))
+        for rid, row in zip(ids, pr):
+            if not np.isnan(row[1]):
+                prior[int(rid)] = (float(row[1]), max(1e-3, float((row[2] - row[0]) / (2 * Z80))))
+    sku_eval = sku_model.evaluate(conn, prior)
+    sku_eval["noise_floor"] = sku_model.noise_floor(conn)
+    sku_eval["sales_needed"] = {m: sku_model.sales_needed(v["sigma"] or 0.35)
+                                for m, v in sku_eval["params"]["sigma_by_market"].items()}
+    results["sku_level"] = sku_eval
 
     ds = P.ds
     status, reasons = validation_gate(ds, results, chosen, P)
@@ -389,6 +408,15 @@ def learning_curve_markdown(r: dict) -> str:
 def validation_gate(ds, results: dict, chosen: dict, P=None) -> tuple[str, list[str]]:
     cfg = settings.get("validation")
     reasons = []
+    sku = results.get("sku_level") or {}
+    for market in dataset.MARKETS:
+        v = (sku.get("by_market") or {}).get(market) or {}
+        if v.get("n", 0) < 30:
+            reasons.append(f"{market}: pontos (cikkszám-szintű) értékelés: {v.get('n', 0)} azonosított, "
+                           f"összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető")
+        elif (v.get("precise_within_10pct") or 0) < cfg.get("min_precise_within_10pct", 0.9):
+            reasons.append(f"{market}: a „pontos ár” becslések ±10%-on belüli aránya "
+                           f"{(v.get('precise_within_10pct') or 0):.0%} < {cfg.get('min_precise_within_10pct', 0.9):.0%}")
     if P is not None:
         n_img = int(P.df[P.tr].has_image.sum())
         if n_img < cfg.get("min_train_rows_with_images", 0):
@@ -492,6 +520,42 @@ def evaluation_markdown(man: dict) -> str:
                          f"{_fmt(m.get('mae'), money=True)} |")
         lines.append("")
         lines.append("A `deep_no_image` ugyanaz a modell a képjellemzők nélkül: a különbség a kép hozzájárulása.")
+    sku = r.get("sku_level") or {}
+    if sku:
+        lines += ["", "## Pontos termék → pontos piaci ár (cikkszám-szint, cél: ±10%)", "",
+                  f"- Formaszámmal azonosított rekord: {sku.get('records_identified')}, kiértékelhető "
+                  f"(van azonos termék/formaszám másik eladása): {sku.get('evaluated')}; "
+                  f"{'időrendi' if sku.get('temporal') else 'csoportonként kihagyásos'} értékelés.", ""]
+        if sku.get("by_market"):
+            lines += ["| Piac | n | MdAPE | ±10%-on belül | 90. percentilis hiba | azonos cikkszámmal | „pontos ár” arány | ebből ±10%-on belül |",
+                      "|---|---:|---:|---:|---:|---:|---:|---:|"]
+            for m, v in sku["by_market"].items():
+                lines.append(f"| {m} | {v['n']} | {_fmt(v['mdape'], pct=True)} | {_fmt(v['within_10pct'], pct=True)} | "
+                             f"{_fmt(v['p90_ape'], pct=True)} | {v['exact_sku_rows']} | {_fmt(v['precise_share'], pct=True)} | "
+                             f"{_fmt(v['precise_within_10pct'], pct=True)} |")
+        curve = sku.get("market_price_curve") or {}
+        if any(curve.values()):
+            lines += ["", "A TERMÉK PIACI ÁRÁNAK hibája az azonos termék ismert eladásainak számától függően "
+                          "(becslés n eladásból, referencia a többi eladás mediánja):", "",
+                      "| Piac | n eladás | minták | MdAPE | ±10%-on belül |", "|---|---:|---:|---:|---:|"]
+            for m, c in curve.items():
+                for n, v in c.items():
+                    lines.append(f"| {m} | {n} | {v['samples']} | {_fmt(v['mdape'], pct=True)} | "
+                                 f"{_fmt(v['within_10pct'], pct=True)} |")
+        else:
+            lines += ["", "A termék piaci árának hibagörbéje még nem mérhető: nincs olyan cikkszám, "
+                          "amelynek legalább 6 eladása lenne az adatban."]
+        lines += ["", "Piaci zajszint (azonos termék eladásai egymáshoz képest):"]
+        for m, v in (sku.get("noise_floor") or {}).items():
+            lines.append(f"- {m}: {v['skus_with_3plus']} cikkszámnak van ≥3 eladása"
+                         + (f"; egy eladás eltérése a többi mediánjától: MdAPE {_fmt(v['loo_mdape'], pct=True)}"
+                            if v.get("loo_mdape") is not None else " – a zajszint még nem mérhető"))
+        lines += ["", "Szükséges eladásszám ugyanabból a termékből (a mért vagy alapértelmezett szórásból):"]
+        for m, v in (sku.get("sales_needed") or {}).items():
+            src = "mért" if (sku["params"]["sigma_by_market"].get(m) or {}).get("sigma") else "alapértelmezett"
+            lines.append(f"- {m}: σ={v['sigma']:.2f} ({src}) → ≥{v['n_for_mdape']} eladás a 10%-os mediánhibához, "
+                         f"≥{v['n_for_share']} eladás ahhoz, hogy az esetek 90%-a ±10%-on belül legyen. "
+                         f"Egyetlen eladás árát ennél pontosabban nem lehet eltalálni: ~{100 * v['single_sale_mdape_floor']:.0f}% MdAPE.")
     lines += ["", "## Ajánlások találati pontossága", "",
               "Nem mérhető: nincs olyan ellenőrző adat (később realizált eladás / továbbértékesítés), amely "
               "megmutatná, hogy egy ajánlott vétel valóban nyereséges lett. A `python -m porcelan evaluate-recommendations` "

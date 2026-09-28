@@ -154,7 +154,62 @@ class Estimator:
                                                    "damage_flags", "mark_flags", "suspect_flags",
                                                    "canonical_en"]].items()}
             out[i]["image_used"] = bool(blocks.get("image_mask", np.zeros((len(df), 1)))[i, 0]) if self.use_clip else False
+        self._apply_sku(listings, out, conn)
         return out
+
+
+    # ------------------------------------------------------------------
+    def _sku_pricer(self, conn):
+        if getattr(self, "_sku", None) is None:
+            from . import sku_model
+            try:
+                self._sku = sku_model.SkuPricer(sku_model.load_frame(conn))
+            except Exception as exc:  # pragma: no cover - adatbázis nélküli környezet
+                log.warning("Cikkszám-modell nem tölthető: %s", exc)
+                self._sku = False
+        return self._sku or None
+
+    def _apply_sku(self, listings: list[dict], out: list[dict], conn) -> None:
+        """Pontosan azonosított terméknél: azonos cikkszám / formaszám eladásai + a kép+szöveg modell
+        (előzetes becslés) bizonytalansággal súlyozott kombinációja; P(|hiba| ≤ 10%)."""
+        from . import db as _db
+        from .identify import identify_text
+        from .sku_model import Z80, prob_within
+        pricer = self._sku_pricer(conn or _db.get_conn())
+        sku_eval = _db.get_meta(conn or _db.get_conn(), "sku_eval") or {}
+        for i, l in enumerate(listings):
+            key = l.get("sku_key")
+            basis = l.get("id_basis")
+            if not key:
+                ident = identify_text(l.get("title") or "", l.get("description") or "")
+                key, basis = ident.sku_key, '["szöveg"]'
+            if not key:
+                continue
+            brand, form, pat = key.split("|")
+            out[i]["identity"] = {"sku_key": key, "brand": brand, "form_no": form,
+                                  "pattern_code": None if pat == "-" else pat,
+                                  "confidence": l.get("id_confidence"), "basis": basis}
+            if not pricer:
+                continue
+            for market, m in out[i]["markets"].items():
+                mu0 = float(np.log(m["q50"]))
+                sd0 = max(1e-3, float((np.log(m["q90"]) - np.log(m["q10"])) / (2 * Z80)))
+                cond = (out[i].get("features") or {}).get("condition") or l.get("condition")
+                est = pricer.estimate(market, key, cond, mu0, sd0, exclude_refs={l.get("source_id")})
+                if est.get("mu") is None or (est["n_exact"] == 0 and est["n_form"] == 0):
+                    m["sku"] = {"n_exact": 0, "n_form": 0, "p_within_10": prob_within(sd0),
+                                "note": "nincs azonos termék eladás az adatban"}
+                    m["p_within_10"] = prob_within(sd0)
+                    continue
+                v = (sku_eval.get("by_market") or {}).get(market) or {}
+                validated = (v.get("n", 0) >= 30 and (v.get("precise_within_10pct") or 0) >= 0.9)
+                m["model_q"] = {k: m[k] for k in ("q10", "q50", "q90")}
+                m["q10"], m["q50"], m["q90"] = (float(np.exp(est["q10"])), float(np.exp(est["mu"])),
+                                                float(np.exp(est["q90"])))
+                m["p_within_10"] = est["p_within_10"]
+                m["sku"] = {k: est[k] for k in ("n_exact", "n_form", "p_within_10", "evidence", "sigma_market")}
+                m["precise"] = bool(est["p_within_10"] >= 0.9 and validated)
+                m["precise_validated"] = validated
 
 
 _cache: dict = {}

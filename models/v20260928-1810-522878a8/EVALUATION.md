@@ -1,17 +1,19 @@
-# Modellértékelés – v20260928-1507-522878a8
+# Modellértékelés – v20260928-1810-522878a8
 
 **Státusz: KÍSÉRLETI**
 
 Miért nem validált:
+- HU: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető
+- US: pontos (cikkszám-szintű) értékelés: 0 azonosított, összehasonlítható eladás < 30 – a ±10%-os cél nem mérhető
 - képes Herendi/Zsolnay tanítósor: 0 < 10000 (képalapú becsléshez sok tízezer képes adat kell)
 - HU: 1167 tanítósor < 10000
 - US: 84 tanítósor < 10000
 - HU: a célváltozó kínálati ár, nem realizált eladási ár
-- HU: MdAPE 43% > 35%
+- HU: MdAPE 43% > 10%
 - US: a célváltozó kínálati ár, nem realizált eladási ár
 - US/Herendi: 19 tesztminta < 50
 - US/Zsolnay: 0 tesztminta < 50
-- US: MdAPE 75% > 35%
+- US: MdAPE 75% > 10%
 - US: 80%-os intervallum tényleges lefedettsége 63%
 - US: a választott modell nem jobb az alapmodellnél a teszten
 
@@ -27,7 +29,7 @@ Miért nem validált:
 - Megfigyelési napok: 2026-09-16, 2026-09-19
 - Képpel rendelkező tanítósor: 0
 - Felosztás: csoportszintű véletlen (a megfigyelések csak 3 napot fednek le; időbeli teszt nem lehetséges); {'train': 1251, 'val': 277, 'test': 265}
-- Adat-ujjlenyomat: `522878a8f0adfc10`, seed 42, git `5156205138`
+- Adat-ujjlenyomat: `522878a8f0adfc10`, seed 42, git `8d3d45752e`
 
 > HU: 0 realizált Herendi/Zsolnay ár < 200 → kínálati áron tanul (kísérleti)
 > US: 0 realizált Herendi/Zsolnay ár < 200 → kínálati áron tanul (kísérleti)
@@ -63,6 +65,21 @@ Miért nem validált:
 | deep_no_clip | HU | Herendi | 141 | 44.1% | 39 097 | 66.0% |
 | deep_no_clip | HU | Zsolnay | 105 | 39.9% | 43 385 | 81.0% |
 | deep_no_clip | US | Herendi | 19 | 65.0% | 450 | 63.2% |
+
+## Pontos termék → pontos piaci ár (cikkszám-szint, cél: ±10%)
+
+- Formaszámmal azonosított rekord: 55, kiértékelhető (van azonos termék/formaszám másik eladása): 0; csoportonként kihagyásos értékelés.
+
+
+A termék piaci árának hibagörbéje még nem mérhető: nincs olyan cikkszám, amelynek legalább 6 eladása lenne az adatban.
+
+Piaci zajszint (azonos termék eladásai egymáshoz képest):
+- HU: 0 cikkszámnak van ≥3 eladása – a zajszint még nem mérhető
+- US: 0 cikkszámnak van ≥3 eladása – a zajszint még nem mérhető
+
+Szükséges eladásszám ugyanabból a termékből (a mért vagy alapértelmezett szórásból):
+- HU: σ=0.35 (alapértelmezett) → ≥7 eladás a 10%-os mediánhibához, ≥34 eladás ahhoz, hogy az esetek 90%-a ±10%-on belül legyen. Egyetlen eladás árát ennél pontosabban nem lehet eltalálni: ~27% MdAPE.
+- US: σ=0.35 (alapértelmezett) → ≥7 eladás a 10%-os mediánhibához, ≥34 eladás ahhoz, hogy az esetek 90%-a ±10%-on belül legyen. Egyetlen eladás árát ennél pontosabban nem lehet eltalálni: ~27% MdAPE.
 
 ## Ajánlások találati pontossága
 
