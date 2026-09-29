@@ -69,18 +69,27 @@ class Crawler:
         self._scope_seen: dict[str, set] = {}
 
     # -- run lifecycle --------------------------------------------------------
+    @property
+    def mode(self) -> str:
+        return "full" if self.full_catalog else self.corpus
+
     def _open_run(self, resume: bool) -> tuple[int, bool]:
         c = self.conn
         if resume:
-            row = c.execute("SELECT id FROM crawl_runs WHERE source=? AND status IN ('running','interrupted','failed','blocked') "
-                            "ORDER BY id DESC LIMIT 1", (self.source.name,)).fetchone()
+            # Csak ugyanolyan módú futást folytatunk. Enélkül egy `--corpus general`
+            # indítás átvenné a félbemaradt márkás bejárást, abban nem talál nyitott
+            # feladatot, és nulla kártyával "készen" áll le – az általános korpusz
+            # kezdőfeladatai pedig sosem kerülnek be.
+            row = c.execute("SELECT id FROM crawl_runs WHERE source=? AND mode=? "
+                            "AND status IN ('running','interrupted','failed','blocked') "
+                            "ORDER BY id DESC LIMIT 1", (self.source.name, self.mode)).fetchone()
             if row:
                 c.execute("UPDATE crawl_runs SET status='running', message='folytatva' WHERE id=?", (row["id"],))
                 c.execute("UPDATE frontier SET status='pending' WHERE run_id=? AND status='in_progress'", (row["id"],))
                 c.commit()
                 return row["id"], True
         cur = c.execute("INSERT INTO crawl_runs(source, mode, started_at, status) VALUES(?,?,?, 'running')",
-                        (self.source.name, "full" if self.full_catalog else self.corpus, _now()))
+                        (self.source.name, self.mode, _now()))
         run_id = cur.lastrowid
         seeds = (self.source.general_tasks() if self.corpus == "general" and hasattr(self.source, "general_tasks")
                  else self.source.seed_tasks(self.full_catalog))

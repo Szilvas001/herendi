@@ -100,5 +100,32 @@ class SitemapDiscoveryTest(unittest.TestCase):
         self.assertEqual(Fetcher._maybe_gunzip(b"<urlset/>"), b"<urlset/>")
 
 
+
+class KorpuszFuggetlenFolytatasTest(unittest.TestCase):
+    """A `--corpus general` futás nem veheti át a márkás bejárást.
+
+    Korábban a folytatás a forrás legutóbbi nyitott futását választotta, a mód
+    figyelembevétele nélkül. Így az általános korpusz átvette a félbemaradt
+    márkás bejárást, abban nem talált nyitott feladatot, és nulla kártyával
+    "készen" állt le – a kezdőfeladatai pedig sosem kerültek be.
+    """
+
+    def test_a_folytatas_modra_szur(self):
+        import inspect
+
+        from porcelan.crawler import Crawler
+        forras = inspect.getsource(Crawler._open_run)
+        self.assertIn("AND mode=?", forras)
+        self.assertIn("self.mode", forras)
+
+    def test_mode_a_korpuszt_koveti(self):
+        from porcelan.crawler import Crawler
+        with IsolatedEnv():
+            from porcelan import db
+            conn = db.get_conn()
+            self.assertEqual(Crawler("vatera", conn, corpus="relevant").mode, "relevant")
+            self.assertEqual(Crawler("vatera", conn, corpus="general").mode, "general")
+            self.assertEqual(Crawler("vatera", conn, corpus="relevant", full_catalog=True).mode, "full")
+
 if __name__ == "__main__":
     unittest.main()
