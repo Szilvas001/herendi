@@ -101,6 +101,12 @@ def futtat(nev: str, argumentumok: list[str], blokkolasra_all: bool) -> bool:
 
 def main() -> int:
     jegyzet("=== Adatgyűjtési lánc indul ===")
+    sys.path.insert(0, str(ROOT))
+    from porcelan import ebren
+    if ebren.ebren_tart():
+        jegyzet("Alvásgátlás bekapcsolva: a rendszer nem alszik el a futás alatt.")
+    else:
+        jegyzet("FIGYELEM: az alvásgátlást nem sikerült bekapcsolni.")
     for nev, argumentumok, blokkolasra_all in LEPESEK:
         if not futtat(nev, argumentumok, blokkolasra_all):
             jegyzet("=== A lánc megállt ===")

@@ -58,4 +58,15 @@ if ($korpuszFut) {
         -WorkingDirectory $gyoker -WindowStyle Hidden
 }
 
+# 4. Alvasgatlas: a gep ne aludjon el, amig barmelyik lanc fut
+$ebrenFut = Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like "*porcelan.ebren*" }
+if ($ebrenFut) {
+    Jegyzet "Az alvasgatlo or mar fut."
+} else {
+    Jegyzet "Alvasgatlo or inditasa."
+    Start-Process -FilePath $py -ArgumentList @("-m", "porcelan.ebren") `
+        -WorkingDirectory $gyoker -WindowStyle Hidden
+}
+
 Jegyzet "=== Folytatas beallitva ==="
